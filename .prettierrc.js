@@ -3,10 +3,10 @@ module.exports = {
   // jsxBracketSameLine: true,
   singleQuote: true,
   // trailingComma: 'all',
+  arrowParens: 'avoid',
 
   // Custom:
   semi: false,
-  arrowParens: 'avoid',
   jsxSingleQuote: true,
   bracketSpacing: true,
   trailingComma: 'none',
