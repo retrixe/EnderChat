@@ -21,12 +21,14 @@ import Dialog, { dialogStyles } from '../components/Dialog'
 import TextField from '../components/TextField'
 import ElevatedView from '../components/ElevatedView'
 import ServersContext from '../context/serversContext'
+import ConnectionContext from '../context/connectionContext'
 
 const stripColorCodes = (str: string) =>
   str.replace(/§[0-9a-fk-orx]/g, '').trim()
 
 const ServerScreen = () => {
   const { servers, setServers } = useContext(ServersContext)
+  const { connection, setConnection } = useContext(ConnectionContext)
 
   // TODO: Have a single Recoil Atom which gets updated with state,
   // and individual Server components that re-render independently
@@ -98,6 +100,14 @@ const ServerScreen = () => {
     })
     setPingResponses({})
     cancelAddServer()
+  }
+  const connectToServer = (server: string) => {
+    if (!connection) {
+      setConnection({
+        serverName: server,
+        socket: null
+      })
+    }
   }
 
   return (
@@ -188,6 +198,7 @@ const ServerScreen = () => {
             return (
               <ElevatedView key={server} style={styles.serverView}>
                 <Pressable
+                  onPress={() => connectToServer(server)}
                   onLongPress={() => setEditServerDialogOpen(server)}
                   android_ripple={{ color: '#aaa' }}
                   style={styles.serverPressable}
