@@ -3,7 +3,7 @@ import { Buffer } from 'buffer'
 
 import { makeBasePacket, concatPacketData, parsePacket, Packet } from './packet'
 import { toggleEndian, padBufferToLength } from './utils'
-import { readVarInt, writeVarInt } from './packetDataTypes'
+import { readVarInt, writeVarInt } from './packetUtils'
 
 export interface LegacyPing {
   ff: number

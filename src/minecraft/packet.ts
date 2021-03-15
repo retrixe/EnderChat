@@ -1,7 +1,7 @@
 import zlib from 'zlib'
 import { Buffer } from 'buffer'
-import { readVarInt, writeVarInt } from './packetDataTypes'
 import { toggleEndian } from './utils'
+import { encodeString, readVarInt, writeVarInt } from './packetUtils'
 
 export const makeBasePacket = (packetId: number, data: Buffer) => {
   const finalData = Buffer.concat([writeVarInt(packetId), data])
@@ -32,10 +32,8 @@ export type PacketDataTypes = string | boolean | number | Buffer
 export const concatPacketData = (data: PacketDataTypes[]) =>
   Buffer.concat(
     data.map(field => {
-      if (typeof field === 'string') {
-        const encoded = Buffer.from(field, 'utf8')
-        return Buffer.concat([writeVarInt(encoded.byteLength), encoded])
-      } else if (typeof field === 'boolean') {
+      if (typeof field === 'string') return encodeString(field)
+      else if (typeof field === 'boolean') {
         return Buffer.from([field ? 0x01 : 0x00])
       } else if (Buffer.isBuffer(field)) return field
       else return toggleEndian(Buffer.from([field]))
