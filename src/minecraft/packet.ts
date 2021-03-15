@@ -1,6 +1,6 @@
 import zlib from 'zlib'
 import { Buffer } from 'buffer'
-import { writeVarInt } from './packetDataTypes'
+import { readVarInt, writeVarInt } from './packetDataTypes'
 import { toggleEndian } from './utils'
 
 export const makeBasePacket = (packetId: number, data: Buffer) => {
@@ -33,10 +33,32 @@ export const concatPacketData = (data: PacketDataTypes[]) =>
   Buffer.concat(
     data.map(field => {
       if (typeof field === 'string') {
-        return toggleEndian(Buffer.from(field, 'utf16le'), 2)
+        const encoded = Buffer.from(field, 'utf8')
+        return Buffer.concat([writeVarInt(encoded.byteLength), encoded])
       } else if (typeof field === 'boolean') {
         return Buffer.from([field ? 0x01 : 0x00])
       } else if (Buffer.isBuffer(field)) return field
       else return toggleEndian(Buffer.from([field]))
     })
   )
+
+export interface Packet {
+  id: number
+  data: Buffer
+  packetLength: number
+}
+
+export const parsePacket = (packet: Buffer): Packet | undefined => {
+  if (packet.byteLength === 0) return
+  const [packetBodyLength, varIntLength] = readVarInt(packet)
+  if (packet.byteLength < packetBodyLength + varIntLength) return
+  const packetBody = packet.slice(varIntLength, varIntLength + packetBodyLength)
+  const [packetId, packetIdLength] = readVarInt(packetBody)
+  const packetData = packetBody.slice(packetIdLength)
+  return {
+    id: packetId,
+    data: packetData,
+    packetLength: packetBodyLength + varIntLength
+  }
+}
+// TODO: parseCompressedPacket.

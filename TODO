@@ -1,8 +1,8 @@
-- Write code to ping Minecraft.
 - What's Jest doing here?
 - Work on dark mode and global style.
 - Setup authentication with Mojang/MS.
 - Finish the UI where you actually chat.
 - Write the code to talk with Minecraft.
 - Finish the UI, add icon, configure app.json.
+- Use console.log plugin from React Native perf docs.
 - Reduce icons bundled and enable Hermes for performance.

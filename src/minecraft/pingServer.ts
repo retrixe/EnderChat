@@ -1,9 +1,9 @@
 import net from 'react-native-tcp'
 import { Buffer } from 'buffer'
 
-import { makeBasePacket, concatPacketData } from './makePacket'
+import { makeBasePacket, concatPacketData, parsePacket, Packet } from './packet'
 import { toggleEndian, padBufferToLength } from './utils'
-import { writeVarInt } from './packetDataTypes'
+import { readVarInt, writeVarInt } from './packetDataTypes'
 
 export interface LegacyPing {
   ff: number
@@ -16,7 +16,8 @@ export interface LegacyPing {
   protocol: number
 }
 
-interface Ping {
+export interface Ping {
+  ping: number
   favicon: string
   version: { name: string; protocol: number }
   players: {
@@ -88,7 +89,6 @@ export const legacyPing = async (opts: { host: string; port: number }) => {
   })
 }
 
-// TODO: Broken.
 export const modernPing = async (opts: { host: string; port: number }) => {
   // TODO: SRV redirect _minecraft._tcp.example.com to example.com
   return await new Promise<Ping>((resolve, reject) => {
@@ -97,27 +97,56 @@ export const modernPing = async (opts: { host: string; port: number }) => {
       port: opts.port
     })
     let data = Buffer.from([])
-    // const receivingPong = false
+    let timeSent: number
+    let timeReceived: number
+    const packets: Packet[] = []
     socket.on('connect', () => {
-      // Initialise handshake with server.
-      socket.write(
-        makeBasePacket(
-          0x00,
-          concatPacketData([-1, opts.host, opts.port, writeVarInt(1)])
-        ),
-        () => socket.write(makeBasePacket(0x00, Buffer.from([])))
+      // Create data to send in Handshake.
+      const port = Buffer.alloc(2)
+      port.writeUInt16BE(opts.port)
+      const handshakeData = [writeVarInt(-1), opts.host, port, writeVarInt(1)]
+
+      // Initialise Handshake with server.
+      socket.write(makeBasePacket(0x00, concatPacketData(handshakeData)), () =>
+        // Send Request packet.
+        socket.write(makeBasePacket(0x00, Buffer.from([])), () => {
+          // Send Ping packet.
+          timeSent = Date.now()
+          const timeLong = padBufferToLength(Buffer.from([timeSent]), 8)
+          socket.write(makeBasePacket(0x01, timeLong))
+        })
       )
-      // socket.write(
-      //   makeBasePacket(0x01, padBufferToLength(Buffer.from([Date.now()]), 8))
-      // )
     })
     socket.on('data', newData => {
-      console.log('received data')
       data = Buffer.concat([data, newData])
+      while (true) {
+        const packet = parsePacket(data)
+        if (packet) {
+          if (packet.id === 0x01) timeReceived = Date.now() // Special case for ping.
+          data = data.slice(packet.packetLength)
+          packets.push(packet)
+        } else break
+      }
     })
     socket.on('close', () => {
-      // Parse the stuff.
-      console.log(toggleEndian(data, 2).toString('utf16le'))
+      // Parse the packets.
+      const responsePacket = packets.find(p => p.id === 0x00)
+      if (!responsePacket) {
+        return reject(new TypeError('No response packet was sent!'))
+      }
+      const [jsonLength, varIntLength] = readVarInt(responsePacket.data)
+      const json = responsePacket.data
+        .slice(varIntLength, varIntLength + jsonLength)
+        .toString('utf8')
+      const response = JSON.parse(json)
+
+      resolve({
+        ping: (timeReceived - timeSent) / 2,
+        version: response.version,
+        players: response.players,
+        favicon: response.favicon,
+        description: response.description
+      })
     })
     socket.on('error', err => reject(err))
   })

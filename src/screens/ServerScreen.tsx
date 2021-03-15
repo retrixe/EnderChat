@@ -16,7 +16,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import allSettled from 'promise.allsettled'
 
 import globalStyle from '../globalStyle'
-import { legacyPing, LegacyPing } from '../minecraft/pingServer'
+import { modernPing, Ping } from '../minecraft/pingServer'
 import Dialog, { dialogStyles } from '../components/Dialog'
 import TextField from '../components/TextField'
 import ElevatedView from '../components/ElevatedView'
@@ -42,7 +42,7 @@ const ServerScreen = () => {
   const [editServerDialogOpen, setEditServerDialogOpen] = useState('')
   // TODO: Actually use IP to avoid rate limits.
   const [pingResponses, setPingResponses] = useState<{
-    [name: string]: LegacyPing | null
+    [name: string]: Ping | null
   }>({})
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const ServerScreen = () => {
         port = 25565
       }
       promises.push(
-        legacyPing({ host: splitAddr.join(':'), port }) // Run in parallel.
+        modernPing({ host: splitAddr.join(':'), port }) // Run in parallel.
           .then(resp => setPingResponses(p => ({ ...p, [serverName]: resp })))
           .catch(() => setPingResponses(p => ({ ...p, [serverName]: null })))
       )
@@ -194,9 +194,7 @@ const ServerScreen = () => {
                 >
                   {ping != null ? (
                     <Image
-                      source={
-                        { uri: 'https://mythicmc.org/icon.png' } /* TODO */
-                      }
+                      source={{ uri: ping.favicon }}
                       style={styles.serverImage}
                     />
                   ) : (
@@ -215,14 +213,19 @@ const ServerScreen = () => {
                     {ping != null ? (
                       <>
                         <Text style={styles.serverPlayers}>
-                          {ping.online}/{ping.maxPlayers} players online | Ping:
-                          {' ' + ping.ping}ms
+                          {ping.players.online}/{ping.players.max} players
+                          online | Ping: {ping.ping}ms
                         </Text>
-                        {ping.motd.split('\n').map((line, index) => (
-                          <Text key={index} style={styles.serverDescription}>
-                            {stripColorCodes(line)}
-                          </Text>
-                        ))}
+                        {(typeof ping.description === 'string'
+                          ? ping.description
+                          : ping.description.text
+                        )
+                          .split('\n')
+                          .map((line, index) => (
+                            <Text key={index} style={styles.serverDescription}>
+                              {stripColorCodes(line)}
+                            </Text>
+                          ))}
                       </>
                     ) : (
                       <Text style={styles.serverDescription}>

@@ -8,7 +8,6 @@ export const readVarInt = (
   offset: number = 0,
   varlong: boolean = false
 ): [number, number] => {
-  /* eslint-disable no-bitwise */
   let numRead = 0
   let result = 0
   let read: number
@@ -23,13 +22,11 @@ export const readVarInt = (
       throw new Error('VarLong is too big')
     }
   } while ((read & 0b10000000) !== 0)
-  /* eslint-enable no-bitwise */
   return [result, numRead]
 }
 
 export const writeVarInt = (value: number): Buffer => {
   let result = Buffer.alloc(0)
-  /* eslint-disable no-bitwise */
   do {
     let temp = value & 0b01111111
     // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
@@ -39,7 +36,6 @@ export const writeVarInt = (value: number): Buffer => {
     }
     result = Buffer.concat([result, Buffer.from([temp])])
   } while (value !== 0)
-  /* eslint-enable no-bitwise */
   return result
 }
 

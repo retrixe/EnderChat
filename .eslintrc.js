@@ -29,6 +29,8 @@ module.exports = {
     // Adjust to Prettier's presence. (Maybe we should do away with it later.)
     '@typescript-eslint/member-delimiter-style': 'off',
     '@typescript-eslint/indent': 'off',
-    'multiline-ternary': 'off'
+    'multiline-ternary': 'off',
+    // Bitwise operations are necessary in this project.
+    'no-bitwise': 'off'
   }
 }
