@@ -25,6 +25,14 @@ import ConnectionContext from '../context/connectionContext'
 
 const stripColorCodes = (str: string) =>
   str.replace(/§[0-9a-fk-orx]/g, '').trim()
+// TODO: No formatting.
+const parseChatComponent = (chat: {
+  text: string
+  extra?: Array<{ text: string }>
+}) => {
+  const extras = chat.extra ? chat.extra.map(e => e.text) : []
+  return chat.text + extras.join('')
+}
 
 const ServerScreen = () => {
   const { servers, setServers } = useContext(ServersContext)
@@ -205,7 +213,11 @@ const ServerScreen = () => {
                 >
                   {ping != null ? (
                     <Image
-                      source={{ uri: ping.favicon }}
+                      source={
+                        ping.favicon
+                          ? { uri: ping.favicon }
+                          : require('../pack.png')
+                      }
                       style={styles.serverImage}
                     />
                   ) : (
@@ -229,7 +241,7 @@ const ServerScreen = () => {
                         </Text>
                         {(typeof ping.description === 'string'
                           ? ping.description
-                          : ping.description.text
+                          : parseChatComponent(ping.description)
                         )
                           .split('\n')
                           .map((line, index) => (
