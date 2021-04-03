@@ -19,7 +19,9 @@ export interface SettingsContext {
 
 const settingsContext = React.createContext<SettingsContext>({
   settings: {
-    joinMessage: '',
+    joinMessage:
+      'I connected using EnderChat, an ad-free, easy to use and well-built ' +
+      'alternative to ChatCraft for Android! Even this message can be disabled!',
     sendJoinMessage: false,
     sendSpawnCommand: false,
     chatTheme: 'Colorless',

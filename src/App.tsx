@@ -76,7 +76,9 @@ const App = () => {
     JSON.stringify({
       // TODO: Better defaults. Also, adding new settings is ineffective here.
       // Have better system for this e.g. useJsonAsyncStorage?
-      joinMessage: '',
+      joinMessage:
+        'I connected using EnderChat, an ad-free, easy to use and well-built ' +
+        'alternative to ChatCraft for Android! Even this message can be disabled!',
       sendJoinMessage: false,
       sendSpawnCommand: false,
       chatTheme: 'Colorless',

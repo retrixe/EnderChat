@@ -16,7 +16,9 @@ const Setting = <T extends string | boolean>({
   multiline?: boolean
 }) => {
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalContent, setModalContent] = useState('')
+  const [modalContent, setModalContent] = useState(
+    typeof value === 'string' ? value : ''
+  )
   const Wrapper = setValue != null ? Pressable : React.Fragment
   const wrapperPress = () => {
     if (typeof value === 'boolean' && setValue != null) {

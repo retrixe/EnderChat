@@ -22,17 +22,7 @@ import TextField from '../components/TextField'
 import ElevatedView from '../components/ElevatedView'
 import ServersContext from '../context/serversContext'
 import ConnectionContext from '../context/connectionContext'
-
-const stripColorCodes = (str: string) =>
-  str.replace(/§[0-9a-fk-orx]/g, '').trim()
-// TODO: No formatting.
-const parseChatComponent = (chat: {
-  text: string
-  extra?: Array<{ text: string }>
-}) => {
-  const extras = chat.extra ? chat.extra.map(e => e.text) : []
-  return chat.text + extras.join('')
-}
+import parseChatToJsx from '../minecraft/chatToJsx'
 
 const ServerScreen = () => {
   const { servers, setServers } = useContext(ServersContext)
@@ -239,16 +229,9 @@ const ServerScreen = () => {
                           {ping.players.online}/{ping.players.max} players
                           online | Ping: {ping.ping}ms
                         </Text>
-                        {(typeof ping.description === 'string'
-                          ? ping.description
-                          : parseChatComponent(ping.description)
-                        )
-                          .split('\n')
-                          .map((line, index) => (
-                            <Text key={index} style={styles.serverDescription}>
-                              {stripColorCodes(line)}
-                            </Text>
-                          ))}
+                        {parseChatToJsx(ping.description, Text, {
+                          style: styles.serverDescription
+                        })}
                       </>
                     ) : (
                       <Text style={styles.serverDescription}>
@@ -287,7 +270,7 @@ const styles = StyleSheet.create({
   serverContent: { marginLeft: 8, flex: 2 },
   serverName: { fontSize: 20, fontWeight: 'bold' },
   serverPlayers: { fontSize: 12, fontWeight: '300' },
-  serverDescription: { fontSize: 16 },
+  serverDescription: { fontSize: 14 },
   deleteServerText: { fontSize: 16 },
   deleteServerDialog: { padding: 0 }
 })

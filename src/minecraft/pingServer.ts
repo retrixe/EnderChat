@@ -4,6 +4,7 @@ import { Buffer } from 'buffer'
 import { makeBasePacket, concatPacketData, parsePacket, Packet } from './packet'
 import { toggleEndian, padBufferToLength } from './utils'
 import { readVarInt, writeVarInt } from './packetUtils'
+import { PlainTextChat } from './chatToJsx'
 
 export interface LegacyPing {
   ff: number
@@ -25,7 +26,7 @@ export interface Ping {
     online: number
     sample: Array<{ name: string; id: string }>
   }
-  description: string | { text: string } // TODO: Chat component support.
+  description: string | PlainTextChat
 }
 
 export const legacyPing = async (opts: { host: string; port: number }) => {
