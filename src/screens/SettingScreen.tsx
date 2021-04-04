@@ -26,7 +26,9 @@ const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
   return (
     <Pressable onPress={() => setModalOpen(true)} android_ripple={ripple}>
       <Dialog visible={modalOpen} onRequestClose={() => setModalOpen(false)}>
-        <Text style={dialogStyles.modalTitle}>Dark mode (beta)</Text>
+        <Text style={[dialogStyles.modalTitle, styles.dialogTitle]}>
+          Dark mode (beta)
+        </Text>
         <Pressable onPress={() => save(true)} android_ripple={ripple}>
           <Text style={styles.settingItem}>Enabled</Text>
         </Pressable>
@@ -58,7 +60,8 @@ const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
 }
 const styles = StyleSheet.create({
   setting: { padding: 12, paddingLeft: 22, paddingRight: 22 },
-  settingText: { fontSize: 18, marginBottom: 12 },
+  settingText: { fontSize: 18 },
+  dialogTitle: { marginBottom: 12 },
   settingItem: { fontSize: 18, width: '100%', padding: 8 },
   settingSubtext: { fontSize: 12, fontWeight: '100', color: '#666' },
   settingSubtextDark: { fontSize: 12, fontWeight: '100', color: '#aaa' },
