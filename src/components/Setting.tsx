@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
-import { StyleSheet, View, Text, Switch, Pressable } from 'react-native'
+import { StyleSheet, View, Switch, Pressable } from 'react-native'
 
 import TextFieldDialog from './TextFieldDialog'
 import globalStyle from '../globalStyle'
+import Text from './Text'
+import useDarkMode from '../context/useDarkMode'
 
 const Setting = <T extends string | boolean>({
   name,
@@ -15,6 +17,7 @@ const Setting = <T extends string | boolean>({
   setValue?: (newValue: T) => void
   multiline?: boolean
 }) => {
+  const da = useDarkMode()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState(
     typeof value === 'string' ? value : ''
@@ -57,7 +60,9 @@ const Setting = <T extends string | boolean>({
       >
         <Text style={styles.settingText}>{name}</Text>
         {typeof value === 'string' && (
-          <Text style={styles.settingSubtext}>{value || 'N/A'}</Text>
+          <Text style={da ? styles.settingSubtextDark : styles.settingSubtext}>
+            {value || 'N/A'}
+          </Text>
         )}
         {typeof value === 'boolean' && (
           <>
@@ -80,7 +85,8 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   settingText: { fontSize: 18 },
-  settingSubtext: { fontSize: 12, fontWeight: '100', color: '#666' }
+  settingSubtext: { fontSize: 12, fontWeight: '100', color: '#666' },
+  settingSubtextDark: { fontSize: 12, fontWeight: '100', color: '#aaa' }
 })
 
 export default Setting

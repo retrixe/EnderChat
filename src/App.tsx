@@ -1,10 +1,10 @@
 import 'react-native-gesture-handler'
 
 import React from 'react'
-import { StatusBar, SafeAreaView } from 'react-native'
+import { useColorScheme, StatusBar, SafeAreaView } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import {
   createStackNavigator,
   StackNavigationProp
@@ -69,6 +69,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
 }
 
 const App = () => {
+  const colorScheme = useColorScheme()
   const [connection, setConnection] = React.useState<Connection | undefined>()
 
   const [settingsStore, setSettingsStore] = useAsyncStorage(
@@ -79,8 +80,8 @@ const App = () => {
       joinMessage:
         'I connected using EnderChat, an ad-free, easy to use and well-built ' +
         'alternative to ChatCraft for Android! Even this message can be disabled!',
-      sendJoinMessage: false,
-      sendSpawnCommand: false,
+      sendJoinMessage: true,
+      sendSpawnCommand: true,
       chatTheme: 'Colorless',
       fontSize: 16,
       webLinks: true,
@@ -99,6 +100,9 @@ const App = () => {
     setSettingsStore(JSON.stringify({ ...settings, ...newSettings }))
   const setServers = (newServers: Servers) =>
     setServersStore(JSON.stringify({ ...servers, ...newServers }))
+  const systemDefault = colorScheme === null ? true : colorScheme === 'dark'
+  const darkMode =
+    settings.darkMode === null ? systemDefault : settings.darkMode
 
   return (
     <SafeAreaView style={globalStyle.flexSpacer}>
@@ -106,8 +110,11 @@ const App = () => {
         <SettingsContext.Provider value={{ settings, setSettings }}>
           <ServersContext.Provider value={{ servers, setServers }}>
             <AccountsContext.Provider value={{ accounts, setAccounts }}>
-              <NavigationContainer>
-                <StatusBar backgroundColor='#ffffff' barStyle='dark-content' />
+              <NavigationContainer theme={darkMode ? DarkTheme : undefined}>
+                <StatusBar
+                  backgroundColor={darkMode ? '#242424' : '#ffffff'}
+                  barStyle={darkMode ? 'light-content' : 'dark-content'}
+                />
                 <Stacks.Navigator initialRouteName='Home' headerMode='none'>
                   <Stacks.Screen name='Home' component={HomeScreen} />
                   <Stacks.Screen name='Chat' component={ChatScreen} />

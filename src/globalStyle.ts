@@ -21,5 +21,12 @@ export default StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#bbb'
   },
+  darkHeader: {
+    padding: 10,
+    flexDirection: 'row',
+    backgroundColor: '#242424',
+    borderBottomWidth: 1,
+    borderBottomColor: '#121212'
+  },
   flexSpacer: { flex: 1 }
 })

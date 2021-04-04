@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
-import { View, Text, Pressable } from 'react-native'
+import { View, Pressable } from 'react-native'
 import Dialog, { dialogStyles as styles } from './Dialog'
+import Text from './Text'
 import TextField from './TextField'
 import globalStyle from '../globalStyle'
+import useDarkMode from '../context/useDarkMode'
 
 const TextFieldDialog = ({
   name,
@@ -47,7 +49,15 @@ const TextFieldDialog = ({
           style={styles.modalButton}
           onPress={closeModalAndReset}
         >
-          <Text style={styles.modalButtonCancelText}>CANCEL</Text>
+          <Text
+            style={
+              useDarkMode()
+                ? styles.modalButtonCancelDarkText
+                : styles.modalButtonCancelText
+            }
+          >
+            CANCEL
+          </Text>
         </Pressable>
         <Pressable
           android_ripple={{ color: '#aaa' }}

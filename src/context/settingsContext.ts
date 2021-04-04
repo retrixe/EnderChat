@@ -9,7 +9,7 @@ export interface Settings {
   fontSize: number
   webLinks: boolean
   linkPrompt: boolean
-  darkMode: boolean
+  darkMode: boolean | null
 }
 
 export interface SettingsContext {
@@ -22,8 +22,8 @@ const settingsContext = React.createContext<SettingsContext>({
     joinMessage:
       'I connected using EnderChat, an ad-free, easy to use and well-built ' +
       'alternative to ChatCraft for Android! Even this message can be disabled!',
-    sendJoinMessage: false,
-    sendSpawnCommand: false,
+    sendJoinMessage: true,
+    sendSpawnCommand: true,
     chatTheme: 'Colorless',
     fontSize: 16,
     webLinks: true,

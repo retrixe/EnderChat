@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react'
 
 import {
   StyleSheet,
-  Text,
   View,
   Image,
   Pressable,
@@ -18,13 +17,16 @@ import allSettled from 'promise.allsettled'
 import globalStyle from '../globalStyle'
 import { modernPing, Ping } from '../minecraft/pingServer'
 import Dialog, { dialogStyles } from '../components/Dialog'
+import Text from '../components/Text'
 import TextField from '../components/TextField'
 import ElevatedView from '../components/ElevatedView'
 import ServersContext from '../context/serversContext'
 import ConnectionContext from '../context/connectionContext'
 import parseChatToJsx from '../minecraft/chatToJsx'
+import useDarkMode from '../context/useDarkMode'
 
 const ServerScreen = () => {
+  const darkMode = useDarkMode()
   const { servers, setServers } = useContext(ServersContext)
   const { connection, setConnection } = useContext(ConnectionContext)
 
@@ -145,7 +147,9 @@ const ServerScreen = () => {
         />
         <Picker
           selectedValue={serverVersion}
+          style={darkMode ? styles.addServerPickerDark : {}}
           onValueChange={itemValue => setServerVersion(itemValue)}
+          dropdownIconColor={darkMode ? '#ffffff' : undefined}
         >
           <Picker.Item label='1.16.5' value='1.16.5' />
         </Picker>
@@ -156,7 +160,15 @@ const ServerScreen = () => {
             android_ripple={{ color: '#aaa' }}
             style={dialogStyles.modalButton}
           >
-            <Text style={dialogStyles.modalButtonCancelText}>CANCEL</Text>
+            <Text
+              style={
+                darkMode
+                  ? dialogStyles.modalButtonCancelDarkText
+                  : dialogStyles.modalButtonCancelText
+              }
+            >
+              CANCEL
+            </Text>
           </Pressable>
           <Pressable
             onPress={addAccount}
@@ -167,7 +179,7 @@ const ServerScreen = () => {
           </Pressable>
         </View>
       </Dialog>
-      <View style={globalStyle.header}>
+      <View style={darkMode ? globalStyle.darkHeader : globalStyle.header}>
         <Text style={globalStyle.title}>Servers</Text>
         <View style={globalStyle.flexSpacer} />
         <Ionicons.Button
@@ -272,7 +284,8 @@ const styles = StyleSheet.create({
   serverPlayers: { fontSize: 12, fontWeight: '300' },
   serverDescription: { fontSize: 14 },
   deleteServerText: { fontSize: 16 },
-  deleteServerDialog: { padding: 0 }
+  deleteServerDialog: { padding: 0 },
+  addServerPickerDark: { color: '#ffffff' }
 })
 
 export default ServerScreen

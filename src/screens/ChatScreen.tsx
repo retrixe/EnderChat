@@ -1,11 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { FlatList, StyleSheet, Text, View } from 'react-native'
+import { FlatList, StyleSheet, View } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { StackNavigationProp } from '@react-navigation/stack'
 
 import globalStyle from '../globalStyle'
+import useDarkMode from '../context/useDarkMode'
 import ConnectionContext from '../context/connectionContext'
 import TextField from '../components/TextField'
+import Text from '../components/Text'
 
 type ChatNavigationProp = StackNavigationProp<
   { Home: undefined; Chat: undefined },
@@ -22,6 +24,7 @@ for (let i = 0; i < 150; i++) {
 
 // TODO: Proper functionality.
 const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
+  const darkMode = useDarkMode()
   const { connection, setConnection } = useContext(ConnectionContext)
   useEffect(() => {
     if (!connection) {
@@ -36,7 +39,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   if (!connection) return <></> // This should never be hit hopefully.
   return (
     <>
-      <View style={globalStyle.header}>
+      <View style={darkMode ? globalStyle.darkHeader : globalStyle.header}>
         {/* TODO: Could look better, but okay for now. Also breaks on long titles. */}
         <Ionicons.Button
           name='chevron-back-sharp'
@@ -60,7 +63,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         contentContainerStyle={styles.chatAreaScrollView}
         renderItem={({ item }) => <Text>{item.text}</Text>}
       />
-      <View style={styles.textArea}>
+      <View style={darkMode ? styles.textAreaDark : styles.textArea}>
         <TextField
           value={message}
           onChangeText={setMessage}
@@ -77,6 +80,11 @@ const styles = StyleSheet.create({
   backButtonIcon: { marginRight: 0 },
   chatArea: { padding: 8, flex: 1 },
   chatAreaScrollView: { paddingBottom: 16 },
+  textAreaDark: {
+    padding: 8,
+    flexDirection: 'row',
+    backgroundColor: '#242424'
+  },
   textArea: { padding: 8, backgroundColor: '#fff', flexDirection: 'row' },
   textField: { marginTop: 0, flex: 1, marginRight: 8 }
 })

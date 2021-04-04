@@ -1,17 +1,77 @@
-import React, { useContext } from 'react'
-import { Text, View } from 'react-native'
+import React, { useContext, useState } from 'react'
+import { View, Pressable, StyleSheet } from 'react-native'
 
 import { version } from '../../package.json'
+import Text from '../components/Text'
+import Dialog, { dialogStyles } from '../components/Dialog'
 import Setting from '../components/Setting'
 import globalStyle from '../globalStyle'
+import useDarkMode from '../context/useDarkMode'
 import SettingsContext from '../context/settingsContext'
 
+interface DarkModeSettingProps {
+  value: boolean | null
+  setValue: (newValue: boolean | null) => void
+}
+const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
+  const [modalOpen, setModalOpen] = useState(false)
+  const save = (newValue: boolean | null) => {
+    setValue(newValue)
+    setModalOpen(false)
+  }
+  const ripple = { color: '#aaa' }
+  const cancelStyle = useDarkMode()
+    ? dialogStyles.modalButtonCancelDarkText
+    : dialogStyles.modalButtonCancelText
+  return (
+    <Pressable onPress={() => setModalOpen(true)} android_ripple={ripple}>
+      <Dialog visible={modalOpen} onRequestClose={() => setModalOpen(false)}>
+        <Text style={dialogStyles.modalTitle}>Dark mode (beta)</Text>
+        <Pressable onPress={() => save(true)} android_ripple={ripple}>
+          <Text style={styles.settingItem}>Enabled</Text>
+        </Pressable>
+        <Pressable onPress={() => save(false)} android_ripple={ripple}>
+          <Text style={styles.settingItem}>Disabled</Text>
+        </Pressable>
+        <Pressable onPress={() => save(null)} android_ripple={ripple}>
+          <Text style={styles.settingItem}>Use system default</Text>
+        </Pressable>
+        <View style={dialogStyles.modalButtons}>
+          <View style={globalStyle.flexSpacer} />
+          <Pressable
+            android_ripple={ripple}
+            style={dialogStyles.modalButton}
+            onPress={() => setModalOpen(false)}
+          >
+            <Text style={cancelStyle}>CANCEL</Text>
+          </Pressable>
+        </View>
+      </Dialog>
+      <View style={styles.setting}>
+        <Text style={styles.settingText}>Dark mode (beta)</Text>
+        <Text style={value ? styles.settingSubtextDark : styles.settingSubtext}>
+          {value === null ? 'System default' : value ? 'Enabled' : 'Disabled'}
+        </Text>
+      </View>
+    </Pressable>
+  )
+}
+const styles = StyleSheet.create({
+  setting: { padding: 12, paddingLeft: 22, paddingRight: 22 },
+  settingText: { fontSize: 18, marginBottom: 12 },
+  settingItem: { fontSize: 18, width: '100%', padding: 8 },
+  settingSubtext: { fontSize: 12, fontWeight: '100', color: '#666' },
+  settingSubtextDark: { fontSize: 12, fontWeight: '100', color: '#aaa' },
+  addServerPickerDark: { color: '#ffffff' }
+})
+
 const SettingScreen = () => {
+  const darkModeApp = useDarkMode()
   const { settings, setSettings } = useContext(SettingsContext)
 
   return (
     <>
-      <View style={globalStyle.header}>
+      <View style={darkModeApp ? globalStyle.darkHeader : globalStyle.header}>
         <Text style={globalStyle.title}>Settings</Text>
       </View>
       <View>
@@ -42,8 +102,7 @@ const SettingScreen = () => {
           value={settings.linkPrompt}
           setValue={linkPrompt => setSettings({ linkPrompt })}
         />
-        <Setting
-          name='Dark mode'
+        <DarkModeSetting
           value={settings.darkMode}
           setValue={darkMode => setSettings({ darkMode })}
         />

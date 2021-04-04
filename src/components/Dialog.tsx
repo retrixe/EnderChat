@@ -6,6 +6,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView
 } from 'react-native'
+import useDarkMode from '../context/useDarkMode'
 
 const Dialog = ({
   visible,
@@ -27,7 +28,15 @@ const Dialog = ({
     <KeyboardAvoidingView style={styles.kaView} enabled behavior='padding'>
       <Pressable style={styles.modalView} onPress={onRequestClose}>
         {/* Use Pressable to opt-out. */}
-        <Pressable style={{ ...styles.modalContainer, ...containerStyles }}>
+        <Pressable
+          style={[
+            styles.modalContainer,
+            ...(Array.isArray(containerStyles)
+              ? containerStyles
+              : [containerStyles]),
+            useDarkMode() ? styles.modalContainerDark : {}
+          ]}
+        >
           {children}
         </Pressable>
       </Pressable>
@@ -39,7 +48,7 @@ const styles = StyleSheet.create({
   kaView: {
     flex: 1,
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
+    backgroundColor: 'rgba(0, 0, 0, 0.6)'
   },
   modalView: {
     flex: 1,
@@ -53,7 +62,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     paddingBottom: 8,
     backgroundColor: '#fff'
-  }
+  },
+  modalContainerDark: { backgroundColor: '#333' }
 })
 
 export const dialogStyles = StyleSheet.create({
@@ -61,7 +71,8 @@ export const dialogStyles = StyleSheet.create({
   modalButtons: { flexDirection: 'row' },
   modalButton: { marginTop: 8, padding: 8 },
   modalButtonText: { fontWeight: 'bold', color: '#008080' },
-  modalButtonCancelText: { fontWeight: 'bold', color: '#666' }
+  modalButtonCancelText: { fontWeight: 'bold', color: '#666' },
+  modalButtonCancelDarkText: { fontWeight: 'bold', color: '#cacaca' }
 })
 
 export default Dialog

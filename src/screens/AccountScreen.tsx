@@ -1,15 +1,19 @@
 import React, { useContext, useState } from 'react'
-import { StyleSheet, Text, View, Image, Switch, Pressable } from 'react-native'
+import { StyleSheet, View, Image, Switch, Pressable } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
 import globalStyle from '../globalStyle'
+import Text from '../components/Text'
 import Dialog, { dialogStyles } from '../components/Dialog'
 import TextField from '../components/TextField'
+import useDarkMode from '../context/useDarkMode'
 import UsersContext from '../context/accountsContext'
 import ElevatedView from '../components/ElevatedView'
 
 const AccountScreen = () => {
+  const darkMode = useDarkMode()
   const { accounts, setAccounts } = useContext(UsersContext)
+
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false)
   const [newUser, setNewUser] = useState('')
   const [userRed, setUserRed] = useState(false)
@@ -87,7 +91,9 @@ const AccountScreen = () => {
           style={styles.auth}
           onPress={() => setPassword(p => (p === null ? '' : null))}
         >
-          <Text style={styles.authText}>Authentication</Text>
+          <Text style={darkMode ? styles.authTextDark : styles.authText}>
+            Authentication
+          </Text>
           <View style={globalStyle.flexSpacer} />
           <Switch
             value={typeof password === 'string'}
@@ -110,7 +116,15 @@ const AccountScreen = () => {
             android_ripple={{ color: '#aaa' }}
             style={styles.modalButton}
           >
-            <Text style={styles.modalButtonCancelText}>CANCEL</Text>
+            <Text
+              style={
+                darkMode
+                  ? styles.modalButtonCancelDarkText
+                  : styles.modalButtonCancelText
+              }
+            >
+              CANCEL
+            </Text>
           </Pressable>
           <Pressable
             onPress={addAccount}
@@ -121,7 +135,7 @@ const AccountScreen = () => {
           </Pressable>
         </View>
       </Dialog>
-      <View style={globalStyle.header}>
+      <View style={darkMode ? globalStyle.darkHeader : globalStyle.header}>
         <Text style={globalStyle.title}>Accounts</Text>
         <View style={globalStyle.flexSpacer} />
         <Ionicons.Button
@@ -160,7 +174,13 @@ const AccountScreen = () => {
                   {accounts[username].active && (
                     <Text style={styles.active}>Active Account</Text>
                   )}
-                  <Text style={styles.authentication}>
+                  <Text
+                    style={
+                      darkMode
+                        ? styles.authenticationDark
+                        : styles.authentication
+                    }
+                  >
                     {accounts[username].authentication
                       ? 'Premium'
                       : 'No Authentication'}
@@ -187,8 +207,10 @@ const styles = StyleSheet.create({
   active: { fontSize: 16 },
   username: { fontSize: 20, fontWeight: 'bold' },
   authentication: { fontSize: 12, color: '#666', fontWeight: '300' },
+  authenticationDark: { fontSize: 12, color: '#aaa', fontWeight: '300' },
   auth: { marginTop: 8, flexDirection: 'row', alignItems: 'center' },
   authText: { fontSize: 14, color: '#666666' },
+  authTextDark: { fontSize: 14, color: '#aaa' },
   deleteAccountText: { fontSize: 16 },
   deleteAccountDialog: { padding: 0 },
   ...dialogStyles
