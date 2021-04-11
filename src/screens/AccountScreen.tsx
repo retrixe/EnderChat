@@ -56,6 +56,7 @@ const AccountScreen = () => {
     newAccounts[username].active = true
     setAccounts(newAccounts)
   }
+  // TODO: Support editing accounts.
 
   return (
     <>

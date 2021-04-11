@@ -109,6 +109,7 @@ const ServerScreen = () => {
       })
     }
   }
+  // TODO: Support editing servers.
 
   return (
     <>

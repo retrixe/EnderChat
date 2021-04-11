@@ -1,6 +1,7 @@
 import React from 'react'
 import { StyleProp, TextProps, TextStyle } from 'react-native'
 
+// TODO: Better color maps (yes, maps in plural).
 const colorMap: { [color: string]: string } = {
   black: '#000000',
   dark_blue: '#0000AA',
