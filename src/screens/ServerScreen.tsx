@@ -148,10 +148,10 @@ const ServerScreen = () => {
         />
         <Picker
           selectedValue={serverVersion}
-          style={darkMode ? styles.addServerPickerDark : {}}
+          style={darkMode ? styles.addServerPickerDark : styles.addServerPicker}
           onValueChange={itemValue => setServerVersion(itemValue)}
-          dropdownIconColor={darkMode ? '#ffffff' : undefined}
         >
+          {/* TODO: dropdownIconColor={darkMode ? 16777215 : undefined} */}
           <Picker.Item label='1.16.5' value='1.16.5' />
         </Picker>
         <View style={dialogStyles.modalButtons}>
@@ -286,7 +286,8 @@ const styles = StyleSheet.create({
   serverDescription: { fontSize: 14 },
   deleteServerText: { fontSize: 16 },
   deleteServerDialog: { padding: 0 },
-  addServerPickerDark: { color: '#ffffff' }
+  addServerPicker: { height: 48 },
+  addServerPickerDark: { height: 48, color: '#ffffff' }
 })
 
 export default ServerScreen

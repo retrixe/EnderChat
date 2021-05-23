@@ -27,6 +27,7 @@ module.exports = {
     '@typescript-eslint/prefer-optional-chain': 'off',
     '@typescript-eslint/prefer-nullish-coalescing': 'off',
     // Adjust to Prettier's presence. (Maybe we should do away with it later.)
+    '@typescript-eslint/space-before-function-paren': 'off',
     '@typescript-eslint/member-delimiter-style': 'off',
     '@typescript-eslint/indent': 'off',
     'multiline-ternary': 'off',

@@ -2,7 +2,7 @@ import net from 'react-native-tcp'
 import { Buffer } from 'buffer'
 
 import { makeBasePacket, concatPacketData, parsePacket, Packet } from './packet'
-import { toggleEndian, padBufferToLength } from './utils'
+import { toggleEndian, padBufferToLength, resolveHostname } from './utils'
 import { readVarInt, writeVarInt } from './packetUtils'
 import { PlainTextChat } from './chatToJsx'
 
@@ -30,11 +30,9 @@ export interface Ping {
 }
 
 export const legacyPing = async (opts: { host: string; port: number }) => {
+  const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<LegacyPing>((resolve, reject) => {
-    const socket = net.createConnection({
-      host: opts.host,
-      port: opts.port
-    })
+    const socket = net.createConnection({ host, port })
     let data = Buffer.from([])
     let time: number
     socket.on('connect', () => {
@@ -52,14 +50,14 @@ export const legacyPing = async (opts: { host: string; port: number }) => {
           ...toggleEndian(Buffer.from('MC|PingHost', 'utf16le'), 2),
           // length of the rest of the data, as a short. Compute as 7 + len(hostname),
           // where len(hostname) is the number of bytes in the UTF-16BE encoded hostname.
-          ...padBufferToLength(Buffer.from([opts.host.length * 2 + 7]), 2),
+          ...padBufferToLength(Buffer.from([host.length * 2 + 7]), 2),
           0x4a, // protocol version, e.g. 4a for the last version (74)
           // length of following string, in characters, as a short
-          ...padBufferToLength(Buffer.from([opts.host.length]), 2),
+          ...padBufferToLength(Buffer.from([host.length]), 2),
           // hostname the client is connecting to, encoded as a UTF-16BE string
-          ...toggleEndian(Buffer.from(opts.host, 'utf16le'), 2),
+          ...toggleEndian(Buffer.from(host, 'utf16le'), 2),
           // port the client is connecting to, as an int.
-          ...padBufferToLength(Buffer.from(opts.port.toString(16), 'hex'), 4)
+          ...padBufferToLength(Buffer.from(port.toString(16), 'hex'), 4)
         ])
       )
     })
@@ -91,21 +89,18 @@ export const legacyPing = async (opts: { host: string; port: number }) => {
 }
 
 export const modernPing = async (opts: { host: string; port: number }) => {
-  // TODO: SRV redirect _minecraft._tcp.example.com to example.com
+  const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<Ping>((resolve, reject) => {
-    const socket = net.createConnection({
-      host: opts.host,
-      port: opts.port
-    })
+    const socket = net.createConnection({ host, port })
     let data = Buffer.from([])
     let timeSent: number
     let timeReceived: number
     const packets: Packet[] = []
     socket.on('connect', () => {
       // Create data to send in Handshake.
-      const port = Buffer.alloc(2)
-      port.writeUInt16BE(opts.port)
-      const handshakeData = [writeVarInt(-1), opts.host, port, writeVarInt(1)]
+      const portBuf = Buffer.alloc(2)
+      portBuf.writeUInt16BE(port)
+      const handshakeData = [writeVarInt(-1), host, portBuf, writeVarInt(1)]
 
       // Initialise Handshake with server.
       socket.write(makeBasePacket(0x00, concatPacketData(handshakeData)), () =>

@@ -24,3 +24,25 @@ export const toggleEndian = (buffer: Buffer, bytes: number = buffer.length) => {
   }
   return output
 }
+
+export const resolveHostname = async (
+  hostname: string,
+  port: number,
+  retry: boolean = false // Not intended to be set by user.
+): Promise<[string, number]> => {
+  const req = await fetch(
+    retry
+      ? `https://dns.google/resolve?name=_minecraft._tcp.${hostname}&type=srv&do=1`
+      : `https://cloudflare-dns.com/dns-query?name=_minecraft._tcp.${hostname}&type=SRV`,
+    { headers: { accept: 'application/dns-json' } }
+  )
+  if (!req.ok && !retry) return await resolveHostname(hostname, port, true)
+  else if (!req.ok) throw new Error('Failed to make DNS query!')
+  const res = await req.json()
+  const srvRecords = res.Answer?.filter((r: any) => r.type === 33 && r.data)
+  if (srvRecords && srvRecords.length) {
+    // TODO: Support SRV priority/weight.
+    const record = srvRecords.map((r: { data: string }) => r.data.split(' '))[0]
+    return [record[3], +record[2]]
+  } else return [hostname, port]
+}

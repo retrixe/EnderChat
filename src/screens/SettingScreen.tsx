@@ -64,8 +64,7 @@ const styles = StyleSheet.create({
   dialogTitle: { marginBottom: 12 },
   settingItem: { fontSize: 18, width: '100%', padding: 8 },
   settingSubtext: { fontSize: 12, fontWeight: '100', color: '#666' },
-  settingSubtextDark: { fontSize: 12, fontWeight: '100', color: '#aaa' },
-  addServerPickerDark: { color: '#ffffff' }
+  settingSubtextDark: { fontSize: 12, fontWeight: '100', color: '#aaa' }
 })
 
 const SettingScreen = () => {
