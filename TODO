@@ -3,5 +3,4 @@
 - Setup authentication with Mojang/MS.
 - Write the code to talk with Minecraft.
 - Finish the UI, add icon, configure app.json.
-- Use console.log plugin from React Native perf docs.
 - Reduce icons bundled and enable Hermes for performance.

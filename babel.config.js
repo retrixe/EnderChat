@@ -1,4 +1,9 @@
 module.exports = {
+  env: {
+    production: {
+      plugins: ['transform-remove-console']
+    }
+  },
   presets: ['module:metro-react-native-babel-preset'],
   // The following plugin will rewrite imports. Reimplementations of node
   // libraries such as `assert`, `buffer`, etc. will be picked up
