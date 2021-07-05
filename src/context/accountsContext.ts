@@ -2,13 +2,15 @@
 import React from 'react'
 
 export interface Account {
-  authentication?: string
-  password?: string
+  clientToken?: string
+  accessToken?: string
+  username: string
   active: boolean
+  email?: string
 }
 
 export interface Accounts {
-  [username: string]: Account
+  [uuid: string]: Account
 }
 
 export interface AccountsContext {

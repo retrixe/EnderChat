@@ -1,6 +1,6 @@
 - Finish the chat UI.
 - What's Jest doing here?
-- Setup authentication with Mojang/MS.
+- Setup authentication with Microsoft.
 - Write the code to talk with Minecraft.
 - Finish the UI, add icon, configure app.json.
 - Reduce icons bundled and enable Hermes for performance.

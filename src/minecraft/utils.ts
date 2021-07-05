@@ -41,7 +41,7 @@ export const resolveHostname = async (
   const res = await req.json()
   const srvRecords = res.Answer?.filter((r: any) => r.type === 33 && r.data)
   if (srvRecords && srvRecords.length) {
-    // TODO: Support SRV priority/weight.
+    // LOW-TODO: Support SRV priority/weight.
     const record = srvRecords.map((r: { data: string }) => r.data.split(' '))[0]
     return [record[3], +record[2]]
   } else return [hostname, port]
