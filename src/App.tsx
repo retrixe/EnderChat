@@ -18,7 +18,7 @@ import SettingsContext, { Settings } from './context/settingsContext'
 import ServersContext, { Servers } from './context/serversContext'
 import ChatScreen from './screens/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
-import AccountScreen from './screens/AccountScreen'
+import AccountScreen from './screens/accounts/AccountScreen'
 import SettingScreen from './screens/SettingScreen'
 import globalStyle from './globalStyle'
 
