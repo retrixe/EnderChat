@@ -43,6 +43,8 @@ export const concatPacketData = (data: PacketDataTypes[]) =>
 export interface Packet {
   id: number
   data: Buffer
+  idLength: number
+  dataLength: number
   packetLength: number
 }
 
@@ -56,7 +58,41 @@ export const parsePacket = (packet: Buffer): Packet | undefined => {
   return {
     id: packetId,
     data: packetData,
+    idLength: packetIdLength,
+    dataLength: packetBodyLength - packetIdLength,
     packetLength: packetBodyLength + varIntLength
   }
 }
-// TODO: parseCompressedPacket.
+
+export const parseCompressedPacket = async (
+  packet: Buffer
+): Promise<Packet | undefined> => {
+  // VarInt Packet Length | Length of Data Length + compressed length of (Packet ID + Data)
+  // VarInt Data Length   | Length of uncompressed (Packet ID + Data) or 0
+  // VarInt Packet ID     | zlib compressed packet ID (see the sections below)
+  // Byte Array Data      | zlib compressed packet data (see the sections below)
+  if (packet.byteLength === 0) return
+  const [packetLength, packetVarIntLength] = readVarInt(packet)
+  if (packet.byteLength < packetLength + packetVarIntLength) return
+  const remainingPacket = packet.slice(
+    packetVarIntLength,
+    packetVarIntLength + packetLength
+  )
+  const [dataLength, dataVarIntLength] = readVarInt(remainingPacket)
+  const compressedData = remainingPacket.slice(dataVarIntLength, packetLength)
+  const uncompressedData: Buffer = await new Promise((resolve, reject) => {
+    zlib.inflate(compressedData, (err, res) =>
+      err ? reject(err) : resolve(res)
+    )
+  })
+  if (dataLength !== 0 && uncompressedData.length < dataLength) return
+  const [packetId, packetIdLength] = readVarInt(uncompressedData)
+  const packetData = uncompressedData.slice(packetIdLength)
+  return {
+    id: packetId,
+    data: packetData,
+    idLength: packetIdLength,
+    dataLength: dataLength - packetIdLength,
+    packetLength: packetLength + packetVarIntLength
+  }
+}

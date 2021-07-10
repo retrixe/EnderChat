@@ -42,29 +42,31 @@ const ServerScreen = () => {
   const [serverVersion, setServerVersion] = useState<'1.16.5'>('1.16.5')
   const [addServerDialogOpen, setAddServerDialogOpen] = useState(false)
   const [editServerDialogOpen, setEditServerDialogOpen] = useState('')
-  // TODO: Actually use IP to avoid rate limits.
   const [pingResponses, setPingResponses] = useState<{
-    [name: string]: Ping | null
+    [ip: string]: Ping | null
   }>({})
 
   useEffect(() => {
     if (Object.keys(pingResponses).length > 0) {
       return
     }
+    const ips: string[] = []
     const promises = []
     for (const serverName in servers) {
-      const server = servers[serverName]
-      const splitAddr = server.address.split(':')
+      const { address: ipAddress } = servers[serverName]
+      const splitAddr = ipAddress.split(':')
       const portStr = splitAddr.pop() || ''
       let port = +portStr
       if (isNaN(+portStr)) {
         splitAddr.push(portStr)
         port = 25565
       }
+      if (ips.includes(ipAddress)) continue
+      else ips.push(ipAddress)
       promises.push(
         modernPing({ host: splitAddr.join(':'), port }) // Run in parallel.
-          .then(resp => setPingResponses(p => ({ ...p, [serverName]: resp })))
-          .catch(() => setPingResponses(p => ({ ...p, [serverName]: null })))
+          .then(resp => setPingResponses(p => ({ ...p, [ipAddress]: resp })))
+          .catch(() => setPingResponses(p => ({ ...p, [ipAddress]: null })))
       )
     }
     allSettled(promises).then(
@@ -205,7 +207,7 @@ const ServerScreen = () => {
       >
         <View style={globalStyle.outerView}>
           {Object.keys(servers).map(server => {
-            const ping = pingResponses[server]
+            const ping = pingResponses[servers[server].address]
             return (
               <ElevatedView key={server} style={styles.serverView}>
                 <Pressable
