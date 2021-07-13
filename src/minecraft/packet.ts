@@ -11,14 +11,20 @@ export const makeBasePacket = (packetId: number, data: Buffer) => {
 }
 
 export const makeBaseCompressedPacket = async (
+  threshold: number,
   packetId: number,
   data: Buffer
 ) => {
   const finalData = Buffer.concat([writeVarInt(packetId), data])
   const finalDataLength = writeVarInt(finalData.byteLength)
-  const compressedData: Buffer = await new Promise((resolve, reject) => {
-    zlib.deflate(finalData, (err, res) => (err ? reject(err) : resolve(res)))
-  })
+  const compressedData: Buffer =
+    threshold > finalData.byteLength
+      ? finalData
+      : await new Promise((resolve, reject) => {
+          zlib.deflate(finalData, (err, res) =>
+            err ? reject(err) : resolve(res)
+          )
+        })
   const finalPacket = Buffer.concat([finalDataLength, compressedData])
   // VarInt Packet Length | Length of Data Length + compressed length of (Packet ID + Data)
   // VarInt Data Length   | Length of uncompressed (Packet ID + Data) or 0
@@ -67,10 +73,6 @@ export const parsePacket = (packet: Buffer): Packet | undefined => {
 export const parseCompressedPacket = async (
   packet: Buffer
 ): Promise<Packet | undefined> => {
-  // VarInt Packet Length | Length of Data Length + compressed length of (Packet ID + Data)
-  // VarInt Data Length   | Length of uncompressed (Packet ID + Data) or 0
-  // VarInt Packet ID     | zlib compressed packet ID (see the sections below)
-  // Byte Array Data      | zlib compressed packet data (see the sections below)
   if (packet.byteLength === 0) return
   const [packetLength, packetVarIntLength] = readVarInt(packet)
   if (packet.byteLength < packetLength + packetVarIntLength) return
@@ -79,13 +81,15 @@ export const parseCompressedPacket = async (
     packetVarIntLength + packetLength
   )
   const [dataLength, dataVarIntLength] = readVarInt(remainingPacket)
-  const compressedData = remainingPacket.slice(dataVarIntLength, packetLength)
-  const uncompressedData: Buffer = await new Promise((resolve, reject) => {
-    zlib.inflate(compressedData, (err, res) =>
-      err ? reject(err) : resolve(res)
-    )
-  })
-  if (dataLength !== 0 && uncompressedData.length < dataLength) return
+  const compressedData = remainingPacket.slice(dataVarIntLength)
+  const uncompressedData: Buffer =
+    dataLength === 0
+      ? compressedData
+      : await new Promise((resolve, reject) => {
+          zlib.inflate(compressedData, (err, res) =>
+            err ? reject(err) : resolve(res)
+          )
+        })
   const [packetId, packetIdLength] = readVarInt(uncompressedData)
   const packetData = uncompressedData.slice(packetIdLength)
   return {

@@ -21,13 +21,28 @@ import Text from '../components/Text'
 import TextField from '../components/TextField'
 import ElevatedView from '../components/ElevatedView'
 import ServersContext from '../context/serversContext'
+import AccountsContext from '../context/accountsContext'
 import ConnectionContext from '../context/connectionContext'
+import initiateConnection from '../minecraft/connection'
+import { resolveHostname } from '../minecraft/utils'
 import parseChatToJsx from '../minecraft/chatToJsx'
 import useDarkMode from '../context/useDarkMode'
+
+const parseIp = (ipAddress: string): [string, number] => {
+  const splitAddr = ipAddress.split(':')
+  const portStr = splitAddr.pop() || ''
+  let port = +portStr
+  if (isNaN(+portStr)) {
+    splitAddr.push(portStr)
+    port = 25565
+  }
+  return [splitAddr.join(':'), port]
+}
 
 const ServerScreen = () => {
   const darkMode = useDarkMode()
   const { servers, setServers } = useContext(ServersContext)
+  const { accounts } = useContext(AccountsContext)
   const { connection, setConnection } = useContext(ConnectionContext)
 
   // TODO: Have a single Recoil Atom which gets updated with state,
@@ -54,17 +69,11 @@ const ServerScreen = () => {
     const promises = []
     for (const serverName in servers) {
       const { address: ipAddress } = servers[serverName]
-      const splitAddr = ipAddress.split(':')
-      const portStr = splitAddr.pop() || ''
-      let port = +portStr
-      if (isNaN(+portStr)) {
-        splitAddr.push(portStr)
-        port = 25565
-      }
       if (ips.includes(ipAddress)) continue
       else ips.push(ipAddress)
+      const [host, port] = parseIp(ipAddress)
       promises.push(
-        modernPing({ host: splitAddr.join(':'), port }) // Run in parallel.
+        modernPing({ host, port }) // Run in parallel.
           .then(resp => setPingResponses(p => ({ ...p, [ipAddress]: resp })))
           .catch(() => setPingResponses(p => ({ ...p, [ipAddress]: null })))
       )
@@ -103,11 +112,22 @@ const ServerScreen = () => {
     setPingResponses({})
     cancelAddServer()
   }
-  const connectToServer = (server: string) => {
+  const connectToServer = async (server: string) => {
     if (!connection) {
+      const [hostname, portNumber] = parseIp(servers[server].address)
+      const [host, port] = await resolveHostname(hostname, portNumber)
+      const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
+      // TODO: Connection errors and loading needs handling.
+      if (!activeAccount) return
+      const newConn = await initiateConnection({
+        host,
+        port,
+        username: accounts[activeAccount].username,
+        protocolVersion: 754
+      })
       setConnection({
         serverName: server,
-        socket: null
+        connection: newConn
       })
     }
   }
@@ -211,7 +231,7 @@ const ServerScreen = () => {
             return (
               <ElevatedView key={server} style={styles.serverView}>
                 <Pressable
-                  onPress={() => connectToServer(server)}
+                  onPress={async () => await connectToServer(server)}
                   onLongPress={() => setEditServerDialogOpen(server)}
                   android_ripple={{ color: '#aaa' }}
                   style={styles.serverPressable}

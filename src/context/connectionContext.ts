@@ -1,9 +1,9 @@
 // Consider using Recoil instead of Context?
 import React from 'react'
-import tcp from 'react-native-tcp'
+import { ServerConnection } from '../minecraft/connection'
 
 export interface Connection {
-  socket: tcp.Socket | null // TODO: Remove this null from here.
+  connection: ServerConnection
   serverName: string
 }
 
