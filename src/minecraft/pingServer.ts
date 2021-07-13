@@ -115,6 +115,9 @@ export const modernPing = async (opts: { host: string; port: number }) => {
     })
     socket.on('data', newData => {
       data = Buffer.concat([data, newData])
+    })
+    socket.on('close', () => {
+      // Parse the packets.
       while (true) {
         const packet = parsePacket(data)
         if (packet) {
@@ -123,9 +126,6 @@ export const modernPing = async (opts: { host: string; port: number }) => {
           packets.push(packet)
         } else break
       }
-    })
-    socket.on('close', () => {
-      // Parse the packets.
       const responsePacket = packets.find(p => p.id === 0x00)
       if (!responsePacket) {
         return reject(new TypeError('No response packet was sent!'))

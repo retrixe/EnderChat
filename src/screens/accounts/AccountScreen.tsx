@@ -93,7 +93,11 @@ const AccountScreen = () => {
               >
                 <Image
                   source={{
-                    uri: `https://crafthead.net/avatar/${uuid}/72`
+                    uri: `https://crafthead.net/avatar/${
+                      accounts[uuid].accessToken
+                        ? uuid
+                        : accounts[uuid].username
+                    }/72`
                   }}
                   style={styles.accountImage}
                 />
