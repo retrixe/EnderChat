@@ -1,14 +1,12 @@
-import 'react-native-gesture-handler'
-
 import React from 'react'
 import { useColorScheme, StatusBar, SafeAreaView } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import {
-  createStackNavigator,
-  StackNavigationProp
-} from '@react-navigation/stack'
+  createNativeStackNavigator,
+  NativeStackNavigationProp
+} from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 
 import useAsyncStorage from './useAsyncStorage'
@@ -22,10 +20,10 @@ import AccountScreen from './screens/accounts/AccountScreen'
 import SettingScreen from './screens/SettingScreen'
 import globalStyle from './globalStyle'
 
-const Stacks = createStackNavigator()
+const Stacks = createNativeStackNavigator()
 const Tabs = createBottomTabNavigator()
 
-type HomeNavigationProp = StackNavigationProp<
+type HomeNavigationProp = NativeStackNavigationProp<
   { Home: undefined; Chat: undefined },
   'Home'
 >
@@ -57,9 +55,10 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
               break
           }
           return <Component name={iconName} size={size} color={color} />
-        }
+        },
+        tabBarLabelStyle: { marginBottom: 5 },
+        headerShown: false
       })}
-      tabBarOptions={{ labelStyle: { marginBottom: 5 } }}
     >
       <Tabs.Screen name='Servers' component={ServerScreen} />
       <Tabs.Screen name='Accounts' component={AccountScreen} />
@@ -115,7 +114,10 @@ const App = () => {
                   backgroundColor={darkMode ? '#242424' : '#ffffff'}
                   barStyle={darkMode ? 'light-content' : 'dark-content'}
                 />
-                <Stacks.Navigator initialRouteName='Home' headerMode='none'>
+                <Stacks.Navigator
+                  initialRouteName='Home'
+                  screenOptions={{ headerShown: false }}
+                >
                   <Stacks.Screen name='Home' component={HomeScreen} />
                   <Stacks.Screen name='Chat' component={ChatScreen} />
                 </Stacks.Navigator>

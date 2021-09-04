@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { FlatList, StyleSheet, View } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import globalStyle from '../globalStyle'
 import useDarkMode from '../context/useDarkMode'
@@ -9,7 +9,7 @@ import ConnectionContext from '../context/connectionContext'
 import TextField from '../components/TextField'
 import Text from '../components/Text'
 
-type ChatNavigationProp = StackNavigationProp<
+type ChatNavigationProp = NativeStackNavigationProp<
   { Home: undefined; Chat: undefined },
   'Chat'
 >

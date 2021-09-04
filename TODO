@@ -1,5 +1,4 @@
 - Finish the chat UI.
-- What's Jest doing here?
 - Setup authentication with Microsoft.
 - Write the code to talk with Minecraft.
 - Finish the UI, add icon, configure app.json.

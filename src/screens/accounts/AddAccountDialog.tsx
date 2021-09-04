@@ -77,7 +77,7 @@ const AddAccountDialog = ({
           }
         })
         cancelAddAccount()
-      } catch (e) {
+      } catch (e: any) {
         setUserRed(true)
         setPassRed(true)
         setDialogError((e.message || '').replace('Invalid credentials. ', ''))
