@@ -3196,6 +3196,11 @@
   "resolved" "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz"
   "version" "4.0.0"
 
+"escape-string-regexp@2.0.0":
+  "integrity" "sha512-UpzcLCXolUWcNu5HtVMHYdXJjArjsF9C0aNnquZYY4uW/Vu0miy5YoWvbV345HauVvcAUnpRuhMMcqTcGOY2+w=="
+  "resolved" "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-2.0.0.tgz"
+  "version" "2.0.0"
+
 "escodegen@^2.0.0":
   "integrity" "sha512-mmHKys/C8BFUGI+MAWNcSYoORYLMdPzjrknd2Vc+bUsjN5bXcr8EhrNB+UTqfL1y3I9c4fw2ihgtMPQLBRiQxw=="
   "resolved" "https://registry.npmjs.org/escodegen/-/escodegen-2.0.0.tgz"
@@ -4164,7 +4169,7 @@
     "has" "^1.0.3"
     "side-channel" "^1.0.2"
 
-"invariant@^2.2.4":
+"invariant@^2.2.4", "invariant@2.2.4":
   "integrity" "sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA=="
   "resolved" "https://registry.npmjs.org/invariant/-/invariant-2.2.4.tgz"
   "version" "2.2.4"
@@ -6527,7 +6532,15 @@
     "prop-types" "^15.7.2"
     "yargs" "^15.0.2"
 
-"react-native@*", "react-native@^0.0.0-0 || ^0.60.6 || ^0.61.5 || ^0.62.2 || ^0.63.2 || ^0.64.0 || ^0.65.0 || 1000.0.0", "react-native@>=0.57", "react-native@>=0.60.0", "react-native@>=0.65.0-rc.0 || 0.0.0-*", "react-native@0.65.1":
+"react-native-webview@^11.13.0":
+  "integrity" "sha512-jjQAKWv8JzRmcn76fMe4lXD84AAeR7kn43kAmUe1GX312BMLaP+RbKlgpYAlNuOBXL0YirItGKDrpaD0bNROOA=="
+  "resolved" "https://registry.npmjs.org/react-native-webview/-/react-native-webview-11.13.0.tgz"
+  "version" "11.13.0"
+  dependencies:
+    "escape-string-regexp" "2.0.0"
+    "invariant" "2.2.4"
+
+"react-native@*", "react-native@^0.0.0-0 || ^0.60.6 || ^0.61.5 || ^0.62.2 || ^0.63.2 || ^0.64.0 || ^0.65.0 || 1000.0.0", "react-native@>=0.57", "react-native@>=0.60", "react-native@>=0.60.0", "react-native@>=0.65.0-rc.0 || 0.0.0-*", "react-native@0.65.1":
   "integrity" "sha512-0UOVSnlssweQZjuaUtzViCifE/4tXm8oRbxwakopc8GavPu9vLulde145GOw6QVYiOy4iL50f+2XXRdX9NmMeQ=="
   "resolved" "https://registry.npmjs.org/react-native/-/react-native-0.65.1.tgz"
   "version" "0.65.1"

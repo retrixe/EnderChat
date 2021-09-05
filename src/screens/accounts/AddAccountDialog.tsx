@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { StyleSheet, View, Switch, Pressable } from 'react-native'
+import { StyleSheet, View, Switch, Pressable, Image } from 'react-native'
 
 import globalStyle from '../../globalStyle'
 import Text from '../../components/Text'
@@ -24,6 +24,7 @@ const AddAccountDialog = ({
   const [newUser, setNewUser] = useState('')
   const [password, setPassword] = useState<string | null>('')
   const [dialogError, setDialogError] = useState('')
+  const [microsoftLogin, setMicrosoftLogin] = useState(false)
 
   const invalidNewUser =
     !!newUser &&
@@ -88,6 +89,14 @@ const AddAccountDialog = ({
   return (
     <Dialog visible={open} onRequestClose={cancelAddAccount}>
       <Text style={styles.modalTitle}>Add Account</Text>
+      <Pressable
+        style={styles.microsoftButton}
+        android_ripple={{ color: '#aaa' }}
+        onPress={() => setMicrosoftLogin(true)}
+      >
+        <Image source={require('../../microsoft.png')} />
+        <Text style={styles.microsoftButtonText}>Login with Microsoft</Text>
+      </Pressable>
       <TextField
         red={userRed || invalidNewUser}
         value={newUser}
@@ -100,11 +109,14 @@ const AddAccountDialog = ({
         onPress={() => setPassword(p => (p === null ? '' : null))}
       >
         <Text style={darkMode ? styles.authTextDark : styles.authText}>
-          Login with Mojang
+          Offline Mode (discouraged)
         </Text>
         <View style={globalStyle.flexSpacer} />
         <Switch
-          value={typeof password === 'string'}
+          value={password === null}
+          thumbColor='#ffaaaa'
+          ios_backgroundColor='#ffaaaa'
+          trackColor={{ true: '#ff0000', false: '#ffdddd' }}
           onValueChange={() => setPassword(p => (p === null ? '' : null))}
         />
       </Pressable>
@@ -152,6 +164,15 @@ const AddAccountDialog = ({
 }
 
 const styles = StyleSheet.create({
+  microsoftButton: {
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 3,
+    padding: 8
+  },
+  microsoftButtonText: { color: '#ffffff', fontWeight: 'bold', marginLeft: 8 },
   dialogError: { color: '#ff6666', marginTop: 10, marginBottom: 10 },
   auth: { marginTop: 8, flexDirection: 'row', alignItems: 'center' },
   authText: { fontSize: 14, color: '#666666' },
