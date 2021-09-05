@@ -1,6 +1,5 @@
 - Finish the chat UI.
 - Setup authentication with Microsoft.
-- Fix Velocity and offline Aternos ping.
 - Write the code to talk with Minecraft.
 - Finish the UI, add icon, configure app.json.
 - Reduce icons bundled and enable Hermes for performance.

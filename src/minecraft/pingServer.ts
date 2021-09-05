@@ -105,18 +105,11 @@ export const modernPing = async (opts: { host: string; port: number }) => {
       // Initialise Handshake with server.
       socket.write(makeBasePacket(0x00, concatPacketData(handshakeData)), () =>
         // Send Request packet.
-        socket.write(makeBasePacket(0x00, Buffer.from([])), () => {
-          // Send Ping packet.
-          timeSent = Date.now()
-          const timeLong = padBufferToLength(Buffer.from([timeSent]), 8)
-          socket.write(makeBasePacket(0x01, timeLong))
-        })
+        socket.write(makeBasePacket(0x00, Buffer.from([])))
       )
     })
     socket.on('data', newData => {
       data = Buffer.concat([data, newData])
-    })
-    socket.on('close', () => {
       // Parse the packets.
       while (true) {
         const packet = parsePacket(data)
@@ -126,23 +119,35 @@ export const modernPing = async (opts: { host: string; port: number }) => {
           packets.push(packet)
         } else break
       }
-      const responsePacket = packets.find(p => p.id === 0x00)
-      if (!responsePacket) {
-        return reject(new TypeError('No response packet was sent!'))
+      // If Response packet has been received, send Ping packet.
+      if (!timeSent && packets.find(p => p.id === 0x00)) {
+        timeSent = Date.now()
+        const timeLong = padBufferToLength(Buffer.from([timeSent]), 8)
+        socket.write(makeBasePacket(0x01, timeLong))
       }
-      const [jsonLength, varIntLength] = readVarInt(responsePacket.data)
-      const json = responsePacket.data
-        .slice(varIntLength, varIntLength + jsonLength)
-        .toString('utf8')
-      const response = JSON.parse(json)
+    })
+    socket.on('close', () => {
+      try {
+        const responsePacket = packets.find(p => p.id === 0x00)
+        if (!responsePacket) {
+          return reject(new TypeError('No response packet was sent!'))
+        }
+        const [jsonLength, varIntLength] = readVarInt(responsePacket.data)
+        const json = responsePacket.data
+          .slice(varIntLength, varIntLength + jsonLength)
+          .toString('utf8')
+        const response = JSON.parse(json)
 
-      resolve({
-        ping: (timeReceived - timeSent) / 2,
-        version: response.version,
-        players: response.players,
-        favicon: response.favicon,
-        description: response.description
-      })
+        resolve({
+          ping: (timeReceived - timeSent) / 2,
+          version: response.version,
+          players: response.players,
+          favicon: response.favicon,
+          description: response.description
+        })
+      } catch (e) {
+        reject(e)
+      }
     })
     socket.on('error', err => reject(err))
   })
