@@ -15,7 +15,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import allSettled from 'promise.allsettled'
 
 import globalStyle from '../globalStyle'
-import { modernPing, Ping } from '../minecraft/pingServer'
+import {
+  LegacyPing,
+  legacyPing,
+  modernPing,
+  Ping
+} from '../minecraft/pingServer'
 import Dialog, { dialogStyles } from '../components/Dialog'
 import Text from '../components/Text'
 import TextField from '../components/TextField'
@@ -58,7 +63,7 @@ const ServerScreen = () => {
   const [addServerDialogOpen, setAddServerDialogOpen] = useState(false)
   const [editServerDialogOpen, setEditServerDialogOpen] = useState('')
   const [pingResponses, setPingResponses] = useState<{
-    [ip: string]: Ping | null
+    [ip: string]: LegacyPing | Ping | null
   }>({})
 
   useEffect(() => {
@@ -75,7 +80,11 @@ const ServerScreen = () => {
       promises.push(
         modernPing({ host, port }) // Run in parallel.
           .then(resp => setPingResponses(p => ({ ...p, [ipAddress]: resp })))
-          .catch(() => setPingResponses(p => ({ ...p, [ipAddress]: null })))
+          .catch(() => {
+            legacyPing({ host, port })
+              .then(res => setPingResponses(p => ({ ...p, [ipAddress]: res })))
+              .catch(() => setPingResponses(p => ({ ...p, [ipAddress]: null })))
+          })
       )
     }
     allSettled(promises).then(
@@ -91,7 +100,7 @@ const ServerScreen = () => {
     setNewServerName('')
     setIpAddr('')
   }
-  const addAccount = () => {
+  const addServer = () => {
     if (
       !newServerName ||
       invalidServerName ||
@@ -170,7 +179,7 @@ const ServerScreen = () => {
         />
         <Picker
           selectedValue={serverVersion}
-          style={darkMode ? styles.addServerPickerDark : styles.addServerPicker}
+          style={darkMode ? styles.addServerPickerDark : undefined}
           onValueChange={itemValue => setServerVersion(itemValue)}
         >
           {/* TODO: dropdownIconColor={darkMode ? 16777215 : undefined} */}
@@ -194,7 +203,7 @@ const ServerScreen = () => {
             </Text>
           </Pressable>
           <Pressable
-            onPress={addAccount}
+            onPress={addServer}
             android_ripple={{ color: '#aaa' }}
             style={dialogStyles.modalButton}
           >
@@ -239,8 +248,8 @@ const ServerScreen = () => {
                   {ping != null ? (
                     <Image
                       source={
-                        ping.favicon
-                          ? { uri: ping.favicon }
+                        (ping as Ping).favicon
+                          ? { uri: (ping as Ping).favicon }
                           : require('../pack.png')
                       }
                       style={styles.serverImage}
@@ -261,12 +270,19 @@ const ServerScreen = () => {
                     {ping != null ? (
                       <>
                         <Text style={styles.serverPlayers}>
-                          {ping.players.online}/{ping.players.max} players
-                          online | Ping: {ping.ping}ms
+                          {(ping as Ping).players?.online ??
+                            (ping as LegacyPing).online}
+                          /
+                          {(ping as Ping).players?.max ??
+                            (ping as LegacyPing).maxPlayers}{' '}
+                          players online | Ping: {ping.ping}ms
                         </Text>
-                        {parseChatToJsx(ping.description, Text, {
-                          style: styles.serverDescription
-                        })}
+                        {parseChatToJsx(
+                          (ping as Ping).description ??
+                            (ping as LegacyPing).motd,
+                          Text,
+                          { style: styles.serverDescription }
+                        )}
                       </>
                     ) : (
                       <Text style={styles.serverDescription}>
@@ -308,8 +324,7 @@ const styles = StyleSheet.create({
   serverDescription: { fontSize: 14 },
   deleteServerText: { fontSize: 16 },
   deleteServerDialog: { padding: 0 },
-  addServerPicker: { height: 48 },
-  addServerPickerDark: { height: 48, color: '#ffffff' }
+  addServerPickerDark: { color: '#ffffff' }
 })
 
 export default ServerScreen

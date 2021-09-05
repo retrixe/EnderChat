@@ -16,15 +16,15 @@ export const makeBaseCompressedPacket = async (
   data: Buffer
 ) => {
   const finalData = Buffer.concat([writeVarInt(packetId), data])
-  const finalDataLength = writeVarInt(finalData.byteLength)
-  const compressedData: Buffer =
-    threshold > finalData.byteLength
-      ? finalData
-      : await new Promise((resolve, reject) => {
-          zlib.deflate(finalData, (err, res) =>
-            err ? reject(err) : resolve(res)
-          )
-        })
+  const toCompress = finalData.byteLength > threshold
+  const finalDataLength = writeVarInt(toCompress ? finalData.byteLength : 0)
+  const compressedData: Buffer = toCompress
+    ? finalData
+    : await new Promise((resolve, reject) => {
+        zlib.deflate(finalData, (err, res) =>
+          err ? reject(err) : resolve(res)
+        )
+      })
   const finalPacket = Buffer.concat([finalDataLength, compressedData])
   // VarInt Packet Length | Length of Data Length + compressed length of (Packet ID + Data)
   // VarInt Data Length   | Length of uncompressed (Packet ID + Data) or 0

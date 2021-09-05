@@ -22,7 +22,7 @@ const colorMap: { [color: string]: string } = {
 }
 
 export interface PlainTextChat {
-  text: string
+  text?: string
   bold?: boolean
   color?: string
   italic?: boolean
@@ -54,7 +54,7 @@ const parseColorCodes = (arg: string | PlainTextChat): PlainTextChat[] => {
   if (typeof arg !== 'string') {
     state = arg
     state.text = ''
-    s = arg.text
+    s = arg.text ?? ''
   } else s = arg
   const components: PlainTextChat[] = []
   for (let i = 0; i < s.length; i++) {
@@ -109,9 +109,12 @@ const trimLines = (s: string) =>
 
 const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
   const { extra, ...c } = chat
-  const arr = hasColorCodes(c.text)
-    ? parseColorCodes(c.text).map(e => ({ ...c, ...e }))
-    : [c]
+  const arr =
+    c.text && hasColorCodes(c.text)
+      ? parseColorCodes(c.text).map(e => ({ ...c, ...e }))
+      : c.text
+      ? [c]
+      : []
   if (!extra) return arr
   const flattenedExtra = extra.flatMap(e =>
     flattenExtraComponents(Object.assign(c, e))
@@ -145,7 +148,7 @@ const parseChatToJsx = (
 
         return (
           <Component key={i} style={style}>
-            {trimLines(c.text)}
+            {c.text ? trimLines(c.text) : ''}
           </Component>
         )
       })}
