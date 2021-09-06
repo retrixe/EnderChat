@@ -117,7 +117,7 @@ const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
       : []
   if (!extra) return arr
   const flattenedExtra = extra.flatMap(e =>
-    flattenExtraComponents(Object.assign(c, e))
+    flattenExtraComponents({ ...c, ...e })
   )
   return [...arr, ...flattenedExtra]
 }

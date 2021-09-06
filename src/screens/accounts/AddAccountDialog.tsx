@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { StyleSheet, View, Switch, Pressable, Image } from 'react-native'
 
+import MicrosoftLogin from './MicrosoftLogin'
 import globalStyle from '../../globalStyle'
 import Text from '../../components/Text'
 import Dialog, { dialogStyles } from '../../components/Dialog'
@@ -32,6 +33,7 @@ const AddAccountDialog = ({
     (password === null ? true : !/^[^\s@]+@[^\s@]+$/.test(newUser))
 
   const cancelAddAccount = () => {
+    setMicrosoftLogin(false)
     setOpen(false)
     setUserRed(false)
     setPassRed(false)
@@ -74,7 +76,8 @@ const AddAccountDialog = ({
             username: name,
             email: newUser,
             accessToken,
-            clientToken
+            clientToken,
+            type: 'mojang'
           }
         })
         cancelAddAccount()
@@ -88,6 +91,7 @@ const AddAccountDialog = ({
 
   return (
     <Dialog visible={open} onRequestClose={cancelAddAccount}>
+      {microsoftLogin && <MicrosoftLogin close={cancelAddAccount} />}
       <Text style={styles.modalTitle}>Add Account</Text>
       <Pressable
         style={styles.microsoftButton}

@@ -94,9 +94,7 @@ const AccountScreen = () => {
                 <Image
                   source={{
                     uri: `https://crafthead.net/avatar/${
-                      accounts[uuid].accessToken
-                        ? uuid
-                        : accounts[uuid].username
+                      accounts[uuid].type ? uuid : accounts[uuid].username
                     }/72`
                   }}
                   style={styles.accountImage}
@@ -107,8 +105,10 @@ const AccountScreen = () => {
                     <Text style={styles.active}>Active Account</Text>
                   )}
                   <Text style={darkMode ? styles.authTxtDark : styles.authTxt}>
-                    {accounts[uuid].accessToken
+                    {accounts[uuid].type === 'mojang'
                       ? 'Mojang: ' + accounts[uuid].email
+                      : accounts[uuid].type === 'microsoft'
+                      ? 'Microsoft Account'
                       : 'No Authentication'}
                   </Text>
                 </View>

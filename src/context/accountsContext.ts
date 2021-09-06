@@ -7,6 +7,7 @@ export interface Account {
   username: string
   active: boolean
   email?: string
+  type?: 'microsoft' | 'mojang'
 }
 
 export interface Accounts {
