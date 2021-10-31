@@ -8,6 +8,7 @@ export const loginUrl =
 export const redirectUrlPrefix =
   'https://login.live.com/oauth20_desktop.srf?code='
 const authTokenUrl = 'https://login.live.com/oauth20_token.srf'
+const redirectUri = 'https://login.live.com/oauth20_desktop.srf'
 const xblAuthUrl = 'https://user.auth.xboxlive.com/user/authenticate'
 const xstsAuthUrl = 'https://xsts.auth.xboxlive.com/xsts/authorize'
 const mcLoginUrl =
@@ -17,37 +18,42 @@ const mcProfileUrl = 'https://api.minecraftservices.com/minecraft/profile'
 
 export const getMSAuthToken = async (
   authorizationCode: string
-): Promise<string> => {
-  const formData = new FormData()
-  formData.append('client_id', '00000000402b5328')
-  formData.append('code', authorizationCode)
-  formData.append('grant_type', 'authorization_code')
-  formData.append('redirect_uri', 'https://login.live.com/oauth20_desktop.srf')
-  formData.append('scope', 'service::user.auth.xboxlive.com::MBI_SSL')
-  const req = await fetch(authTokenUrl, { method: 'POST', body: formData })
+): Promise<[string, string]> => {
+  const body = `client_id=00000000402b5328
+ &scope=${encodeURIComponent('service::user.auth.xboxlive.com::MBI_SSL')}
+ &code=${encodeURIComponent(authorizationCode)}
+ &grant_type=authorization_code
+ &redirect_uri=${encodeURIComponent(redirectUri)}`
+  const req = await fetch(authTokenUrl, {
+    method: 'POST',
+    body,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  })
   if (!req.ok) throw new Error('Failed to request auth token from Microsoft!')
   const res = await req.json()
-  // { "expires_in":86400, "refresh_token":"M.R3_BAY.token here" }
-  console.log(res)
-  return res.access_token // TODO
+  // { "expires_in":86400 }
+  return [res.access_token, res.refresh_token]
 }
 
 export const refreshMSAuthToken = async (
   refreshToken: string
-): Promise<string> => {
-  const formData = new FormData()
-  formData.append('client_id', '00000000402b5328')
-  formData.append('code', refreshToken)
-  formData.append('grant_type', 'refresh_token')
-  formData.append('redirect_uri', 'https://login.live.com/oauth20_desktop.srf')
-  formData.append('scope', 'service::user.auth.xboxlive.com::MBI_SSL')
-  const req = await fetch(authTokenUrl, { method: 'POST', body: formData })
+): Promise<[string, string]> => {
+  const body = `client_id=00000000402b5328
+ &scope=${encodeURIComponent('service::user.auth.xboxlive.com::MBI_SSL')}
+ &code=${encodeURIComponent(refreshToken)}
+ &grant_type=refresh_token
+ &redirect_uri=${encodeURIComponent(redirectUri)}`
+  const req = await fetch(authTokenUrl, {
+    method: 'POST',
+    body,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  })
   const res = await req.json()
   console.log(req.ok)
   console.log(res)
   if (!req.ok) throw new Error('Failed to request auth token from Microsoft!')
-  // { "expires_in":86400, "refresh_token":"M.R3_BAY.token here" }
-  return res.access_token // TODO
+  // { "expires_in":86400 }
+  return [res.access_token, res.refresh_token]
 }
 
 export const getXboxLiveTokenAndUserHash = async (
@@ -60,7 +66,7 @@ export const getXboxLiveTokenAndUserHash = async (
       Properties: {
         AuthMethod: 'RPS',
         SiteName: 'user.auth.xboxlive.com',
-        RpsTicket: authToken.startsWith('d=') ? authToken : `d=${authToken}`
+        RpsTicket: authToken // sometimes it needs t= or d= prefix lol
       },
       RelyingParty: 'http://auth.xboxlive.com',
       TokenType: 'JWT'

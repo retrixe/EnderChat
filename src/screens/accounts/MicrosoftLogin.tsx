@@ -21,9 +21,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
 
   const webview = useRef<WebView>(null)
   const [loading, setLoading] = useState(false)
-  const [html, setHtml] = useState(
-    '<h1>Hand tight, MSA support is being worked on!</h1>'
-  )
+  const [html, setHtml] = useState('')
 
   const onRequestClose = () => {
     if (!loading) close()
@@ -42,20 +40,29 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
         webview.current.reload()
         const suffix = newNavState.url.substring(redirectUrlPrefix.length)
         const authCode = suffix.substr(0, suffix.indexOf('&'))
-        const authToken = await getMSAuthToken(authCode)
+        const [msAccessToken] = await getMSAuthToken(authCode) // TODO: Refresh code.
         const [xboxLiveToken, xboxUserHash] = await getXboxLiveTokenAndUserHash(
-          authToken
+          msAccessToken
         )
         const [xstsToken] = await getXstsTokenAndUserHash(xboxLiveToken)
+        console.log(xstsToken)
+        console.log(xboxUserHash)
         const accessToken = await authenticateWithXsts(xstsToken, xboxUserHash)
-        /* const gameProfile = */ await getGameProfile(accessToken)
-        // TODO: Save the account.
+        console.log(accessToken)
+        const gameProfile = await getGameProfile(accessToken)
+        console.log(gameProfile)
+        // TODO: Fix authenticateWithXsts, getGameProfile, remove console.logs and save account data.
         setLoading(false)
         setHtml('')
       } catch (e) {
         setLoading(false)
         if (e instanceof XstsError) {
           setHtml(`<h1>Xbox Live Error (${e.XErr}): ${e.XErrMessage}</h1>`)
+        } else if (
+          e instanceof Error &&
+          e.message === 'This user does not own Minecraft!'
+        ) {
+          setHtml('<h1>You do not own Minecraft!</h1>')
         } else {
           console.error(e)
           setHtml('<h1>An unknown error occurred while logging in.</h1>')
