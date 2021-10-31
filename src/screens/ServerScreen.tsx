@@ -183,7 +183,7 @@ const ServerScreen = () => {
           onValueChange={itemValue => setServerVersion(itemValue)}
         >
           {/* TODO: dropdownIconColor={darkMode ? 16777215 : undefined} */}
-          <Picker.Item label='1.16.5' value='1.16.5' />
+          <Picker.Item label='1.16.4/1.16.5' value='1.16.5' />
         </Picker>
         <View style={dialogStyles.modalButtons}>
           <View style={globalStyle.flexSpacer} />

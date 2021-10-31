@@ -55,7 +55,6 @@ const AddAccountDialog = ({
     }
     if (password === null) {
       setAccounts({
-        ...accounts,
         [newUser]: {
           username: newUser,
           active: Object.keys(accounts).length === 0
@@ -70,7 +69,6 @@ const AddAccountDialog = ({
           selectedProfile: { name, id }
         } = await authenticate(newUser, password, true)
         setAccounts({
-          ...accounts,
           [id]: {
             active: Object.keys(accounts).length === 0,
             username: name,

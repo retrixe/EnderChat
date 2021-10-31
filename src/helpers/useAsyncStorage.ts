@@ -8,11 +8,13 @@ const useAsyncStorage = (
   defaultValue: string = ''
 ): [string, SetAsyncStorage] => {
   const [state, setState] = useState(defaultValue)
+
   useEffect(() => {
     AsyncStorage.getItem(name)
       .then(res => setState(res || defaultValue))
       .catch(err => console.error(err))
   }, [name, defaultValue])
+
   return [
     state,
     (value: string) => {

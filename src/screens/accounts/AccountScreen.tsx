@@ -48,7 +48,7 @@ const AccountScreen = () => {
               try {
                 await invalidate(accessToken, clientToken)
               } catch (e) {
-                return // TODO: Do something more intelligent? Should alert the user.
+                return // LOW-TODO: Do something more intelligent? Should alert the user.
               }
             }
             delete accounts[deleteAccount]
