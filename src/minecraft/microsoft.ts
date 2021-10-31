@@ -1,4 +1,3 @@
-// TODO: OfflineAccess refresh_token handling?
 export const loginUrl =
   'https://login.live.com/oauth20_authorize.srf' +
   '?client_id=00000000402b5328' +
@@ -105,7 +104,7 @@ export const authenticateWithXsts = async (
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     method: 'POST',
     body: JSON.stringify({
-      identifyToken: `XBL3.0 x=${xboxUserHash};${xstsToken}`
+      identityToken: `XBL3.0 x=${xboxUserHash};${xstsToken}`
     })
   })
   if (!req.ok) throw new Error('Failed to authenticate with Mojang via MSA!')
@@ -136,12 +135,17 @@ export const getGameProfile = async (
 ): Promise<{
   id: string
   name: string
-  capes: Array<{}> // Incomplete and irrelevant.
+  capes: Array<{
+    id: string
+    url: string
+    alias?: string
+    state?: 'ACTIVE'
+  }>
   skins: Array<{
     id: string
     url: string
-    alias: 'STEVE' // Incomplete and irrelevant.
     state?: 'ACTIVE'
+    alias?: 'STEVE' | 'ALEX'
     variant: 'CLASSIC' | 'SLIM'
   }>
 }> => {

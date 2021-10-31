@@ -2,11 +2,13 @@
 import React from 'react'
 
 export interface Account {
-  clientToken?: string
+  microsoftAccessToken?: string // Microsoft only.
+  microsoftRefreshToken?: string // Microsoft only.
+  clientToken?: string // Yggdrasil only.
   accessToken?: string
   username: string
   active: boolean
-  email?: string
+  email?: string // Yggdrasil only.
   type?: 'microsoft' | 'mojang'
 }
 

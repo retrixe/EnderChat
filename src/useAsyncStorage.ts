@@ -5,7 +5,7 @@ type SetAsyncStorage = (value: string) => void
 
 const useAsyncStorage = (
   name: string,
-  defaultValue: string
+  defaultValue: string = ''
 ): [string, SetAsyncStorage] => {
   const [state, setState] = useState(defaultValue)
   useEffect(() => {

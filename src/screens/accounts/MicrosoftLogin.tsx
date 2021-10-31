@@ -1,9 +1,9 @@
-import React, { /* useContext, */ useRef, useState } from 'react'
+import React, { useContext, useRef, useState } from 'react'
 import { StyleSheet, Pressable, Modal } from 'react-native'
 import { WebView, WebViewNavigation } from 'react-native-webview'
 
-// import useDarkMode from '../../context/useDarkMode'
-// import UsersContext from '../../context/accountsContext'
+import useDarkMode from '../../context/useDarkMode'
+import UsersContext from '../../context/accountsContext'
 import {
   loginUrl,
   redirectUrlPrefix,
@@ -16,12 +16,41 @@ import {
 } from '../../minecraft/microsoft'
 
 const MicrosoftLogin = ({ close }: { close: () => void }) => {
-  // const darkMode = useDarkMode() // TODO: Make use on loading screen.
-  // const { setAccounts } = useContext(UsersContext)
+  const darkMode = useDarkMode()
+  const style = darkMode
+    ? '<style>body{font-size:48px;padding:16px;background-color:#242424;color:#ffffff;}</style>'
+    : '<style>body{font-size:48px;padding:16px;}</style>'
+  const { accounts, setAccounts } = useContext(UsersContext)
 
   const webview = useRef<WebView>(null)
   const [loading, setLoading] = useState(false)
-  const [html, setHtml] = useState('')
+  const [html, setRawHtml] = useState('')
+  const setHtml = (newHtml: string) => setRawHtml(style + newHtml)
+
+  const addAccount = (
+    id: string,
+    microsoftAccessToken: string,
+    microsoftRefreshToken: string,
+    accessToken: string,
+    username: string
+  ): boolean => {
+    // Honestly, overwrite the old Microsoft account, but inform the user.
+    const alreadyExists = accounts[id] && accounts[id].type === 'microsoft'
+    setAccounts({
+      ...accounts,
+      [id]: {
+        active:
+          Object.keys(accounts).length === 0 ||
+          (alreadyExists && accounts[id].active),
+        microsoftRefreshToken,
+        microsoftAccessToken,
+        accessToken,
+        username,
+        type: 'microsoft'
+      }
+    })
+    return alreadyExists
+  }
 
   const onRequestClose = () => {
     if (!loading) close()
@@ -40,20 +69,27 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
         webview.current.reload()
         const suffix = newNavState.url.substring(redirectUrlPrefix.length)
         const authCode = suffix.substr(0, suffix.indexOf('&'))
-        const [msAccessToken] = await getMSAuthToken(authCode) // TODO: Refresh code.
+        const [msAccessToken, msRefreshToken] = await getMSAuthToken(authCode)
         const [xboxLiveToken, xboxUserHash] = await getXboxLiveTokenAndUserHash(
           msAccessToken
         )
         const [xstsToken] = await getXstsTokenAndUserHash(xboxLiveToken)
-        console.log(xstsToken)
-        console.log(xboxUserHash)
         const accessToken = await authenticateWithXsts(xstsToken, xboxUserHash)
-        console.log(accessToken)
         const gameProfile = await getGameProfile(accessToken)
-        console.log(gameProfile)
-        // TODO: Fix authenticateWithXsts, getGameProfile, remove console.logs and save account data.
+        const alreadyExists = addAccount(
+          gameProfile.id,
+          msAccessToken,
+          msRefreshToken,
+          accessToken,
+          gameProfile.name
+        )
         setLoading(false)
-        setHtml('')
+        if (alreadyExists) {
+          setHtml('<h1>You are already logged into this account!</h1>')
+        } else {
+          setHtml('')
+          close()
+        }
       } catch (e) {
         setLoading(false)
         if (e instanceof XstsError) {
