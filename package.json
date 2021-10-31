@@ -2,6 +2,7 @@
   "name": "enderchat",
   "version": "0.0.1",
   "private": true,
+  "license": "MPL-2.0",
   "scripts": {
     "postinstall": "husky install",
     "android": "react-native run-android",
@@ -11,7 +12,7 @@
     "lint": "tsc && eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^1.14.1",
+    "@react-native-async-storage/async-storage": "^1.15.9",
     "@react-native-picker/picker": "^1.16.1",
     "@react-navigation/bottom-tabs": "^6.0.5",
     "@react-navigation/native": "^6.0.2",
@@ -22,7 +23,7 @@
     "events": "^3.3.0",
     "promise.allsettled": "^1.0.4",
     "react": "17.0.2",
-    "react-native": "0.65.1",
+    "react-native": "^0.66.1",
     "react-native-safe-area-context": "^3.1.9",
     "react-native-screens": "^3.6.0",
     "react-native-tcp": "^4.0.0",
@@ -55,7 +56,6 @@
     "husky": "^6.0.0",
     "jest": "^26.6.3",
     "metro-react-native-babel-preset": "^0.66.2",
-    "react-native-codegen": "^0.0.7",
     "react-test-renderer": "^17.0.2",
     "typescript": "^4.4.2"
   },
