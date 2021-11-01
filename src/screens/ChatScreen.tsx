@@ -37,18 +37,19 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const [message, setMessage] = useState('')
 
   if (!connection) return <></> // This should never be hit hopefully.
+  const title =
+    connection.serverName.length > 12
+      ? connection.serverName.substring(0, 9) + '...'
+      : connection.serverName
   return (
     <>
       <View style={darkMode ? globalStyle.darkHeader : globalStyle.header}>
-        {/* TODO: Could look better, but okay for now. Also breaks on long titles. */}
         <Ionicons.Button
           name='chevron-back-sharp'
           iconStyle={styles.backButtonIcon}
           backgroundColor='#363636'
         />
-        <Text style={[globalStyle.title, styles.headerTitle]}>
-          Chat - {connection.serverName}
-        </Text>
+        <Text style={[globalStyle.title, styles.title]}>Chat - {title}</Text>
         <View style={globalStyle.flexSpacer} />
         <Ionicons.Button
           name='settings-outline'
@@ -76,7 +77,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
 }
 
 const styles = StyleSheet.create({
-  headerTitle: { marginLeft: 8 },
+  title: { marginLeft: 8, textAlignVertical: 'center' },
   backButtonIcon: { marginRight: 0 },
   chatArea: { padding: 8, flex: 1 },
   chatAreaScrollView: { paddingBottom: 16 },

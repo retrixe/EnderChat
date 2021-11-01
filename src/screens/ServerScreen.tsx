@@ -50,10 +50,6 @@ const ServerScreen = () => {
   const { accounts } = useContext(AccountsContext)
   const { connection, setConnection } = useContext(ConnectionContext)
 
-  // TODO: Have a single Recoil Atom which gets updated with state,
-  // and individual Server components that re-render independently
-  // of top-level component and ping servers on their own, or just
-  // use customised React.memo+useState+props and skip using Recoil.
   const [ipAddr, setIpAddr] = useState('')
   const [ipAddrRed, setIpAddrRed] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -140,8 +136,8 @@ const ServerScreen = () => {
       })
     }
   }
-  // TODO: Support editing servers.
 
+  // LOW-TODO: Support editing servers.
   return (
     <>
       <Dialog
@@ -181,8 +177,8 @@ const ServerScreen = () => {
           selectedValue={serverVersion}
           style={darkMode ? styles.addServerPickerDark : undefined}
           onValueChange={itemValue => setServerVersion(itemValue)}
+          dropdownIconColor={darkMode ? '#ffffff' : undefined}
         >
-          {/* TODO: dropdownIconColor={darkMode ? 16777215 : undefined} */}
           <Picker.Item label='1.16.4/1.16.5' value='1.16.5' />
         </Picker>
         <View style={dialogStyles.modalButtons}>

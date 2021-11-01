@@ -1185,10 +1185,10 @@
   "resolved" "https://registry.npmjs.org/@react-native-community/eslint-plugin/-/eslint-plugin-1.1.0.tgz"
   "version" "1.1.0"
 
-"@react-native-picker/picker@^1.16.1":
-  "integrity" "sha512-/QJxL4JniloFvdPDufQTiMQQbpucCQ0w7wvGhZQt0x3KVxvI1f/vzDO+669r/1yipcFZbSLcYIiQSMSpZtkqiQ=="
-  "resolved" "https://registry.npmjs.org/@react-native-picker/picker/-/picker-1.16.7.tgz"
-  "version" "1.16.7"
+"@react-native-picker/picker@^2.1.0":
+  "integrity" "sha512-iJ/QaDrBMBaW6cFuQyR3DXzcn2h7c5O7mGgmNLCBQHTTtLNBZR+Sxogy6YleFPeToNdysG5mTTkXqBmlWHMQqg=="
+  "resolved" "https://registry.npmjs.org/@react-native-picker/picker/-/picker-2.1.0.tgz"
+  "version" "2.1.0"
 
 "@react-native/assets@1.0.0":
   "integrity" "sha512-KrwSpS1tKI70wuKl68DwJZYEvXktDHdZMG0k2AXD/rJVSlB23/X2CB2cutVR0HwNMJIal9HOUOBB2rVfa6UGtQ=="
