@@ -70,9 +70,7 @@ export const parsePacket = (packet: Buffer): Packet | undefined => {
   }
 }
 
-export const parseCompressedPacket = async (
-  packet: Buffer
-): Promise<Packet | undefined> => {
+export const parseCompressedPacket = (packet: Buffer): Packet | undefined => {
   if (packet.byteLength === 0) return
   const [packetLength, packetVarIntLength] = readVarInt(packet)
   if (packet.byteLength < packetLength + packetVarIntLength) return
@@ -85,11 +83,23 @@ export const parseCompressedPacket = async (
   const uncompressedData: Buffer =
     dataLength === 0
       ? compressedData
-      : await new Promise((resolve, reject) => {
-          zlib.inflate(compressedData, (err, res) =>
-            err ? reject(err) : resolve(res)
-          )
-        })
+      : (() => {
+          try {
+            return zlib.inflateSync(compressedData, { finishFlush: 2 })
+          } catch (e) {
+            console.error(`problem inflating chunk
+            uncompressed length: ${dataLength}
+            compressed length: ${compressedData.length}
+            theoretical compressed length: ${packetLength - dataVarIntLength}`)
+            // hex: ${compressedData.toString('hex')}`)
+            throw e
+          }
+        })()
+  // : await new Promise((resolve, reject) => {
+  //    zlib.inflate(compressedData, { finishFlush: 2 }, (err, res) => (
+  //     err ? reject(err) : resolve(res)
+  //    ))
+  //  })
   const [packetId, packetIdLength] = readVarInt(uncompressedData)
   const packetData = uncompressedData.slice(packetIdLength)
   return {

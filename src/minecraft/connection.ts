@@ -79,13 +79,14 @@ const initiateConnection = async (opts: {
         )
       )
     })
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    socket.on('data', async newData => {
-      // TODO: Online mode + Encryption + Time-out after 20s
+    socket.on('data', newData => {
+      // TODO: Compression + Online mode + Encryption + Time-out after 20s of no keep-alives
       conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
+      // no-eslint-disable-next-line @typescript-eslint/no-floating-promises
+      // ;(async () => { This type of implementation will need a mutex.
       while (true) {
         const packet = conn.compressionEnabled
-          ? await parseCompressedPacket(conn.bufferedData)
+          ? parseCompressedPacket(conn.bufferedData)
           : parsePacket(conn.bufferedData)
         if (packet) {
           if (packet.id === 0x03 && !conn.loggedIn) {

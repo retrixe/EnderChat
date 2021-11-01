@@ -11,7 +11,8 @@ import UsersContext from '../../context/accountsContext'
 import ElevatedView from '../../components/ElevatedView'
 import { invalidate } from '../../minecraft/yggdrasil'
 
-// TODO: Enable reloading to update account info for online mode using /refresh.
+// TODO: Reload to update account info for online mode using /refresh.
+// Also, to reload all the skin images?
 const AccountScreen = () => {
   const darkMode = useDarkMode()
   const { accounts, setAccounts } = useContext(UsersContext)
