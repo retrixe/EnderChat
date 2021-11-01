@@ -30,7 +30,7 @@ import AccountsContext from '../context/accountsContext'
 import ConnectionContext from '../context/connectionContext'
 import initiateConnection from '../minecraft/connection'
 import { resolveHostname } from '../minecraft/utils'
-import parseChatToJsx from '../minecraft/chatToJsx'
+import parseChatToJsx, { mojangColorMap } from '../minecraft/chatToJsx'
 import useDarkMode from '../context/useDarkMode'
 
 const parseIp = (ipAddress: string): [string, number] => {
@@ -277,6 +277,7 @@ const ServerScreen = () => {
                           (ping as Ping).description ??
                             (ping as LegacyPing).motd,
                           Text,
+                          mojangColorMap,
                           { style: styles.serverDescription }
                         )}
                       </>

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { View, Pressable, StyleSheet } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet, Linking } from 'react-native'
 
 import { version } from '../../package.json'
 import Text from '../components/Text'
@@ -76,7 +76,7 @@ const SettingScreen = () => {
       <View style={darkModeApp ? globalStyle.darkHeader : globalStyle.header}>
         <Text style={globalStyle.title}>Settings</Text>
       </View>
-      <View>
+      <ScrollView>
         {/* <Text>Hermes in use: {(global as any).HermesInternal ? 'true' : 'false'}</Text> */}
         <Setting
           multiline
@@ -108,9 +108,20 @@ const SettingScreen = () => {
           value={settings.darkMode}
           setValue={darkMode => setSettings({ darkMode })}
         />
-        {/* TODO: Font Size, Chat Theme, Feedback/Support, Privacy Policy */}
+        {/* TODO: Font Size, Chat Theme, Feedback/Support */}
         <Setting name='Version' value={version} />
-      </View>
+        <Setting
+          name='Privacy Policy'
+          value='EnderChat does not collect any data. Analytics may be added later.'
+        />
+        <Setting
+          name='License'
+          value='Mozilla Public License 2.0'
+          onClick={async () => {
+            await Linking.openURL('https://www.mozilla.org/en-US/MPL/2.0/')
+          }}
+        />
+      </ScrollView>
     </>
   )
 }

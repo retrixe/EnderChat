@@ -1,8 +1,9 @@
 import React from 'react'
 import { StyleProp, TextProps, TextStyle } from 'react-native'
 
-// TODO: Better color maps (yes, maps in plural).
-const colorMap: { [color: string]: string } = {
+// TODO: Add a better color map for light mode, as Mojang color map is terrible.
+
+export const mojangColorMap: { [color: string]: string } = {
   black: '#000000',
   dark_blue: '#0000AA',
   dark_green: '#00AA00',
@@ -125,6 +126,7 @@ const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
 const parseChatToJsx = (
   chat: PlainTextChat | string,
   Component: React.ComponentType<TextProps>,
+  colorMap: { [color: string]: string },
   componentProps?: {}
 ) => {
   const flat =

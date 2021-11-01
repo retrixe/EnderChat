@@ -9,11 +9,13 @@ import useDarkMode from '../context/useDarkMode'
 const Setting = <T extends string | boolean>({
   name,
   value,
+  onClick,
   setValue,
   multiline
 }: {
   name: string
   value: T
+  onClick?: () => void
   setValue?: (newValue: T) => void
   multiline?: boolean
 }) => {
@@ -22,11 +24,12 @@ const Setting = <T extends string | boolean>({
   const [modalContent, setModalContent] = useState(
     typeof value === 'string' ? value : ''
   )
-  const Wrapper = setValue != null ? Pressable : React.Fragment
+  const Wrapper = setValue || onClick ? Pressable : React.Fragment
   const wrapperPress = () => {
-    if (typeof value === 'boolean' && setValue != null) {
+    if (onClick) onClick()
+    else if (typeof value === 'boolean' && setValue) {
       setValue(!value as T)
-    } else if (typeof value === 'string' && setValue != null && !modalOpen) {
+    } else if (typeof value === 'string' && setValue && !modalOpen) {
       setModalOpen(true)
       setModalContent(value)
     }
@@ -34,11 +37,11 @@ const Setting = <T extends string | boolean>({
 
   return (
     <Wrapper
-      {...(setValue != null
+      {...(setValue || onClick
         ? { onPress: wrapperPress, android_ripple: { color: '#aaa' } }
         : {})}
     >
-      {typeof value === 'string' && (
+      {typeof value === 'string' && setValue && (
         <TextFieldDialog
           name={name}
           placeholder={name}
@@ -46,11 +49,7 @@ const Setting = <T extends string | boolean>({
           modalOpen={modalOpen}
           initialState={modalContent}
           closeModal={() => setModalOpen(false)}
-          setFinalState={response => {
-            if (setValue != null) {
-              setValue(response as T)
-            }
-          }}
+          setFinalState={response => setValue(response as T)}
         />
       )}
       <View
