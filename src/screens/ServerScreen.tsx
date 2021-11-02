@@ -27,9 +27,13 @@ import ElevatedView from '../components/ElevatedView'
 import ServersContext from '../context/serversContext'
 import AccountsContext from '../context/accountsContext'
 import ConnectionContext from '../context/connectionContext'
-import initiateConnection from '../minecraft/connection'
 import { resolveHostname, protocolMap } from '../minecraft/utils'
-import parseChatToJsx, { mojangColorMap } from '../minecraft/chatToJsx'
+import initiateConnection from '../minecraft/connection'
+import { readVarInt } from '../minecraft/packetUtils'
+import parseChatToJsx, {
+  mojangColorMap,
+  PlainTextChat
+} from '../minecraft/chatToJsx'
 import useDarkMode from '../context/useDarkMode'
 
 const parseIp = (ipAddress: string): [string, number] => {
@@ -63,6 +67,10 @@ const ServerScreen = () => {
   const [pingResponses, setPingResponses] = useState<{
     [ip: string]: LegacyPing | Ping | null
   }>({})
+  const [disconnectDialog, setDisconnectDialog] = useState<{
+    server: string
+    reason: PlainTextChat | string
+  } | null>(null)
 
   useEffect(() => {
     if (Object.keys(pingResponses).length > 0) {
@@ -126,8 +134,14 @@ const ServerScreen = () => {
       const [hostname, portNumber] = parseIp(servers[server].address)
       const [host, port] = await resolveHostname(hostname, portNumber)
       const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
-      // TODO: Connection error/disconnect dialog for returns/close/errors.
-      if (!activeAccount) return
+      if (!activeAccount) {
+        initiatingConnection.current = false
+        return setDisconnectDialog({
+          server,
+          reason:
+            'No active account selected! Open the Accounts tab and add an account.'
+        })
+      }
       let protocolVersion = protocolMap[servers[server].version]
       if (protocolVersion === -1) {
         const ping = pingResponses[servers[server].address]
@@ -137,19 +151,36 @@ const ServerScreen = () => {
           protocolVersion = ping.version.protocol
         } else protocolVersion = (ping as LegacyPing).protocol
       }
-      if (protocolVersion < 754) return // Unsupported.
+      if (protocolVersion < 754) {
+        initiatingConnection.current = false
+        return setDisconnectDialog({
+          server,
+          reason: 'EnderChat only supports 1.16.5 and newer.'
+        })
+      }
       const newConn = await initiateConnection({
         host,
         port,
         username: accounts[activeAccount].username,
         protocolVersion
       })
-      newConn.on('close', () => {
+      const onCloseOrError = () => {
         setConnection(undefined)
-      })
-      newConn.on('error', () => {
-        setConnection(undefined)
-      })
+        if (newConn.disconnectPacket) {
+          const [chatLength, chatVarIntLength] = readVarInt(
+            newConn.disconnectPacket.data
+          )
+          const chatJson = newConn.disconnectPacket.data
+            .slice(chatVarIntLength, chatVarIntLength + chatLength)
+            .toString('utf8')
+          setDisconnectDialog({
+            server,
+            reason: JSON.parse(chatJson)
+          })
+        }
+      }
+      newConn.on('close', onCloseOrError)
+      newConn.on('error', onCloseOrError)
       setConnection({
         serverName: server,
         connection: newConn
@@ -180,6 +211,26 @@ const ServerScreen = () => {
           </Text>
         </Pressable>
       </Dialog>
+      {disconnectDialog && (
+        <Dialog visible onRequestClose={() => setDisconnectDialog(null)}>
+          <Text style={dialogStyles.modalTitle}>
+            Disconnected from {disconnectDialog.server}
+          </Text>
+          {parseChatToJsx(disconnectDialog.reason, Text, mojangColorMap, {
+            style: styles.serverDescription
+          })}
+          <View style={dialogStyles.modalButtons}>
+            <View style={globalStyle.flexSpacer} />
+            <Pressable
+              onPress={() => setDisconnectDialog(null)}
+              android_ripple={{ color: '#aaa' }}
+              style={dialogStyles.modalButton}
+            >
+              <Text style={dialogStyles.modalButtonText}>CLOSE</Text>
+            </Pressable>
+          </View>
+        </Dialog>
+      )}
       <Dialog visible={addServerDialogOpen} onRequestClose={cancelAddServer}>
         <Text style={dialogStyles.modalTitle}>Add Server</Text>
         <TextField

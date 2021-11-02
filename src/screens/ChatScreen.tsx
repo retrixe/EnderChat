@@ -61,7 +61,6 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         // LOW-TODO: Support position 2 and sender.
         if (position === 0 || position === 1) {
           setMessages(m => {
-            // TODO: Handle chat.type.* translations.
             const c = parseChatToJsx(JSON.parse(chatJson), Text, mojangColorMap)
             return [{ key: id++, text: c }].concat(m)
           })
@@ -92,7 +91,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   }, [connection, setConnection, navigation])
 
   const sendMessage = () => {
-    if (!connection) return
+    if (!connection || !message) return
     setMessage('')
     connection.connection
       .writePacket(0x03, concatPacketData([message]))

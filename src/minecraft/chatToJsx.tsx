@@ -22,8 +22,7 @@ export const mojangColorMap: { [color: string]: string } = {
   white: '#FFFFFF'
 }
 
-export interface PlainTextChat {
-  text?: string
+export interface BaseChat {
   bold?: boolean
   color?: string
   italic?: boolean
@@ -34,6 +33,15 @@ export interface PlainTextChat {
   insertion?: string
   clickEvent?: ClickEvent
   // HoverEvent unsupported atm.
+}
+
+export interface PlainTextChat extends BaseChat {
+  text?: string
+}
+
+export interface TranslatedChat extends PlainTextChat {
+  translate: string
+  with: PlainTextChat[]
 }
 
 export interface ClickEvent {
@@ -124,6 +132,7 @@ const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
   return [...arr, ...flattenedExtra]
 }
 
+// TODO: Support chat.type.* translations.
 const parseChatToJsx = (
   chat: PlainTextChat | string,
   Component: React.ComponentType<TextProps>,
