@@ -115,7 +115,7 @@ const trimLines = (s: string) =>
         .split('\n')
         .map(k => k.trim())
         .join('\n')
-    : s.trimLeft() // TODO: This is problematic, temporary workaround until this can be refined.
+    : s.trimLeft() // LOW-TODO: This is problematic, temporary workaround until this can be refined.
 
 const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
   const { extra, ...c } = chat
@@ -137,7 +137,8 @@ const parseChatToJsx = (
   chat: PlainTextChat | string,
   Component: React.ComponentType<TextProps>,
   colorMap: { [color: string]: string },
-  componentProps?: {}
+  componentProps?: {},
+  trim = false
 ) => {
   const flat =
     typeof chat === 'string'
@@ -160,7 +161,7 @@ const parseChatToJsx = (
 
         return (
           <Component key={i} style={style}>
-            {c.text ? trimLines(c.text) : ''}
+            {c.text ? (trim ? trimLines(c.text) : c.text) : ''}
           </Component>
         )
       })}

@@ -173,6 +173,7 @@ const ServerScreen = () => {
           const chatJson = newConn.disconnectPacket.data
             .slice(chatVarIntLength, chatVarIntLength + chatLength)
             .toString('utf8')
+          // LOW-TODO: This doesn't always hit correctly, since screen may be unrendered.
           setDisconnectDialog({
             server,
             reason: JSON.parse(chatJson)
@@ -353,7 +354,8 @@ const ServerScreen = () => {
                             (ping as LegacyPing).motd,
                           Text,
                           mojangColorMap,
-                          { style: styles.serverDescription }
+                          { style: styles.serverDescription },
+                          true
                         )}
                       </>
                     ) : (

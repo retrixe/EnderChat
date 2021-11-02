@@ -85,7 +85,7 @@ export const parseCompressedPacket = (packet: Buffer): Packet | undefined => {
       ? compressedData
       : (() => {
           try {
-            return zlib.inflateSync(compressedData, { finishFlush: 2 })
+            return zlib.unzipSync(compressedData, { finishFlush: 2 })
           } catch (e) {
             console.error(`problem inflating chunk
             uncompressed length: ${dataLength}
