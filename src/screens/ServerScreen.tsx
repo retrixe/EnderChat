@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
-
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import {
   StyleSheet,
   View,
@@ -49,6 +48,7 @@ const ServerScreen = () => {
   const { servers, setServers } = useContext(ServersContext)
   const { accounts } = useContext(AccountsContext)
   const { connection, setConnection } = useContext(ConnectionContext)
+  const initiatingConnection = useRef(false)
 
   const [ipAddr, setIpAddr] = useState('')
   const [ipAddrRed, setIpAddrRed] = useState(false)
@@ -120,12 +120,13 @@ const ServerScreen = () => {
     cancelAddServer()
   }
   const connectToServer = async (server: string) => {
+    if (initiatingConnection.current) return
     if (!connection) {
+      initiatingConnection.current = true
       const [hostname, portNumber] = parseIp(servers[server].address)
       const [host, port] = await resolveHostname(hostname, portNumber)
       const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
       // TODO: Connection error/disconnect dialog.
-      // Loading screen will be handled by ChatScreen.
       if (!activeAccount) return
       const newConn = await initiateConnection({
         host,
@@ -134,10 +135,18 @@ const ServerScreen = () => {
         // TODO: Auto-handling support based on Ping response.
         protocolVersion: protocolMap[servers[server].version]
       })
+      // TODO: Disconnect reasons.
+      newConn.on('close', () => {
+        setConnection(undefined)
+      })
+      newConn.on('error', () => {
+        setConnection(undefined)
+      })
       setConnection({
         serverName: server,
         connection: newConn
       })
+      initiatingConnection.current = false
     }
   }
 
@@ -214,7 +223,7 @@ const ServerScreen = () => {
         </View>
       </Dialog>
       <View style={darkMode ? globalStyle.darkHeader : globalStyle.header}>
-        <Text style={globalStyle.title}>Servers</Text>
+        <Text style={globalStyle.title}>EnderChat</Text>
         <View style={globalStyle.flexSpacer} />
         <Ionicons.Button
           name='add'

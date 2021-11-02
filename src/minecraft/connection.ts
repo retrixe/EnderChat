@@ -24,6 +24,7 @@ export class ServerConnection extends events.EventEmitter {
   compressionThreshold = -1
   compressionEnabled = false
   loggedIn = false
+  closed = false
   socket: net.Socket
   constructor(socket: net.Socket) {
     super()
@@ -81,6 +82,7 @@ const initiateConnection = async (opts: {
     })
     socket.on('data', newData => {
       // TODO: Compression + Online mode + Encryption + Time-out after 20s of no keep-alives
+      // + Disconnect reasons + If end is called, wait 20 seconds before calling destroy
       conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
       // no-eslint-disable-next-line @typescript-eslint/no-floating-promises
       // ;(async () => { This type of implementation will need a mutex.
@@ -109,7 +111,10 @@ const initiateConnection = async (opts: {
       }
       conn.emit('data', newData)
     })
-    socket.on('close', () => conn.emit('close'))
+    socket.on('close', () => {
+      conn.closed = true
+      conn.emit('close')
+    })
     socket.on('error', err => {
       if (!resolved) reject(err)
       else conn.emit('error', err)

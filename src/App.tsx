@@ -110,7 +110,10 @@ const App = () => {
                 />
                 <Stacks.Navigator
                   initialRouteName='Home'
-                  screenOptions={{ headerShown: false }}
+                  screenOptions={{
+                    headerShown: false,
+                    animation: 'slide_from_right'
+                  }}
                 >
                   <Stacks.Screen name='Home' component={HomeScreen} />
                   <Stacks.Screen name='Chat' component={ChatScreen} />
