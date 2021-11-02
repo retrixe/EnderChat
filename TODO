@@ -1,4 +1,2 @@
-- Add functionality to ChatScreen.
 - Add icon and configure app.json.
-- Write the code to talk with Minecraft.
 - Reduce icons bundled and enable Hermes for performance.

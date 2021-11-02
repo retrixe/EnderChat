@@ -48,8 +48,6 @@ export const refreshMSAuthToken = async (
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   })
   const res = await req.json()
-  console.log(req.ok)
-  console.log(res)
   if (!req.ok) throw new Error('Failed to request auth token from Microsoft!')
   // { "expires_in":86400 }
   return [res.access_token, res.refresh_token]

@@ -82,7 +82,7 @@ const initiateConnection = async (opts: {
       )
     })
     socket.on('data', newData => {
-      // TODO: Compression + Online mode + Encryption + Time-out after 20s of no keep-alives/end but no close
+      // TODO: Compression + Online mode encryption + Time-out after 20s of no keep-alives/end but no close
       conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
       // no-eslint-disable-next-line @typescript-eslint/no-floating-promises
       // ;(async () => { This type of implementation will need a mutex.

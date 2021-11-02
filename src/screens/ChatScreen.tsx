@@ -57,6 +57,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         const chatJson = packet.data
           .slice(chatVarIntLength, chatVarIntLength + chatLength)
           .toString('utf8')
+        // TODO: Gracefully handle parsing errors.
         const position = packet.data.readInt8(chatVarIntLength + chatLength)
         // LOW-TODO: Support position 2 and sender.
         if (position === 0 || position === 1) {
@@ -114,6 +115,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         />
         <Text style={[globalStyle.title, styles.title]}>Chat - {title}</Text>
         <View style={globalStyle.flexSpacer} />
+        {/* TODO: Make this actually work. */}
         <Ionicons.Button
           name='settings-outline'
           iconStyle={styles.backButtonIcon}
