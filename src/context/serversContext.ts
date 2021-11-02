@@ -1,8 +1,9 @@
 // Consider using Recoil instead of Context?
 import React from 'react'
+import { protocolMap } from '../minecraft/utils'
 
 export interface Server {
-  version: '1.16.5'
+  version: keyof typeof protocolMap
   address: string
 }
 

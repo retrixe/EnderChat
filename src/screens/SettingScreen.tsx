@@ -27,7 +27,7 @@ const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
     <Pressable onPress={() => setModalOpen(true)} android_ripple={ripple}>
       <Dialog visible={modalOpen} onRequestClose={() => setModalOpen(false)}>
         <Text style={[dialogStyles.modalTitle, styles.dialogTitle]}>
-          Dark mode (beta)
+          Dark mode
         </Text>
         <Pressable onPress={() => save(true)} android_ripple={ripple}>
           <Text style={styles.settingItem}>Enabled</Text>
@@ -50,7 +50,7 @@ const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
         </View>
       </Dialog>
       <View style={styles.setting}>
-        <Text style={styles.settingText}>Dark mode (beta)</Text>
+        <Text style={styles.settingText}>Dark mode</Text>
         <Text style={value ? styles.settingSubtextDark : styles.settingSubtext}>
           {value === null ? 'System default' : value ? 'Enabled' : 'Disabled'}
         </Text>

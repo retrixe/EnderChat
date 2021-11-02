@@ -1,5 +1,13 @@
 import { Buffer } from 'buffer'
 
+export const protocolMap = {
+  '1.16.4': 754,
+  '1.16.5': 754,
+  1.17: 755,
+  '1.17.1': 756,
+  auto: -1
+}
+
 export const padBufferToLength = (buffer: Buffer, length: number) =>
   length <= buffer.byteLength
     ? buffer

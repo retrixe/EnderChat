@@ -29,7 +29,7 @@ import ServersContext from '../context/serversContext'
 import AccountsContext from '../context/accountsContext'
 import ConnectionContext from '../context/connectionContext'
 import initiateConnection from '../minecraft/connection'
-import { resolveHostname } from '../minecraft/utils'
+import { resolveHostname, protocolMap } from '../minecraft/utils'
 import parseChatToJsx, { mojangColorMap } from '../minecraft/chatToJsx'
 import useDarkMode from '../context/useDarkMode'
 
@@ -55,7 +55,9 @@ const ServerScreen = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [newServerName, setNewServerName] = useState('')
   const [serverNameRed, setServerNameRed] = useState(false)
-  const [serverVersion, setServerVersion] = useState<'1.16.5'>('1.16.5')
+  const [serverVersion, setServerVersion] = useState<keyof typeof protocolMap>(
+    '1.17.1'
+  )
   const [addServerDialogOpen, setAddServerDialogOpen] = useState(false)
   const [editServerDialogOpen, setEditServerDialogOpen] = useState('')
   const [pingResponses, setPingResponses] = useState<{
@@ -122,13 +124,15 @@ const ServerScreen = () => {
       const [hostname, portNumber] = parseIp(servers[server].address)
       const [host, port] = await resolveHostname(hostname, portNumber)
       const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
-      // TODO: Connection errors and loading needs handling.
+      // TODO: Connection error/disconnect dialog.
+      // Loading screen will be handled by ChatScreen.
       if (!activeAccount) return
       const newConn = await initiateConnection({
         host,
         port,
         username: accounts[activeAccount].username,
-        protocolVersion: 754
+        // TODO: Auto-handling support based on Ping response.
+        protocolVersion: protocolMap[servers[server].version]
       })
       setConnection({
         serverName: server,
@@ -179,6 +183,8 @@ const ServerScreen = () => {
           onValueChange={itemValue => setServerVersion(itemValue)}
           dropdownIconColor={darkMode ? '#ffffff' : undefined}
         >
+          <Picker.Item label='1.17.1' value='1.17.1' />
+          <Picker.Item label='1.17' value='1.17' />
           <Picker.Item label='1.16.4/1.16.5' value='1.16.5' />
         </Picker>
         <View style={dialogStyles.modalButtons}>

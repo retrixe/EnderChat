@@ -82,7 +82,7 @@ const App = () => {
     chatTheme: 'Colorless',
     fontSize: 16,
     webLinks: true,
-    darkMode: false,
+    darkMode: null,
     linkPrompt: true
   })
   const [accountsStore, setAccountsStore] = useAsyncStorage('@accounts', '{}')
