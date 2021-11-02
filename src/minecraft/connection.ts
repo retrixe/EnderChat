@@ -26,6 +26,7 @@ export class ServerConnection extends events.EventEmitter {
   loggedIn = false
   closed = false
   socket: net.Socket
+  disconnectPacket?: Packet
   constructor(socket: net.Socket) {
     super()
     this.socket = socket
@@ -81,8 +82,7 @@ const initiateConnection = async (opts: {
       )
     })
     socket.on('data', newData => {
-      // TODO: Compression + Online mode + Encryption + Time-out after 20s of no keep-alives
-      // + Disconnect reasons + If end is called, wait 20 seconds before calling destroy
+      // TODO: Compression + Online mode + Encryption + Time-out after 20s of no keep-alives/end but no close
       conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
       // no-eslint-disable-next-line @typescript-eslint/no-floating-promises
       // ;(async () => { This type of implementation will need a mutex.
@@ -98,12 +98,14 @@ const initiateConnection = async (opts: {
           } else if (packet.id === 0x02 && !conn.loggedIn) {
             conn.loggedIn = true
           } else if (packet.id === 0x21) {
-            console.log(
-              'Received keep alive, is compressed? ' + conn.compressionEnabled
-            )
             conn
               .writePacket(0x0f, packet.data)
               .catch(err => conn.emit('error', err))
+          } else if (
+            (packet.id === 0x00 && !conn.loggedIn) ||
+            (packet.id === 0x1a && conn.loggedIn)
+          ) {
+            conn.disconnectPacket = packet
           }
           conn.bufferedData = conn.bufferedData.slice(packet.packetLength)
           conn.emit('packet', packet)

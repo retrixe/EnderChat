@@ -56,7 +56,7 @@ const ServerScreen = () => {
   const [newServerName, setNewServerName] = useState('')
   const [serverNameRed, setServerNameRed] = useState(false)
   const [serverVersion, setServerVersion] = useState<keyof typeof protocolMap>(
-    '1.17.1'
+    'auto'
   )
   const [addServerDialogOpen, setAddServerDialogOpen] = useState(false)
   const [editServerDialogOpen, setEditServerDialogOpen] = useState('')
@@ -126,16 +126,24 @@ const ServerScreen = () => {
       const [hostname, portNumber] = parseIp(servers[server].address)
       const [host, port] = await resolveHostname(hostname, portNumber)
       const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
-      // TODO: Connection error/disconnect dialog.
+      // TODO: Connection error/disconnect dialog for returns/close/errors.
       if (!activeAccount) return
+      let protocolVersion = protocolMap[servers[server].version]
+      if (protocolVersion === -1) {
+        const ping = pingResponses[servers[server].address]
+        // Try the latest.
+        if (!ping) protocolVersion = protocolMap['1.17.1']
+        else if (typeof ping.version === 'object') {
+          protocolVersion = ping.version.protocol
+        } else protocolVersion = (ping as LegacyPing).protocol
+      }
+      if (protocolVersion < 754) return // Unsupported.
       const newConn = await initiateConnection({
         host,
         port,
         username: accounts[activeAccount].username,
-        // TODO: Auto-handling support based on Ping response.
-        protocolVersion: protocolMap[servers[server].version]
+        protocolVersion
       })
-      // TODO: Disconnect reasons.
       newConn.on('close', () => {
         setConnection(undefined)
       })
@@ -192,6 +200,7 @@ const ServerScreen = () => {
           onValueChange={itemValue => setServerVersion(itemValue)}
           dropdownIconColor={darkMode ? '#ffffff' : undefined}
         >
+          <Picker.Item label='Auto' value='auto' />
           <Picker.Item label='1.17.1' value='1.17.1' />
           <Picker.Item label='1.17' value='1.17' />
           <Picker.Item label='1.16.4/1.16.5' value='1.16.5' />

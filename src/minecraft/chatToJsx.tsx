@@ -37,6 +37,7 @@ export interface PlainTextChat {
 }
 
 export interface ClickEvent {
+  // TODO: Build actual support for this.
   action:
     | 'open_url'
     | 'open_file'
