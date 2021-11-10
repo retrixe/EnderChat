@@ -1,5 +1,11 @@
-import React from 'react'
-import { useColorScheme, StatusBar, SafeAreaView } from 'react-native'
+import React, { useEffect } from 'react'
+import {
+  useColorScheme,
+  NativeModules,
+  StatusBar,
+  SafeAreaView,
+  Platform
+} from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
@@ -96,6 +102,17 @@ const App = () => {
   const systemDefault = colorScheme === null ? true : colorScheme === 'dark'
   const darkMode =
     settings.darkMode === null ? systemDefault : settings.darkMode
+  // Change navigation bar colour on dark mode.
+  // LOW-TODO: Doesn't work correctly in modals.
+  useEffect(() => {
+    if (Platform.OS === 'android' && NativeModules.NavBarColorModule) {
+      NativeModules.NavBarColorModule.setNavigationBarColor(
+        darkMode ? '#121212' : '#ffffff',
+        false,
+        darkMode
+      )
+    }
+  }, [darkMode])
 
   return (
     <SafeAreaView style={globalStyle.flexSpacer}>
