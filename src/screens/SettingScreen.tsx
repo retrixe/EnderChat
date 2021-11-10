@@ -63,8 +63,8 @@ const styles = StyleSheet.create({
   settingText: { fontSize: 18 },
   dialogTitle: { marginBottom: 12 },
   settingItem: { fontSize: 18, width: '100%', padding: 8 },
-  settingSubtext: { fontSize: 12, fontWeight: '100', color: '#666' },
-  settingSubtextDark: { fontSize: 12, fontWeight: '100', color: '#aaa' }
+  settingSubtext: { fontSize: 12, fontWeight: '400', color: '#666' },
+  settingSubtextDark: { fontSize: 12, fontWeight: '400', color: '#aaa' }
 })
 
 const SettingScreen = () => {

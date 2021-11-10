@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
   },
   active: { fontSize: 16 },
   username: { fontSize: 20, fontWeight: 'bold' },
-  authTxt: { fontSize: 12, color: '#666', fontWeight: '300' },
-  authTxtDark: { fontSize: 12, color: '#aaa', fontWeight: '300' },
+  authTxt: { fontSize: 12, color: '#666', fontWeight: '400' },
+  authTxtDark: { fontSize: 12, color: '#aaa', fontWeight: '400' },
   deleteAccountText: { fontSize: 16 },
   deleteAccountDialog: { padding: 0 },
   ...dialogStyles

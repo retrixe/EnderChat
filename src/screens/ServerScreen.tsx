@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   },
   serverContent: { marginLeft: 8, flex: 2 },
   serverName: { fontSize: 20, fontWeight: 'bold' },
-  serverPlayers: { fontSize: 12, fontWeight: '300' },
+  serverPlayers: { fontSize: 12, fontWeight: 'bold' },
   serverDescription: { fontSize: 14 },
   deleteServerText: { fontSize: 16 },
   deleteServerDialog: { padding: 0 },

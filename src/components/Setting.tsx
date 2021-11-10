@@ -84,8 +84,8 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   settingText: { fontSize: 18 },
-  settingSubtext: { fontSize: 12, fontWeight: '100', color: '#666' },
-  settingSubtextDark: { fontSize: 12, fontWeight: '100', color: '#aaa' }
+  settingSubtext: { fontSize: 12, fontWeight: '400', color: '#666' },
+  settingSubtextDark: { fontSize: 12, fontWeight: '400', color: '#aaa' }
 })
 
 export default Setting
