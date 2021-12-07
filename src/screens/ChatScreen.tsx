@@ -86,7 +86,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     }
     return () => {
       // Gracefully disconnect, destroy will be called in 20s automatically if needed.
-      connection.connection.socket.end()
+      connection.connection.close()
       setConnection(undefined)
     }
   }, [connection, setConnection, navigation])
@@ -152,6 +152,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
               enablesReturnKeyAutomatically
               returnKeyType='send'
               blurOnSubmit={false}
+              autoCorrect={!settings.disableAutoCorrect}
             />
             <Ionicons.Button name='ios-send-sharp' onPress={sendMessage}>
               Send

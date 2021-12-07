@@ -105,6 +105,11 @@ const SettingScreen = () => {
           value={settings.linkPrompt}
           setValue={linkPrompt => setSettings({ linkPrompt })}
         />
+        <Setting
+          name='Disable auto-correct in chat'
+          value={settings.disableAutoCorrect}
+          setValue={disableAutoCorrect => setSettings({ disableAutoCorrect })}
+        />
         <DarkModeSetting
           value={settings.darkMode}
           setValue={darkMode => setSettings({ darkMode })}

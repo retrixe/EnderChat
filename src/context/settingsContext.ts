@@ -9,6 +9,7 @@ export interface Settings {
   fontSize: number
   webLinks: boolean
   linkPrompt: boolean
+  disableAutoCorrect: boolean
   darkMode: boolean | null
 }
 
@@ -28,7 +29,8 @@ const settingsContext = React.createContext<SettingsContext>({
     fontSize: 16,
     webLinks: true,
     darkMode: false,
-    linkPrompt: true
+    linkPrompt: true,
+    disableAutoCorrect: false
   },
   setSettings: () => {}
 })

@@ -26,7 +26,9 @@ export class ServerConnection extends events.EventEmitter {
   loggedIn = false
   closed = false
   socket: net.Socket
+  disconnectTimer?: number
   disconnectPacket?: Packet
+
   constructor(socket: net.Socket) {
     super()
     this.socket = socket
@@ -41,6 +43,20 @@ export class ServerConnection extends events.EventEmitter {
       ? makeBaseCompressedPacket(this.compressionThreshold, packetId, data)
       : makeBasePacket(packetId, data)
     return this.socket.write(packet, cb)
+  }
+
+  onlyOneCloseCall = false
+  close() {
+    if (this.onlyOneCloseCall) return
+    else this.onlyOneCloseCall = true
+
+    this.socket.end()
+    setTimeout(() => {
+      if (!this.closed) {
+        this.closed = true
+        this.socket.destroy()
+      }
+    }, 1000)
   }
 }
 
@@ -78,10 +94,13 @@ const initiateConnection = async (opts: {
       )
     })
     socket.on('data', newData => {
-      // TODO: Online mode encryption + Time-out after 20s of no keep-alives/end but no close
+      // TODO: Online mode encryption
+      // Handle timeout after 20 seconds of no data.
+      if (conn.disconnectTimer) clearTimeout(conn.disconnectTimer)
+      setTimeout(() => conn.close(), 20000)
+      // Buffer data for read.
       conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
-      // no-eslint-disable-next-line @typescript-eslint/no-floating-promises
-      // ;(async () => { This type of implementation will need a mutex.
+      // ednl @ts-es/no-floating-promises: ;(async () => { This would need a mutex.
       while (true) {
         const packet = conn.compressionEnabled
           ? parseCompressedPacket(conn.bufferedData)
