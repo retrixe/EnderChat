@@ -10,27 +10,23 @@ export const makeBasePacket = (packetId: number, data: Buffer) => {
   return Buffer.concat([finalDataLength, finalData])
 }
 
-export const makeBaseCompressedPacket = async (
+export const makeBaseCompressedPacket = (
   threshold: number,
   packetId: number,
   data: Buffer
 ) => {
-  const finalData = Buffer.concat([writeVarInt(packetId), data])
-  const toCompress = finalData.byteLength > threshold
-  const finalDataLength = writeVarInt(toCompress ? finalData.byteLength : 0)
-  const compressedData: Buffer = toCompress
-    ? finalData
-    : await new Promise((resolve, reject) => {
-        zlib.deflate(finalData, (err, res) =>
-          err ? reject(err) : resolve(res)
-        )
-      })
-  const finalPacket = Buffer.concat([finalDataLength, compressedData])
   // VarInt Packet Length | Length of Data Length + compressed length of (Packet ID + Data)
   // VarInt Data Length   | Length of uncompressed (Packet ID + Data) or 0
   // VarInt Packet ID     | zlib compressed packet ID (see the sections below)
   // Byte Array Data      | zlib compressed packet data (see the sections below)
-  return Buffer.concat([writeVarInt(finalPacket.byteLength), finalPacket])
+  const finalData = Buffer.concat([writeVarInt(packetId), data])
+  const toCompress = finalData.byteLength >= threshold
+  const dataLength = toCompress ? finalData.byteLength : 0
+  /* : await new Promise((resolve, reject) => {
+        zlib.deflate(finalData, (err, res) => err ? reject(err) : resolve(res))
+      }) */
+  const dataToSend = toCompress ? zlib.deflateSync(finalData) : finalData
+  return makeBasePacket(dataLength, dataToSend)
 }
 
 export type PacketDataTypes = string | boolean | number | Buffer

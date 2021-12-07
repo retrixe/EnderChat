@@ -38,11 +38,7 @@ export class ServerConnection extends events.EventEmitter {
     cb?: ((err?: Error | undefined) => void) | undefined
   ): Promise<boolean> {
     const packet = this.compressionEnabled
-      ? await makeBaseCompressedPacket(
-          this.compressionThreshold,
-          packetId,
-          data
-        )
+      ? makeBaseCompressedPacket(this.compressionThreshold, packetId, data)
       : makeBasePacket(packetId, data)
     return this.socket.write(packet, cb)
   }
@@ -82,7 +78,7 @@ const initiateConnection = async (opts: {
       )
     })
     socket.on('data', newData => {
-      // TODO: Compression + Online mode encryption + Time-out after 20s of no keep-alives/end but no close
+      // TODO: Online mode encryption + Time-out after 20s of no keep-alives/end but no close
       conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
       // no-eslint-disable-next-line @typescript-eslint/no-floating-promises
       // ;(async () => { This type of implementation will need a mutex.
