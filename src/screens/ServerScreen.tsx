@@ -102,7 +102,7 @@ const ServerScreen = () => {
   const invalidServerName = newServerName.length > 32
   const cancelAddServer = () => {
     setAddServerDialogOpen(false)
-    setServerVersion('1.16.5')
+    setServerVersion('auto')
     setNewServerName('')
     setIpAddr('')
   }
@@ -146,7 +146,7 @@ const ServerScreen = () => {
       if (protocolVersion === -1) {
         const ping = pingResponses[servers[server].address]
         // Try the latest.
-        if (!ping) protocolVersion = protocolMap['1.17.1']
+        if (!ping) protocolVersion = protocolMap['1.18']
         else if (typeof ping.version === 'object') {
           protocolVersion = ping.version.protocol
         } else protocolVersion = (ping as LegacyPing).protocol
@@ -155,7 +155,7 @@ const ServerScreen = () => {
         initiatingConnection.current = false
         return setDisconnectDialog({
           server,
-          reason: 'EnderChat only supports 1.16.5 and newer.'
+          reason: 'EnderChat only supports 1.16.4 and newer for now.'
         })
       }
       const newConn = await initiateConnection({
@@ -253,6 +253,7 @@ const ServerScreen = () => {
           dropdownIconColor={darkMode ? '#ffffff' : undefined}
         >
           <Picker.Item label='Auto' value='auto' />
+          <Picker.Item label='1.18' value='1.18' />
           <Picker.Item label='1.17.1' value='1.17.1' />
           <Picker.Item label='1.17' value='1.17' />
           <Picker.Item label='1.16.4/1.16.5' value='1.16.5' />

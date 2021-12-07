@@ -134,7 +134,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
           <Text style={styles.loadingScreenText}>Connecting...</Text>
         </View>
       )}
-      {loggedIn && (
+      {loggedIn && ( // https://reactnative.dev/docs/optimizing-flatlist-configuration
         <>
           <FlatList
             inverted

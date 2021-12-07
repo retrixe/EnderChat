@@ -1,2 +1,10 @@
 - Add icon and configure app.json.
-- Reduce icons bundled and enable Hermes for performance.
+- Reduce bundled icons.
+- Hermes hurts performance on connect.
+- Fix issue with split-screen when connected.
+- Fix text fields on Samsung being white-coloured.
+- Work on replacing auto /spawn with auto commands.
+- Handle graceful disconnect when being hit by the OOM killer?
+- Keyboard doesn't show up after tapping on chat field on Redmi Note 4.
+- No limit on amount of chat loaded.
+- Look into https://reactnative.dev/docs/performance
