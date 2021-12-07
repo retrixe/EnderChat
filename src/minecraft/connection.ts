@@ -26,7 +26,7 @@ export class ServerConnection extends events.EventEmitter {
   loggedIn = false
   closed = false
   socket: net.Socket
-  disconnectTimer?: number
+  disconnectTimer?: NodeJS.Timeout
   disconnectPacket?: Packet
 
   constructor(socket: net.Socket) {
@@ -97,7 +97,7 @@ const initiateConnection = async (opts: {
       // TODO: Online mode encryption
       // Handle timeout after 20 seconds of no data.
       if (conn.disconnectTimer) clearTimeout(conn.disconnectTimer)
-      setTimeout(() => conn.close(), 20000)
+      conn.disconnectTimer = setTimeout(() => conn.close(), 20000)
       // Buffer data for read.
       conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
       // ednl @ts-es/no-floating-promises: ;(async () => { This would need a mutex.

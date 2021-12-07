@@ -23,14 +23,37 @@ type ChatNavigationProp = NativeStackNavigationProp<
   { Home: undefined; Chat: undefined },
   'Chat'
 >
-type Messages = Array<{ key: number; text: JSX.Element }>
+interface Message {
+  key: number
+  text: JSX.Element
+}
+
+const renderItem = ({ item }: { item: Message }) => (
+  <View style={styles.androidScaleInvert}>{item.text}</View>
+) // https://reactnative.dev/docs/optimizing-flatlist-configuration
+const ChatMessageList = (props: { messages: Message[] }) => {
+  return (
+    <FlatList
+      inverted={Platform.OS !== 'android'}
+      data={props.messages}
+      style={[styles.androidScaleInvert, styles.chatArea]}
+      contentContainerStyle={styles.chatAreaScrollView}
+      renderItem={renderItem}
+    />
+  )
+}
+const ChatMessageListMemo = React.memo(
+  ChatMessageList,
+  (prevProps, nextProps) => prevProps.messages === nextProps.messages
+)
 
 let id = 0
+// TODO: Ability to copy text.
 const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const darkMode = useDarkMode()
   const { settings } = useContext(SettingsContext)
   const { connection, setConnection } = useContext(ConnectionContext)
-  const [messages, setMessages] = useState<Messages>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
   const [message, setMessage] = useState('')
   const loggedInRef = useRef(false)
@@ -134,15 +157,9 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
           <Text style={styles.loadingScreenText}>Connecting...</Text>
         </View>
       )}
-      {loggedIn && ( // https://reactnative.dev/docs/optimizing-flatlist-configuration
+      {loggedIn && (
         <>
-          <FlatList
-            inverted
-            data={messages}
-            style={styles.chatArea}
-            contentContainerStyle={styles.chatAreaScrollView}
-            renderItem={({ item }) => item.text}
-          />
+          <ChatMessageListMemo messages={messages} />
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
             <TextField
               value={message}
@@ -167,7 +184,10 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
 const styles = StyleSheet.create({
   title: { marginLeft: 8, textAlignVertical: 'center' },
   backButtonIcon: { marginRight: 0 },
-  chatArea: { padding: 8, flex: 1 },
+  androidScaleInvert: {
+    scaleY: Platform.OS === 'android' ? -1 : undefined
+  },
+  chatArea: { padding: 8, flex: 1, scaleY: -1 },
   chatAreaScrollView: { paddingBottom: 16 },
   loadingScreen: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingScreenText: { paddingTop: 24, fontSize: 20 },
