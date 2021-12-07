@@ -49,9 +49,11 @@ export const concatPacketData = (data: PacketDataTypes[]) =>
 export interface Packet {
   id: number
   data: Buffer
-  idLength: number
-  dataLength: number
-  packetLength: number
+  idLength: number // Length of the ID VarInt.
+  dataLength: number // Length of the data after the packet ID.
+  packetLength: number // Length of the entire packet.
+  lengthLength: number // Length of the packet length VarInt.
+  compressed?: boolean
 }
 
 export const parsePacket = (packet: Buffer): Packet | undefined => {
@@ -66,47 +68,48 @@ export const parsePacket = (packet: Buffer): Packet | undefined => {
     data: packetData,
     idLength: packetIdLength,
     dataLength: packetBodyLength - packetIdLength,
-    packetLength: packetBodyLength + varIntLength
+    packetLength: packetBodyLength + varIntLength,
+    lengthLength: varIntLength
   }
 }
 
 export const parseCompressedPacket = (packet: Buffer): Packet | undefined => {
-  if (packet.byteLength === 0) return
-  const [packetLength, packetVarIntLength] = readVarInt(packet)
-  if (packet.byteLength < packetLength + packetVarIntLength) return
-  const remainingPacket = packet.slice(
-    packetVarIntLength,
-    packetVarIntLength + packetLength
-  )
-  const [dataLength, dataVarIntLength] = readVarInt(remainingPacket)
-  const compressedData = remainingPacket.slice(dataVarIntLength)
-  const uncompressedData: Buffer =
-    dataLength === 0
-      ? compressedData
-      : (() => {
-          try {
-            return zlib.unzipSync(compressedData, { finishFlush: 2 })
-          } catch (e) {
-            console.error(`problem inflating chunk
-            uncompressed length: ${dataLength}
-            compressed length: ${compressedData.length}
-            theoretical compressed length: ${packetLength - dataVarIntLength}`)
-            // hex: ${compressedData.toString('hex')}`)
-            throw e
-          }
-        })()
-  // : await new Promise((resolve, reject) => {
-  //    zlib.inflate(compressedData, { finishFlush: 2 }, (err, res) => (
-  //     err ? reject(err) : resolve(res)
-  //    ))
-  //  })
-  const [packetId, packetIdLength] = readVarInt(uncompressedData)
-  const packetData = uncompressedData.slice(packetIdLength)
+  const dissect = parsePacket(packet)
+  if (!dissect) return
+  else if (dissect.id === 0) {
+    const [id, idLength] = readVarInt(dissect.data)
+    const data = dissect.data.slice(idLength)
+    return {
+      id,
+      data,
+      idLength,
+      dataLength: data.length,
+      packetLength: dissect.packetLength,
+      lengthLength: dissect.lengthLength,
+      compressed: false
+    }
+  }
+  const dataLength = dissect.id
+  let dataWithId: Buffer
+  try {
+    dataWithId = zlib.unzipSync(dissect.data, { finishFlush: 2 })
+  } catch (e) {
+    console.error(`problem inflating chunk
+uncompressed length: ${dataLength}
+compressed length: ${dissect.data.length}
+theoretical compressed length: ${dissect.dataLength}`)
+    // hex: ${compressedData.toString('hex')}`)
+    throw e
+  }
+  const [id, idLength] = readVarInt(dataWithId)
+  const data = dataWithId.slice(idLength)
   return {
-    id: packetId,
-    data: packetData,
-    idLength: packetIdLength,
-    dataLength: dataLength - packetIdLength,
-    packetLength: packetLength + packetVarIntLength
+    id,
+    data,
+    idLength,
+    dataLength: data.length,
+    packetLength: dissect.packetLength,
+    lengthLength: dissect.lengthLength,
+    compressed: true
   }
 }
