@@ -148,6 +148,10 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
               value={message}
               onChangeText={setMessage}
               style={styles.textField}
+              onSubmitEditing={sendMessage}
+              enablesReturnKeyAutomatically
+              returnKeyType='send'
+              blurOnSubmit={false}
             />
             <Ionicons.Button name='ios-send-sharp' onPress={sendMessage}>
               Send

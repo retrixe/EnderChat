@@ -71,6 +71,7 @@ const SettingScreen = () => {
   const darkModeApp = useDarkMode()
   const { settings, setSettings } = useContext(SettingsContext)
 
+  // TODO: Setting to disable autocomplete.
   return (
     <>
       <View style={darkModeApp ? globalStyle.darkHeader : globalStyle.header}>
