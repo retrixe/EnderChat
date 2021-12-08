@@ -29,7 +29,7 @@ export class ServerConnection extends events.EventEmitter {
   closed = false
   socket: net.Socket
   disconnectTimer?: NodeJS.Timeout
-  disconnectPacket?: Packet
+  disconnectReason?: string
 
   constructor(socket: net.Socket) {
     super()
@@ -122,7 +122,10 @@ const initiateConnection = async (opts: {
             (packet.id === 0x00 && !conn.loggedIn) ||
             (packet.id === 0x1a && conn.loggedIn)
           ) {
-            conn.disconnectPacket = packet
+            const [chatLength, chatVarIntLength] = readVarInt(packet.data)
+            conn.disconnectReason = packet.data
+              .slice(chatVarIntLength, chatVarIntLength + chatLength)
+              .toString('utf8')
           } /* else if (packet.id === 0x01 && !conn.loggedIn) {
             // What if no accessToken was provided?
             const [serverIdLen, serverIdLenLen] = readVarInt(packet.data)

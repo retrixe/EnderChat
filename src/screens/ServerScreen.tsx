@@ -29,7 +29,6 @@ import AccountsContext from '../context/accountsContext'
 import ConnectionContext from '../context/connectionContext'
 import { resolveHostname, protocolMap } from '../minecraft/utils'
 import initiateConnection from '../minecraft/connection'
-import { readVarInt } from '../minecraft/packetUtils'
 import parseChatToJsx, {
   mojangColorMap,
   PlainTextChat
@@ -168,17 +167,11 @@ const ServerScreen = () => {
       })
       const onCloseOrError = () => {
         setConnection(undefined)
-        if (newConn.disconnectPacket) {
-          const [chatLength, chatVarIntLength] = readVarInt(
-            newConn.disconnectPacket.data
-          )
-          const chatJson = newConn.disconnectPacket.data
-            .slice(chatVarIntLength, chatVarIntLength + chatLength)
-            .toString('utf8')
+        if (newConn.disconnectReason) {
           // LOW-TODO: This doesn't always hit correctly, since screen may be unrendered.
           setDisconnectDialog({
             server,
-            reason: JSON.parse(chatJson)
+            reason: JSON.parse(newConn.disconnectReason)
           })
         }
       }

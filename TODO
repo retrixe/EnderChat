@@ -5,7 +5,11 @@
 - Handle graceful disconnect when being hit by the OOM killer?
 - Keyboard doesn't show up after tapping on chat field on Redmi Note 4.
 - Chat input and Send button is clipped on phones with rounded corners.
+- https://reactnative.dev/docs/performance (esp when logging in)
 - Disabled setting toggles look weird in light mode.
-- https://reactnative.dev/docs/performance
 - OnePlus 3T titles are wrapped.
 - Add command history.
+Next release:
+- Redesigned text fields.
+- Working settings button in ChatScreen.
+- Send button that doesn't clip on rounded displays.

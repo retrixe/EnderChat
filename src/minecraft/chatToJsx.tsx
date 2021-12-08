@@ -1,9 +1,11 @@
 import React from 'react'
 import { StyleProp, TextProps, TextStyle } from 'react-native'
+import translations from './translations'
 
 // TODO: Add a better color map for light mode, as Mojang color map is terrible.
+export const lightModeColorMap: {} = {}
 
-export const mojangColorMap: { [color: string]: string } = {
+export const mojangColorMap: ColorMap = {
   black: '#000000',
   dark_blue: '#0000AA',
   dark_green: '#00AA00',
@@ -20,6 +22,26 @@ export const mojangColorMap: { [color: string]: string } = {
   light_purple: '#FF55FF',
   yellow: '#FFFF55',
   white: '#FFFFFF'
+}
+
+export interface ColorMap {
+  [color: string]: string
+  black: string
+  dark_blue: string
+  dark_green: string
+  dark_aqua: string
+  dark_red: string
+  dark_purple: string
+  gold: string
+  gray: string
+  dark_gray: string
+  blue: string
+  green: string
+  aqua: string
+  red: string
+  light_purple: string
+  yellow: string
+  white: string
 }
 
 export interface BaseChat {
@@ -39,7 +61,7 @@ export interface PlainTextChat extends BaseChat {
   text?: string
 }
 
-export interface TranslatedChat extends PlainTextChat {
+export interface TranslatedChat {
   translate: string
   with: PlainTextChat[]
 }
@@ -132,18 +154,26 @@ const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
   return [...arr, ...flattenedExtra]
 }
 
-// TODO: Support chat.type.* translations.
 const parseChatToJsx = (
-  chat: PlainTextChat | string,
+  chat: PlainTextChat | TranslatedChat | string,
   Component: React.ComponentType<TextProps>,
-  colorMap: { [color: string]: string },
+  colorMap: ColorMap,
   componentProps?: {},
   trim = false
 ) => {
+  if (typeof chat !== 'string' && (chat as TranslatedChat).translate) {
+    const translatedChat = chat as TranslatedChat
+    const translation = translations[translatedChat.translate]
+      .split('%s')
+      .map((text, index) => [{ text }, translatedChat.with[index]])
+      .flat()
+      .filter(component => !!component)
+    chat = { extra: translation }
+  }
   const flat =
     typeof chat === 'string'
       ? parseColorCodes(chat)
-      : flattenExtraComponents(chat)
+      : flattenExtraComponents(chat as PlainTextChat)
   return (
     <Component {...componentProps}>
       {flat.map((c, i) => {
