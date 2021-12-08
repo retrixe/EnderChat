@@ -115,10 +115,10 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   }, [connection, setConnection, navigation])
 
   const sendMessage = () => {
-    if (!connection || !message) return
+    if (!connection || !message.trim()) return
     setMessage('')
     connection.connection
-      .writePacket(0x03, concatPacketData([message]))
+      .writePacket(0x03, concatPacketData([message.trim()]))
       .catch(console.error)
   }
 

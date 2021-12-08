@@ -20,7 +20,8 @@ const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
     setModalOpen(false)
   }
   const ripple = { color: '#aaa' }
-  const cancelStyle = useDarkMode()
+  const dark = useDarkMode()
+  const cancelStyle = dark
     ? dialogStyles.modalButtonCancelDarkText
     : dialogStyles.modalButtonCancelText
   return (
@@ -51,7 +52,7 @@ const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
       </Dialog>
       <View style={styles.setting}>
         <Text style={styles.settingText}>Dark mode</Text>
-        <Text style={value ? styles.settingSubtextDark : styles.settingSubtext}>
+        <Text style={dark ? styles.settingSubtextDark : styles.settingSubtext}>
           {value === null ? 'System default' : value ? 'Enabled' : 'Disabled'}
         </Text>
       </View>

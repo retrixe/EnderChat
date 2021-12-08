@@ -105,6 +105,8 @@ const ServerScreen = () => {
     setServerVersion('auto')
     setNewServerName('')
     setIpAddr('')
+    setIpAddrRed(false)
+    setServerNameRed(false)
   }
   const addServer = () => {
     if (
@@ -248,9 +250,9 @@ const ServerScreen = () => {
         />
         <Picker
           selectedValue={serverVersion}
-          style={darkMode ? styles.addServerPickerDark : undefined}
+          style={darkMode ? styles.addServerPickerDark : styles.addServerPicker}
           onValueChange={itemValue => setServerVersion(itemValue)}
-          dropdownIconColor={darkMode ? '#ffffff' : undefined}
+          dropdownIconColor={darkMode ? '#ffffff' : '#000000'}
         >
           <Picker.Item label='Auto' value='auto' />
           <Picker.Item label='1.18' value='1.18' />
@@ -399,7 +401,8 @@ const styles = StyleSheet.create({
   serverDescription: { fontSize: 14 },
   deleteServerText: { fontSize: 16 },
   deleteServerDialog: { padding: 0 },
-  addServerPickerDark: { color: '#ffffff' }
+  addServerPickerDark: { color: '#ffffff' },
+  addServerPicker: { color: '#000000' }
 })
 
 export default ServerScreen

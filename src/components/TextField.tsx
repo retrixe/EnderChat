@@ -2,6 +2,7 @@ import React from 'react'
 import { TextInput, StyleSheet, TextInputProps } from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
+// TODO: Look into a redesign.
 const TextField = (props: TextInputProps & { red?: boolean }) => {
   const style = props.style && props.style.valueOf()
   const darkMode = useDarkMode()
@@ -9,7 +10,7 @@ const TextField = (props: TextInputProps & { red?: boolean }) => {
     <TextInput
       textAlignVertical='top'
       numberOfLines={props.multiline ? 3 : 1}
-      placeholderTextColor={darkMode ? '#aaa' : undefined}
+      placeholderTextColor={darkMode ? '#aaa' : '#888'}
       {
         ...props /* Spreads value, placeholder, multiline and onChangeText. */
       }
@@ -41,7 +42,8 @@ const styles = StyleSheet.create({
   },
   modalTextFieldBackground: {
     backgroundColor: '#fafafa',
-    borderColor: '#efefef'
+    borderColor: '#efefef',
+    color: '#000'
   },
   modalTextFieldBackgroundDark: {
     backgroundColor: '#363636',
