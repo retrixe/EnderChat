@@ -32,22 +32,29 @@ const styles = StyleSheet.create({
   modalTextField: {
     height: 40,
     marginTop: 8,
-    borderWidth: 1
+    paddingLeft: 8,
+    paddingRight: 8,
+    borderRadius: 4
+    // borderWidth: 1
   },
   modalMultilineField: {
     height: 60,
     padding: 4,
     marginTop: 8,
-    borderWidth: 1
+    paddingLeft: 8,
+    paddingRight: 8
+    // borderWidth: 1
   },
   modalTextFieldBackground: {
-    backgroundColor: '#fafafa',
-    borderColor: '#efefef',
+    backgroundColor: '#f0f0f0', // fafafa
+    // borderColor: '#efefef',
+    borderRadius: 6,
     color: '#000'
   },
   modalTextFieldBackgroundDark: {
-    backgroundColor: '#363636',
-    borderColor: '#121212',
+    backgroundColor: '#121212', // 363636
+    // borderColor: '#121212',
+    borderRadius: 6,
     color: '#fff'
   }
 })

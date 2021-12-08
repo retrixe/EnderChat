@@ -195,9 +195,12 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
               blurOnSubmit={false}
               autoCorrect={!settings.disableAutoCorrect}
             />
-            <Ionicons.Button name='ios-send-sharp' onPress={sendMessage}>
-              Send
-            </Ionicons.Button>
+            <Ionicons.Button
+              name='ios-send-sharp'
+              onPress={sendMessage}
+              iconStyle={styles.sendButtonIcon}
+              borderRadius={32}
+            />
           </View>
         </>
       )}
@@ -208,6 +211,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
 const styles = StyleSheet.create({
   title: { marginLeft: 8, textAlignVertical: 'center' },
   backButtonIcon: { marginRight: 0 },
+  sendButtonIcon: { marginRight: 0, marginLeft: 4 },
   androidScaleInvert: {
     scaleY: Platform.OS === 'android' ? -1 : undefined
   },
@@ -221,7 +225,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#242424'
   },
   textArea: { padding: 8, backgroundColor: '#fff', flexDirection: 'row' },
-  textField: { marginTop: 0, flex: 1, marginRight: 8 }
+  textField: { marginTop: 0, flex: 1, marginRight: 8, borderRadius: 32 }
 })
 
 export default ChatScreen

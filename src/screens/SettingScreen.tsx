@@ -25,6 +25,7 @@ const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
     ? dialogStyles.modalButtonCancelDarkText
     : dialogStyles.modalButtonCancelText
   return (
+    // LOW-TODO: Should have radio buttons.
     <Pressable onPress={() => setModalOpen(true)} android_ripple={ripple}>
       <Dialog visible={modalOpen} onRequestClose={() => setModalOpen(false)}>
         <Text style={[dialogStyles.modalTitle, styles.dialogTitle]}>
