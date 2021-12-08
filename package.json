@@ -24,6 +24,8 @@
     "promise.allsettled": "^1.0.4",
     "react": "17.0.2",
     "react-native": "0.66.3",
+    "react-native-crypto": "^2.2.0",
+    "react-native-randombytes": "^3.6.1",
     "react-native-safe-area-context": "^3.1.9",
     "react-native-screens": "^3.6.0",
     "react-native-tcp": "^4.0.0",
