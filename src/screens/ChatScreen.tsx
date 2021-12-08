@@ -47,6 +47,17 @@ const ChatMessageListMemo = React.memo(
   (prevProps, nextProps) => prevProps.messages === nextProps.messages
 )
 
+const createErrorHandler = (
+  color: string,
+  addMessage: (text: JSX.Element) => void,
+  translated: string
+) => (error: unknown) => {
+  console.error(error)
+  addMessage(<Text style={{ color }}>[EnderChat] {translated}</Text>)
+}
+const sendMessageErr = 'Failed to send message to server!'
+const parseMessageErr = 'An error occurred when parsing chat.'
+
 let id = 0
 // TODO: Ability to copy text.
 const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
@@ -58,6 +69,13 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const [message, setMessage] = useState('')
   const loggedInRef = useRef(false)
 
+  const colorMap = mojangColorMap
+  const addMessage = (text: JSX.Element) =>
+    setMessages(m => {
+      const trunc = m.length > 500 ? m.slice(0, 499) : m
+      return [{ key: id++, text }].concat(trunc)
+    })
+
   // Packet handler useEffect.
   useEffect(() => {
     if (!connection) return
@@ -65,29 +83,34 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
       if (!loggedInRef.current && connection.connection.loggedIn) {
         setLoggedIn(true)
         loggedInRef.current = true
+        const errorHandler = createErrorHandler(
+          colorMap.dark_red,
+          addMessage,
+          sendMessageErr
+        )
         if (settings.sendJoinMessage) {
           connection.connection
             .writePacket(0x03, concatPacketData([settings.joinMessage]))
-            .catch(console.error)
+            .catch(errorHandler)
         }
         if (settings.sendSpawnCommand) {
           connection.connection
             .writePacket(0x03, concatPacketData(['/spawn']))
-            .catch(console.error)
+            .catch(errorHandler)
         }
       } else if (packet.id === 0x0f) {
-        const [chatLength, chatVarIntLength] = readVarInt(packet.data)
-        const chatJson = packet.data
-          .slice(chatVarIntLength, chatVarIntLength + chatLength)
-          .toString('utf8')
-        // TODO: Gracefully handle parsing errors.
-        const position = packet.data.readInt8(chatVarIntLength + chatLength)
-        // LOW-TODO: Support position 2 and sender.
-        if (position === 0 || position === 1) {
-          setMessages(m => {
-            const c = parseChatToJsx(JSON.parse(chatJson), Text, mojangColorMap)
-            return [{ key: id++, text: c }].concat(m)
-          })
+        try {
+          const [chatLength, chatVarIntLength] = readVarInt(packet.data)
+          const chatJson = packet.data
+            .slice(chatVarIntLength, chatVarIntLength + chatLength)
+            .toString('utf8')
+          const position = packet.data.readInt8(chatVarIntLength + chatLength)
+          // LOW-TODO: Support position 2 and sender.
+          if (position === 0 || position === 1) {
+            addMessage(parseChatToJsx(JSON.parse(chatJson), Text, colorMap))
+          }
+        } catch (e) {
+          createErrorHandler(colorMap.dark_red, addMessage, parseMessageErr)(e)
         }
       }
     })
@@ -95,6 +118,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
       connection.connection.removeAllListeners('packet')
     }
   }, [
+    colorMap,
     connection,
     settings.joinMessage,
     settings.sendJoinMessage,
@@ -119,7 +143,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     setMessage('')
     connection.connection
       .writePacket(0x03, concatPacketData([message.trim()]))
-      .catch(console.error)
+      .catch(createErrorHandler(colorMap.dark_red, addMessage, sendMessageErr))
   }
 
   if (!connection) return <></> // This should never be hit hopefully.

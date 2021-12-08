@@ -7,6 +7,5 @@
 - Chat input and Send button is clipped on phones with rounded corners.
 - Disabled setting toggles look weird in light mode.
 - https://reactnative.dev/docs/performance
-- No limit on amount of chat loaded.
 - OnePlus 3T titles are wrapped.
 - Add command history.
