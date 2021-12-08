@@ -19,6 +19,8 @@ import { readVarInt } from '../minecraft/packetUtils'
 import TextField from '../components/TextField'
 import Text from '../components/Text'
 
+import SettingScreen from './settings/SettingScreen'
+
 type ChatNavigationProp = NativeStackNavigationProp<
   { Home: undefined; Chat: undefined },
   'Chat'
@@ -64,6 +66,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const darkMode = useDarkMode()
   const { settings } = useContext(SettingsContext)
   const { connection, setConnection } = useContext(ConnectionContext)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
   const [message, setMessage] = useState('')
@@ -151,15 +154,24 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     connection.serverName.length > 12
       ? connection.serverName.substring(0, 9) + '...'
       : connection.serverName
+  const backButton = (
+    <View style={styles.backButton}>
+      <Ionicons.Button
+        name='chevron-back-sharp'
+        iconStyle={styles.backButtonIcon}
+        backgroundColor='#363636'
+        onPress={() => {
+          settingsOpen ? setSettingsOpen(false) : navigation.goBack()
+        }}
+      />
+    </View>
+  )
+  // LOW-TODO: Use stack navigation for this.
+  if (settingsOpen) return <SettingScreen button={backButton} />
   return (
     <>
       <View style={darkMode ? globalStyle.darkHeader : globalStyle.header}>
-        <Ionicons.Button
-          name='chevron-back-sharp'
-          iconStyle={styles.backButtonIcon}
-          backgroundColor='#363636'
-          onPress={() => navigation.goBack()}
-        />
+        {backButton}
         <Text style={[globalStyle.title, styles.title]}>Chat - {title}</Text>
         <View style={globalStyle.flexSpacer} />
         {/* TODO: Make this actually work. */}
@@ -167,6 +179,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
           name='settings-outline'
           iconStyle={styles.backButtonIcon}
           backgroundColor='#363636'
+          onPress={() => setSettingsOpen(true)}
         />
       </View>
       {!loggedIn && (
@@ -209,7 +222,8 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
 }
 
 const styles = StyleSheet.create({
-  title: { marginLeft: 8, textAlignVertical: 'center' },
+  title: { textAlignVertical: 'center' },
+  backButton: { marginRight: 8 },
   backButtonIcon: { marginRight: 0 },
   sendButtonIcon: { marginRight: 0, marginLeft: 4 },
   androidScaleInvert: {
