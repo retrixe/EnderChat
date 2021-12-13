@@ -5,5 +5,6 @@
 - Handle graceful disconnect when being hit by the OOM killer?
 - Keyboard doesn't show up after tapping on chat field on Redmi Note 4.
 - https://reactnative.dev/docs/performance (esp when logging in)
+- Respect chat message length limits.
 - OnePlus 3T titles are wrapped.
 - Add command history.

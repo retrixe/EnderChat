@@ -166,7 +166,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
       />
     </View>
   )
-  // LOW-TODO: Use stack navigation for this.
+  // LOW-TODO: Use stack navigation for this so the physical back button works correctly.
   if (settingsOpen) return <SettingScreen button={backButton} />
   return (
     <>
@@ -174,7 +174,6 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         {backButton}
         <Text style={[globalStyle.title, styles.title]}>Chat - {title}</Text>
         <View style={globalStyle.flexSpacer} />
-        {/* TODO: Make this actually work. */}
         <Ionicons.Button
           name='settings-outline'
           iconStyle={styles.backButtonIcon}
