@@ -1,5 +1,7 @@
 import { randomBytes } from 'react-native-crypto'
 
+export const authUrl = 'https://sessionserver.mojang.com/session/minecraft/join'
+
 export const generateSharedSecret = async () =>
   await new Promise<Buffer>((resolve, reject) => {
     randomBytes(16, (err, buf) => {

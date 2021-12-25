@@ -12,7 +12,7 @@ import {
 } from './packet'
 import { resolveHostname } from './utils'
 import { readVarInt, writeVarInt } from './packetUtils'
-// import { generateSharedSecret, mcHexDigest } from './onlineMode'
+// import { authUrl, generateSharedSecret, mcHexDigest } from './onlineMode'
 
 export declare interface ServerConnection {
   on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
@@ -68,6 +68,7 @@ const initiateConnection = async (opts: {
   port: number
   username: string
   protocolVersion: number
+  selectedProfile?: string
   accessToken?: string
 }) => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
@@ -75,6 +76,7 @@ const initiateConnection = async (opts: {
     const socket = net.createConnection({ host, port })
     const conn = new ServerConnection(socket)
     let resolved = false
+    const { accessToken /* , selectedProfile */ } = opts
     socket.on('connect', () => {
       // Create data to send in Handshake.
       const portBuf = Buffer.alloc(2)
@@ -130,8 +132,11 @@ const initiateConnection = async (opts: {
               conn.disconnectReason = packet.data
                 .slice(chatVarIntLength, chatVarIntLength + chatLength)
                 .toString('utf8')
+            } else if (packet.id === 0x01 && !conn.loggedIn && !accessToken) {
+              conn.disconnectReason =
+                'This server requires a premium account to be logged in!'
+              conn.close()
             } /* else if (packet.id === 0x01 && !conn.loggedIn) {
-              // What if no accessToken was provided?
               const [serverIdLen, serverIdLenLen] = readVarInt(packet.data)
               const serverId = packet.data.slice(
                 serverIdLenLen,
@@ -143,7 +148,6 @@ const initiateConnection = async (opts: {
               const verifyTokenData = data.slice(pkLen + pkLenLen)
               const [, verifyTokenLengthLength] = readVarInt(verifyTokenData)
               const verifyToken = verifyTokenData.slice(verifyTokenLengthLength)
-              // TODO: https://wiki.vg/Protocol_Encryption
               // eslint-disable-next-line @typescript-eslint/no-floating-promises
               ;(async () => {
                 // Generate random 16-byte shared secret.
@@ -155,17 +159,13 @@ const initiateConnection = async (opts: {
                 sha1.update(publicKey) // Server's encoded public key from Encryption Request
                 const hash = mcHexDigest(sha1.digest())
                 // Send hash to Mojang servers.
-                const req = await fetch(
-                  'https://sessionserver.mojang.com/session/minecraft/join',
-                  {
-                    method: 'POST',
-                    body: JSON.stringify({})
-                  }
-                )
-                // POST https://sessionserver.mojang.com/session/minecraft/join
-                // Body: {"accessToken": "<accessToken>",
-                // "selectedProfile": "<player's uuid without dashes>",
-                // "serverId": "<serverHash>"}
+                const body = JSON.stringify({
+                  accessToken,
+                  selectedProfile,
+                  serverId: hash
+                })
+                const req = await fetch(authUrl, { method: 'POST', body })
+                // TODO: https://wiki.vg/Protocol_Encryption
                 // Encrypt shared secret and verify token with public key.
                 // Send encryption response packet.
                 // Encrypted Shared Secret Length - VarInt
