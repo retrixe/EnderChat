@@ -6501,11 +6501,6 @@
   "resolved" "https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz"
   "version" "17.0.2"
 
-"react-native-aes-crypto@^2.0.0":
-  "integrity" "sha512-ZsnvpUPaGQ7v7tI7StU40J8bplIQ6xGl7rwUUG+D31KOOIwjODRnUfMfF0hf/6+nrHxtfGd/aUV+nfVLCLI16Q=="
-  "resolved" "https://registry.npmjs.org/react-native-aes-crypto/-/react-native-aes-crypto-2.0.0.tgz"
-  "version" "2.0.0"
-
 "react-native-codegen@^0.0.7":
   "integrity" "sha512-dwNgR8zJ3ALr480QnAmpTiqvFo+rDtq6V5oCggKhYFlRjzOmVSFn3YD41u8ltvKS5G2nQ8gCs2vReFFnRGLYng=="
   "resolved" "https://registry.npmjs.org/react-native-codegen/-/react-native-codegen-0.0.7.tgz"

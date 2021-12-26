@@ -147,7 +147,7 @@ const ServerScreen = () => {
       if (protocolVersion === -1) {
         const ping = pingResponses[servers[server].address]
         // Try the latest.
-        if (!ping) protocolVersion = protocolMap['1.18']
+        if (!ping) protocolVersion = protocolMap['1.18.1']
         else if (typeof ping.version === 'object') {
           protocolVersion = ping.version.protocol
         } else protocolVersion = (ping as LegacyPing).protocol
@@ -248,10 +248,10 @@ const ServerScreen = () => {
           dropdownIconColor={darkMode ? '#ffffff' : '#000000'}
         >
           <Picker.Item label='Auto' value='auto' />
-          <Picker.Item label='1.18' value='1.18' />
+          <Picker.Item label='1.18/1.18.1' value='1.18' />
           <Picker.Item label='1.17.1' value='1.17.1' />
           <Picker.Item label='1.17' value='1.17' />
-          <Picker.Item label='1.16.4/1.16.5' value='1.16.5' />
+          <Picker.Item label='1.16.4/1.16.5' value='1.16.4' />
         </Picker>
         <View style={dialogStyles.modalButtons}>
           <View style={globalStyle.flexSpacer} />

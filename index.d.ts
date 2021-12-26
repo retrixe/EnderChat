@@ -6,6 +6,12 @@ declare module 'react-native-crypto' {
   import * as crypto from 'crypto'
   export = crypto
 }
+declare module 'react-native-randombytes' {
+  export function randomBytes(
+    size: number,
+    callback: (err: Error | null, buf: Buffer) => void
+  ): void
+}
 declare module 'react-native-aes-crypto' {
   export type Algorithms = 'aes-128-cbc' | 'aes-192-cbc' | 'aes-256-cbc'
   export function pbkdf2(
