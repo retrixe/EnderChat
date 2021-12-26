@@ -159,6 +159,7 @@ const ServerScreen = () => {
           reason: 'EnderChat only supports 1.16.4 and newer for now.'
         })
       }
+      // TODO: Refresh token before trying to connect.
       const uuid = accounts[activeAccount].type ? activeAccount : undefined
       const newConn = await initiateConnection({
         host,

@@ -2,7 +2,6 @@ import React from 'react'
 import { TextInput, StyleSheet, TextInputProps } from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
-// TODO: Look into a redesign.
 const TextField = (props: TextInputProps & { red?: boolean }) => {
   const style = props.style && props.style.valueOf()
   const darkMode = useDarkMode()
@@ -21,7 +20,7 @@ const TextField = (props: TextInputProps & { red?: boolean }) => {
         ...(darkMode
           ? styles.modalTextFieldBackgroundDark
           : styles.modalTextFieldBackground),
-        ...(props.red ? { borderColor: '#ff0000' } : {}),
+        ...(props.red ? { borderColor: '#ff0000', borderWidth: 1 } : {}),
         ...(typeof style === 'object' ? style : {})
       }}
     />
