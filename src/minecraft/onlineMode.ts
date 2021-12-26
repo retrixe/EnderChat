@@ -1,4 +1,5 @@
-import { randomBytes } from 'react-native-crypto'
+// Other crypto libraries: simple-crypto, sha256, aes-crypto and rsa-native
+import { randomBytes } from 'react-native-randombytes'
 
 export const authUrl = 'https://sessionserver.mojang.com/session/minecraft/join'
 

@@ -159,11 +159,14 @@ const ServerScreen = () => {
           reason: 'EnderChat only supports 1.16.4 and newer for now.'
         })
       }
+      const uuid = accounts[activeAccount].type ? activeAccount : undefined
       const newConn = await initiateConnection({
         host,
         port,
         username: accounts[activeAccount].username,
-        protocolVersion
+        protocolVersion,
+        selectedProfile: uuid,
+        accessToken: accounts[activeAccount].accessToken
       })
       const onCloseOrError = () => {
         setConnection(undefined)

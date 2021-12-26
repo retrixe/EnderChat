@@ -1,4 +1,9 @@
-// import { createHash } from 'react-native-crypto'
+import {
+  Cipher,
+  createCipheriv,
+  createHash,
+  publicEncrypt
+} from 'react-native-crypto'
 import { InteractionManager } from 'react-native'
 import net from 'react-native-tcp'
 import events from 'events'
@@ -12,7 +17,7 @@ import {
 } from './packet'
 import { resolveHostname } from './utils'
 import { readVarInt, writeVarInt } from './packetUtils'
-// import { authUrl, generateSharedSecret, mcHexDigest } from './onlineMode'
+import { authUrl, generateSharedSecret, mcHexDigest } from './onlineMode'
 
 export declare interface ServerConnection {
   on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
@@ -31,6 +36,7 @@ export class ServerConnection extends events.EventEmitter {
   socket: net.Socket
   disconnectTimer?: NodeJS.Timeout
   disconnectReason?: string
+  aesDigest?: Cipher
 
   constructor(socket: net.Socket) {
     super()
@@ -76,7 +82,7 @@ const initiateConnection = async (opts: {
     const socket = net.createConnection({ host, port })
     const conn = new ServerConnection(socket)
     let resolved = false
-    const { accessToken /* , selectedProfile */ } = opts
+    const { accessToken, selectedProfile } = opts
     socket.on('connect', () => {
       // Create data to send in Handshake.
       const portBuf = Buffer.alloc(2)
@@ -105,8 +111,9 @@ const initiateConnection = async (opts: {
       conn.disconnectTimer = setTimeout(() => conn.close(), 20000)
       // Run after interactions to improve user experience.
       InteractionManager.runAfterInteractions(() => {
+        // Note: the entire packet is encrypted, including the length fields and the packet's data.
+        if (conn.aesDigest) newData = conn.aesDigest.update(newData)
         // Buffer data for read.
-        // TODO: Implement decryption.
         conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
         // ;(async () => { This would need a mutex.
         while (true) {
@@ -134,21 +141,23 @@ const initiateConnection = async (opts: {
                 .toString('utf8')
             } else if (packet.id === 0x01 && !conn.loggedIn && !accessToken) {
               conn.disconnectReason =
-                'This server requires a premium account to be logged in!'
+                '{"text":"This server requires a premium account to be logged in!"}'
               conn.close()
-            } /* else if (packet.id === 0x01 && !conn.loggedIn) {
+            } else if (packet.id === 0x01 && !conn.loggedIn) {
+              // https://wiki.vg/Protocol_Encryption
               const [serverIdLen, serverIdLenLen] = readVarInt(packet.data)
+              // ASCII encoding of the server id string from Encryption Request
               const serverId = packet.data.slice(
                 serverIdLenLen,
                 serverIdLen + serverIdLenLen
               )
               const data = packet.data.slice(serverIdLen + serverIdLenLen)
               const [pkLen, pkLenLen] = readVarInt(data)
+              // Server's encoded public key from Encryption Request
               const publicKey = data.slice(pkLenLen, pkLen + pkLenLen)
               const verifyTokenData = data.slice(pkLen + pkLenLen)
               const [, verifyTokenLengthLength] = readVarInt(verifyTokenData)
               const verifyToken = verifyTokenData.slice(verifyTokenLengthLength)
-              // eslint-disable-next-line @typescript-eslint/no-floating-promises
               ;(async () => {
                 // Generate random 16-byte shared secret.
                 const sharedSecret = await generateSharedSecret()
@@ -164,24 +173,43 @@ const initiateConnection = async (opts: {
                   selectedProfile,
                   serverId: hash
                 })
-                const req = await fetch(authUrl, { method: 'POST', body })
-                // TODO: https://wiki.vg/Protocol_Encryption
+                const req = await fetch(authUrl, {
+                  headers: { 'content-type': 'application/json' },
+                  method: 'POST',
+                  body
+                })
+                if (!req.ok) {
+                  throw new Error('Mojang online mode network request failed')
+                }
                 // Encrypt shared secret and verify token with public key.
+                const pk =
+                  '-----BEGIN PUBLIC KEY-----\n' +
+                  publicKey.toString('base64') +
+                  '\n-----END PUBLIC KEY-----'
+                const encryptedSharedSecret = publicEncrypt(pk, sharedSecret)
+                const encryptedVerifyToken = publicEncrypt(pk, verifyToken)
+                conn.aesDigest = createCipheriv(
+                  'aes-128-cfb8',
+                  sharedSecret,
+                  sharedSecret
+                )
                 // Send encryption response packet.
-                // Encrypted Shared Secret Length - VarInt
-                // Encrypted Shared Secret - Byte Array
-                // Encrypted Verify Token Length - VarInt
-                // Encrypted Verify Token - Byte Array
-                // It then sends a Login Success, and enables AES/CFB8 encryption.
-                // For the Initial Vector (IV) and AES setup, both sides use the shared
-                // secret as both the IV and the key. Similarly, the client will also
-                // enable encryption upon sending Encryption Response.
-                // From this point forward, everything is encrypted.
-                // Note: the entire packet is encrypted, including the length
-                // fields and the packet's data.
-                // The Login Success packet is sent encrypted.
-              })()
-            } */
+                await conn.writePacket(
+                  0x01,
+                  concatPacketData([
+                    writeVarInt(encryptedSharedSecret.byteLength),
+                    encryptedSharedSecret,
+                    writeVarInt(encryptedVerifyToken.byteLength),
+                    encryptedVerifyToken
+                  ])
+                )
+                // From this point forward, everything is encrypted, including the Login Success packet.
+              })().catch(() => {
+                conn.disconnectReason =
+                  '{"text":"Failed to authenticate with Mojang servers!"}'
+                conn.close()
+              })
+            }
             conn.bufferedData =
               conn.bufferedData.length <= packet.packetLength
                 ? Buffer.alloc(0) // Avoid errors shortening.
