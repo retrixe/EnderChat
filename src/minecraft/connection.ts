@@ -1,7 +1,9 @@
 import {
   Cipher,
   createCipheriv,
+  createDecipheriv,
   createHash,
+  Decipher,
   publicEncrypt
 } from 'react-native-crypto'
 import { InteractionManager } from 'react-native'
@@ -36,7 +38,8 @@ export class ServerConnection extends events.EventEmitter {
   socket: net.Socket
   disconnectTimer?: NodeJS.Timeout
   disconnectReason?: string
-  aesDigest?: Cipher
+  aesDecipher?: Decipher
+  aesCipher?: Cipher
 
   constructor(socket: net.Socket) {
     super()
@@ -51,7 +54,8 @@ export class ServerConnection extends events.EventEmitter {
     const packet = this.compressionEnabled
       ? makeBaseCompressedPacket(this.compressionThreshold, packetId, data)
       : makeBasePacket(packetId, data)
-    return this.socket.write(packet, cb)
+    const toWrite = this.aesCipher ? this.aesCipher.update(packet) : packet
+    return this.socket.write(toWrite, cb)
   }
 
   onlyOneCloseCall = false
@@ -112,9 +116,11 @@ const initiateConnection = async (opts: {
       // Run after interactions to improve user experience.
       InteractionManager.runAfterInteractions(() => {
         // Note: the entire packet is encrypted, including the length fields and the packet's data.
-        if (conn.aesDigest) newData = conn.aesDigest.update(newData)
+        // https://github.com/PrismarineJS/node-minecraft-protocol/blob/master/src/transforms/encryption.js
+        let finalData = newData
+        if (conn.aesDecipher) finalData = conn.aesDecipher.update(newData)
         // Buffer data for read.
-        conn.bufferedData = Buffer.concat([conn.bufferedData, newData])
+        conn.bufferedData = Buffer.concat([conn.bufferedData, finalData])
         // ;(async () => { This would need a mutex.
         while (true) {
           const packet = conn.compressionEnabled
@@ -188,11 +194,6 @@ const initiateConnection = async (opts: {
                   '\n-----END PUBLIC KEY-----'
                 const encryptedSharedSecret = publicEncrypt(pk, sharedSecret)
                 const encryptedVerifyToken = publicEncrypt(pk, verifyToken)
-                conn.aesDigest = createCipheriv(
-                  'aes-128-cfb8',
-                  sharedSecret,
-                  sharedSecret
-                )
                 // Send encryption response packet.
                 await conn.writePacket(
                   0x01,
@@ -204,6 +205,9 @@ const initiateConnection = async (opts: {
                   ])
                 )
                 // From this point forward, everything is encrypted, including the Login Success packet.
+                const ss = sharedSecret
+                conn.aesDecipher = createDecipheriv('aes-128-cfb8', ss, ss)
+                conn.aesCipher = createCipheriv('aes-128-cfb8', ss, ss)
               })().catch(() => {
                 conn.disconnectReason =
                   '{"text":"Failed to authenticate with Mojang servers!"}'

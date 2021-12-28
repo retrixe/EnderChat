@@ -360,7 +360,7 @@ const ServerScreen = () => {
                       </>
                     ) : (
                       <Text style={styles.serverDescription}>
-                        {ping === null
+                        {ping === null // LOW-TODO: No UI feedback when No route to host.
                           ? 'Error while pinging...'
                           : 'Pinging...'}
                       </Text>
