@@ -42,6 +42,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
   }, [connection, navigation])
 
   return (
+    // LOW-TODO: Swipe between tab screens.
     <Tabs.Navigator
       screenOptions={({ route }) => ({
         // eslint-disable-next-line react/prop-types,react/display-name
