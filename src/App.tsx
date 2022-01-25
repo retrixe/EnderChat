@@ -13,7 +13,7 @@ import {
   createNativeStackNavigator,
   NativeStackNavigationProp
 } from '@react-navigation/native-stack'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 
 import useAsyncStorage from './helpers/useAsyncStorage'
 import useJsonAsyncStorage from './helpers/useJsonAsyncStorage'
@@ -28,7 +28,7 @@ import SettingScreen from './screens/settings/SettingScreen'
 import globalStyle from './globalStyle'
 
 const Stacks = createNativeStackNavigator()
-const Tabs = createBottomTabNavigator()
+const Tabs = createMaterialTopTabNavigator() // createBottomTabNavigator()
 
 type HomeNavigationProp = NativeStackNavigationProp<
   { Home: undefined; Chat: undefined },
@@ -42,11 +42,11 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
   }, [connection, navigation])
 
   return (
-    // LOW-TODO: Swipe between tab screens.
     <Tabs.Navigator
+      tabBarPosition='bottom'
       screenOptions={({ route }) => ({
         // eslint-disable-next-line react/prop-types,react/display-name
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           let Component = Ionicons
           let iconName = focused ? 'ios-list-circle' : 'ios-list'
           switch (route.name) {
@@ -62,9 +62,11 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
             default:
               break
           }
-          return <Component name={iconName} size={size} color={color} />
+          return <Component name={iconName} size={24} color={color} />
         },
         tabBarLabelStyle: { marginBottom: 5 },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: '#a0a0a0',
         headerShown: false
       })}
     >
