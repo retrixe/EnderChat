@@ -291,7 +291,7 @@ const ServerScreen = () => {
           onPress={() => setAddServerDialogOpen(true)}
           iconStyle={globalStyle.iconStyle}
         >
-          Add
+          <Text style={globalStyle.iconButtonText}>Add</Text>
         </Ionicons.Button>
       </View>
       <ScrollView
@@ -322,7 +322,7 @@ const ServerScreen = () => {
                       source={
                         (ping as Ping).favicon
                           ? { uri: (ping as Ping).favicon }
-                          : require('../pack.png')
+                          : require('../assets/pack.png')
                       }
                       style={styles.serverImage}
                     />

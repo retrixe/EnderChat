@@ -5,5 +5,4 @@
 - Handle graceful disconnect when being hit by the OOM killer?
 - https://reactnative.dev/docs/performance (esp when logging in)
 - Respect chat message length limits.
-- OnePlus 3T titles are wrapped.
 - Add command history.

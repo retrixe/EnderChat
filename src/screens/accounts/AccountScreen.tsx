@@ -72,7 +72,7 @@ const AccountScreen = () => {
           onPress={() => setAddAccountDialogOpen(true)}
           iconStyle={globalStyle.iconStyle}
         >
-          Add
+          <Text style={globalStyle.iconButtonText}>Add</Text>
         </Ionicons.Button>
       </View>
       <View style={globalStyle.outerView}>

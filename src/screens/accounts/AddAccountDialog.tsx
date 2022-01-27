@@ -96,7 +96,7 @@ const AddAccountDialog = ({
         android_ripple={{ color: '#aaa' }}
         onPress={() => setMicrosoftLogin(true)}
       >
-        <Image source={require('../../microsoft.png')} />
+        <Image source={require('../../assets/microsoft.png')} />
         <Text style={styles.microsoftButtonText}>Login with Microsoft</Text>
       </Pressable>
       <TextField

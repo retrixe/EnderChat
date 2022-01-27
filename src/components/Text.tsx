@@ -13,8 +13,9 @@ const Text = (props: React.PropsWithChildren<TextProps>) => (
 )
 
 const styles = StyleSheet.create({
-  darkMode: { color: '#ffffff' },
-  lightMode: { color: '#000000' }
+  // https://github.com/facebook/react-native/issues/15114#issuecomment-364458149
+  darkMode: { color: '#ffffff', fontFamily: '' },
+  lightMode: { color: '#000000', fontFamily: '' }
 })
 
 export default Text

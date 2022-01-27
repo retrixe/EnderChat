@@ -28,5 +28,6 @@ export default StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#121212'
   },
+  iconButtonText: { color: 'white', fontWeight: '600' }, // backgroundColor: 'transparent'
   flexSpacer: { flex: 1 }
 })
