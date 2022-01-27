@@ -11,13 +11,15 @@ const Setting = <T extends string | boolean>({
   value,
   onClick,
   setValue,
-  multiline
+  multiline,
+  maxLength
 }: {
   name: string
   value: T
   onClick?: () => void
   setValue?: (newValue: T) => void
   multiline?: boolean
+  maxLength?: number
 }) => {
   const da = useDarkMode()
   const [modalOpen, setModalOpen] = useState(false)
@@ -44,6 +46,7 @@ const Setting = <T extends string | boolean>({
       {typeof value === 'string' && setValue && (
         <TextFieldDialog
           name={name}
+          maxLength={maxLength}
           placeholder={name}
           multiline={multiline}
           modalOpen={modalOpen}

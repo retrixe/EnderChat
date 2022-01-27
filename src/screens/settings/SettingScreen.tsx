@@ -24,6 +24,7 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
         {/* <Text>Hermes in use: {(global as any).HermesInternal ? 'true' : 'false'}</Text> */}
         <Setting
           multiline
+          maxLength={256}
           name='Join message'
           value={settings.joinMessage}
           setValue={joinMessage => setSettings({ joinMessage })}

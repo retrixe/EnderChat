@@ -83,7 +83,11 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const [message, setMessage] = useState('')
   const loggedInRef = useRef(false)
 
-  const colorMap = mojangColorMap
+  const charLimit =
+    connection && connection.connection.options.protocolVersion >= 306 // 16w38a
+      ? 256
+      : 100
+  const colorMap = darkMode ? mojangColorMap : lightColorMap
   const addMessage = (text: MinecraftChat) =>
     setMessages(m => {
       const trunc = m.length > 500 ? m.slice(0, 499) : m
@@ -104,7 +108,10 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         )
         if (settings.sendJoinMessage) {
           connection.connection
-            .writePacket(0x03, concatPacketData([settings.joinMessage]))
+            .writePacket(
+              0x03,
+              concatPacketData([settings.joinMessage.substring(charLimit)])
+            )
             .catch(errorHandler)
         }
         if (settings.sendSpawnCommand) {
@@ -131,6 +138,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     }
   }, [
     colorMap,
+    charLimit,
     connection,
     settings.joinMessage,
     settings.sendJoinMessage,
@@ -208,6 +216,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
             <TextField
               value={message}
+              maxLength={charLimit}
               onChangeText={setMessage}
               style={styles.textField}
               onSubmitEditing={sendMessage}

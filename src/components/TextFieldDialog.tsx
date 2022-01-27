@@ -9,6 +9,7 @@ import useDarkMode from '../context/useDarkMode'
 const TextFieldDialog = ({
   name,
   multiline,
+  maxLength,
   modalOpen,
   closeModal,
   placeholder,
@@ -17,6 +18,7 @@ const TextFieldDialog = ({
 }: {
   name: string
   modalOpen: boolean
+  maxLength?: number
   multiline?: boolean
   placeholder: string
   closeModal: () => void
@@ -38,6 +40,7 @@ const TextFieldDialog = ({
       <Text style={styles.modalTitle}>{name}</Text>
       <TextField
         value={modalContent}
+        maxLength={maxLength}
         multiline={multiline}
         placeholder={placeholder}
         onChangeText={setModalContent}

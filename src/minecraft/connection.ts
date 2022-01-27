@@ -29,6 +29,15 @@ export declare interface ServerConnection {
     ((event: string, listener: Function) => this)
 }
 
+export interface ConnectionOptions {
+  host: string
+  port: number
+  username: string
+  protocolVersion: number
+  selectedProfile?: string
+  accessToken?: string
+}
+
 export class ServerConnection extends events.EventEmitter {
   bufferedData: Buffer = Buffer.from([])
   compressionThreshold = -1
@@ -36,14 +45,16 @@ export class ServerConnection extends events.EventEmitter {
   loggedIn = false
   closed = false
   socket: net.Socket
+  options: ConnectionOptions
   disconnectTimer?: NodeJS.Timeout
   disconnectReason?: string
   aesDecipher?: Decipher
   aesCipher?: Cipher
 
-  constructor(socket: net.Socket) {
+  constructor(socket: net.Socket, options: ConnectionOptions) {
     super()
     this.socket = socket
+    this.options = options
   }
 
   async writePacket(
@@ -73,18 +84,11 @@ export class ServerConnection extends events.EventEmitter {
   }
 }
 
-const initiateConnection = async (opts: {
-  host: string
-  port: number
-  username: string
-  protocolVersion: number
-  selectedProfile?: string
-  accessToken?: string
-}) => {
+const initiateConnection = async (opts: ConnectionOptions) => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<ServerConnection>((resolve, reject) => {
     const socket = net.createConnection({ host, port })
-    const conn = new ServerConnection(socket)
+    const conn = new ServerConnection(socket, opts)
     let resolved = false
     const { accessToken, selectedProfile } = opts
     socket.on('connect', () => {

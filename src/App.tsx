@@ -82,7 +82,7 @@ const App = () => {
   const [connection, setConnection] = React.useState<Connection | undefined>()
 
   const [settings, setSettings] = useJsonAsyncStorage<Settings>('@settings', {
-    // TODO: Better defaults and settings.
+    // TODO: Better defaults and settings e.g. join message is 140 chars (bad for <1.11).
     joinMessage:
       'I connected using EnderChat, an ad-free, easy to use and well-built ' +
       'alternative to ChatCraft for Android! Even this message can be disabled!',
