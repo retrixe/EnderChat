@@ -15,6 +15,7 @@ import SettingsContext from '../context/settingsContext'
 import ConnectionContext from '../context/connectionContext'
 import {
   ChatToJsx,
+  parseValidJson,
   mojangColorMap,
   lightColorMap,
   MinecraftChat,
@@ -127,7 +128,9 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
             .toString('utf8')
           const position = packet.data.readInt8(chatVarIntLength + chatLength)
           // TODO: Support position 2 and sender.
-          if (position === 0 || position === 1) addMessage(JSON.parse(chatJson))
+          if (position === 0 || position === 1) {
+            addMessage(parseValidJson(chatJson))
+          }
         } catch (e) {
           createErrorHandler(colorMap.dark_red, addMessage, parseMessageErr)(e)
         }

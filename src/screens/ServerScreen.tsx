@@ -32,7 +32,8 @@ import initiateConnection from '../minecraft/connection'
 import {
   ChatToJsx,
   lightColorMap,
-  mojangColorMap
+  mojangColorMap,
+  parseValidJson
 } from '../minecraft/chatToJsx'
 import useDarkMode from '../context/useDarkMode'
 
@@ -176,7 +177,7 @@ const ServerScreen = () => {
         if (newConn.disconnectReason) {
           setDisconnectReason({
             server,
-            reason: JSON.parse(newConn.disconnectReason)
+            reason: parseValidJson(newConn.disconnectReason)
           })
         }
       }

@@ -3,8 +3,8 @@ import { Buffer } from 'buffer'
 
 import { makeBasePacket, concatPacketData, parsePacket, Packet } from './packet'
 import { toggleEndian, padBufferToLength, resolveHostname } from './utils'
+import { parseValidJson, PlainTextChat } from './chatToJsx'
 import { readVarInt, writeVarInt } from './packetUtils'
-import { PlainTextChat } from './chatToJsx'
 
 export interface LegacyPing {
   ff: number
@@ -136,7 +136,7 @@ export const modernPing = async (opts: { host: string; port: number }) => {
         const json = responsePacket.data
           .slice(varIntLength, varIntLength + jsonLength)
           .toString('utf8')
-        const response = JSON.parse(json)
+        const response = parseValidJson(json)
 
         resolve({
           ping: (timeReceived - timeSent) / 2,

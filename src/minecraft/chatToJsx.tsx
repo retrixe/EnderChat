@@ -224,4 +224,12 @@ const ChatToJsxNonMemo = ({
 // Memoisation means this is only re-rendered if the props changed.
 export const ChatToJsx = React.memo(ChatToJsxNonMemo)
 
+export const parseValidJson = (text: string) => {
+  try {
+    return JSON.parse(text)
+  } catch (e) {
+    return text
+  }
+}
+
 export default parseChatToJsx
