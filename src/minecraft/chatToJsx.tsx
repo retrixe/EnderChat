@@ -2,9 +2,6 @@ import React from 'react'
 import { StyleProp, TextProps, TextStyle } from 'react-native'
 import translations from './translations'
 
-// TODO: Add a better color map for light mode, as Mojang color map is terrible.
-export const lightModeColorMap: {} = {}
-
 export const mojangColorMap: ColorMap = {
   black: '#000000',
   dark_blue: '#0000AA',
@@ -22,6 +19,15 @@ export const mojangColorMap: ColorMap = {
   light_purple: '#FF55FF',
   yellow: '#FFFF55',
   white: '#FFFFFF'
+}
+
+export const lightColorMap: ColorMap = {
+  ...mojangColorMap,
+  white: '#000000', // LOW-TODO: Should white be pure black?
+  green: '#55c855',
+  gray: '#999999',
+  yellow: '#b9b955',
+  aqua: '#55cdcd'
 }
 
 export interface ColorMap {
@@ -65,6 +71,8 @@ export interface TranslatedChat {
   translate: string
   with: PlainTextChat[]
 }
+
+export type MinecraftChat = PlainTextChat | TranslatedChat | string
 
 export interface ClickEvent {
   // TODO: Build actual support for this.
@@ -155,7 +163,7 @@ const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
 }
 
 const parseChatToJsx = (
-  chat: PlainTextChat | TranslatedChat | string,
+  chat: MinecraftChat,
   Component: React.ComponentType<TextProps>,
   colorMap: ColorMap,
   componentProps?: {},
@@ -198,5 +206,22 @@ const parseChatToJsx = (
     </Component>
   )
 }
+
+// React Component-ised.
+const ChatToJsxNonMemo = ({
+  chat,
+  component,
+  colorMap,
+  componentProps,
+  trim
+}: {
+  chat: MinecraftChat
+  component: React.ComponentType<TextProps>
+  colorMap: ColorMap
+  componentProps?: {}
+  trim?: boolean
+}) => parseChatToJsx(chat, component, colorMap, componentProps, trim)
+// Memoisation means this is only re-rendered if the props changed.
+export const ChatToJsx = React.memo(ChatToJsxNonMemo)
 
 export default parseChatToJsx

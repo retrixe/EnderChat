@@ -13,7 +13,13 @@ import globalStyle from '../globalStyle'
 import useDarkMode from '../context/useDarkMode'
 import SettingsContext from '../context/settingsContext'
 import ConnectionContext from '../context/connectionContext'
-import parseChatToJsx, { mojangColorMap } from '../minecraft/chatToJsx'
+import {
+  ChatToJsx,
+  mojangColorMap,
+  lightColorMap,
+  MinecraftChat,
+  ColorMap
+} from '../minecraft/chatToJsx'
 import { concatPacketData } from '../minecraft/packet'
 import { readVarInt } from '../minecraft/packetUtils'
 import TextField from '../components/TextField'
@@ -27,20 +33,25 @@ type ChatNavigationProp = NativeStackNavigationProp<
 >
 interface Message {
   key: number
-  text: JSX.Element
+  text: MinecraftChat
 }
 
-const renderItem = ({ item }: { item: Message }) => (
-  <View style={styles.androidScaleInvert}>{item.text}</View>
-) // https://reactnative.dev/docs/optimizing-flatlist-configuration
-const ChatMessageList = (props: { messages: Message[] }) => {
+const renderItem = (colorMap: ColorMap) => {
+  const ItemRenderer = ({ item }: { item: Message }) => (
+    <View style={styles.androidScaleInvert}>
+      <ChatToJsx chat={item.text} component={Text} colorMap={colorMap} />
+    </View>
+  )
+  return ItemRenderer // LOW-TODO: Performance implications?
+} // https://reactnative.dev/docs/optimizing-flatlist-configuration
+const ChatMessageList = (props: { messages: Message[]; darkMode: boolean }) => {
   return (
     <FlatList
       inverted={Platform.OS !== 'android'}
       data={props.messages}
       style={[styles.androidScaleInvert, styles.chatArea]}
       contentContainerStyle={styles.chatAreaScrollView}
-      renderItem={renderItem}
+      renderItem={renderItem(props.darkMode ? mojangColorMap : lightColorMap)}
     />
   )
 }
@@ -51,11 +62,11 @@ const ChatMessageListMemo = React.memo(
 
 const createErrorHandler = (
   color: string,
-  addMessage: (text: JSX.Element) => void,
+  addMessage: (text: MinecraftChat) => void,
   translated: string
 ) => (error: unknown) => {
   console.error(error)
-  addMessage(<Text style={{ color }}>[EnderChat] {translated}</Text>)
+  addMessage('[EnderChat] ' + translated)
 }
 const sendMessageErr = 'Failed to send message to server!'
 const parseMessageErr = 'An error occurred when parsing chat.'
@@ -73,7 +84,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const loggedInRef = useRef(false)
 
   const colorMap = mojangColorMap
-  const addMessage = (text: JSX.Element) =>
+  const addMessage = (text: MinecraftChat) =>
     setMessages(m => {
       const trunc = m.length > 500 ? m.slice(0, 499) : m
       return [{ key: id++, text }].concat(trunc)
@@ -109,9 +120,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
             .toString('utf8')
           const position = packet.data.readInt8(chatVarIntLength + chatLength)
           // LOW-TODO: Support position 2 and sender.
-          if (position === 0 || position === 1) {
-            addMessage(parseChatToJsx(JSON.parse(chatJson), Text, colorMap))
-          }
+          if (position === 0 || position === 1) addMessage(JSON.parse(chatJson))
         } catch (e) {
           createErrorHandler(colorMap.dark_red, addMessage, parseMessageErr)(e)
         }
@@ -195,7 +204,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
       )}
       {loggedIn && (
         <>
-          <ChatMessageListMemo messages={messages} />
+          <ChatMessageListMemo messages={messages} darkMode={darkMode} />
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
             <TextField
               value={message}

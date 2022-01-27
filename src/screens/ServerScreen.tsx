@@ -29,9 +29,11 @@ import AccountsContext from '../context/accountsContext'
 import ConnectionContext from '../context/connectionContext'
 import { resolveHostname, protocolMap } from '../minecraft/utils'
 import initiateConnection from '../minecraft/connection'
-import parseChatToJsx, {
-  mojangColorMap,
-  PlainTextChat
+import {
+  ChatToJsx,
+  MinecraftChat,
+  lightColorMap,
+  mojangColorMap
 } from '../minecraft/chatToJsx'
 import useDarkMode from '../context/useDarkMode'
 
@@ -68,7 +70,7 @@ const ServerScreen = () => {
   }>({})
   const [disconnectDialog, setDisconnectDialog] = useState<{
     server: string
-    reason: PlainTextChat | string
+    reason: MinecraftChat
   } | null>(null)
 
   useEffect(() => {
@@ -216,9 +218,12 @@ const ServerScreen = () => {
           <Text style={dialogStyles.modalTitle}>
             Disconnected from {disconnectDialog.server}
           </Text>
-          {parseChatToJsx(disconnectDialog.reason, Text, mojangColorMap, {
-            style: styles.serverDescription
-          })}
+          <ChatToJsx
+            chat={disconnectDialog.reason}
+            component={Text}
+            colorMap={darkMode ? mojangColorMap : lightColorMap}
+            componentProps={{ style: styles.serverDescription }}
+          />
           <View style={dialogStyles.modalButtons}>
             <View style={globalStyle.flexSpacer} />
             <Pressable
@@ -349,14 +354,16 @@ const ServerScreen = () => {
                             (ping as LegacyPing).maxPlayers}{' '}
                           players online | Ping: {ping.ping}ms
                         </Text>
-                        {parseChatToJsx(
-                          (ping as Ping).description ??
-                            (ping as LegacyPing).motd,
-                          Text,
-                          mojangColorMap,
-                          { style: styles.serverDescription },
-                          true
-                        )}
+                        <ChatToJsx
+                          chat={
+                            (ping as Ping).description ??
+                            (ping as LegacyPing).motd
+                          }
+                          component={Text}
+                          colorMap={darkMode ? mojangColorMap : lightColorMap}
+                          componentProps={{ styles: styles.serverDescription }}
+                          trim
+                        />
                       </>
                     ) : (
                       <Text style={styles.serverDescription}>
