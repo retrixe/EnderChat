@@ -5,7 +5,8 @@ export default StyleSheet.create({
   iconStyle: { marginRight: 5 },
   title: {
     fontSize: 24,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    height: 37.5
   },
   horizontalLine: {
     backgroundColor: '#666',

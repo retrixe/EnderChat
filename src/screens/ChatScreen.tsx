@@ -126,7 +126,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
             .slice(chatVarIntLength, chatVarIntLength + chatLength)
             .toString('utf8')
           const position = packet.data.readInt8(chatVarIntLength + chatLength)
-          // LOW-TODO: Support position 2 and sender.
+          // TODO: Support position 2 and sender.
           if (position === 0 || position === 1) addMessage(JSON.parse(chatJson))
         } catch (e) {
           createErrorHandler(colorMap.dark_red, addMessage, parseMessageErr)(e)
@@ -183,7 +183,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
       />
     </View>
   )
-  // LOW-TODO: Use stack navigation for this so the physical back button works correctly.
+  // TODO: Use stack navigation for this so the physical back button works correctly.
   if (settingsOpen) return <SettingScreen button={backButton} />
   return (
     <>

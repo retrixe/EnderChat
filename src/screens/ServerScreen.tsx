@@ -31,7 +31,6 @@ import { resolveHostname, protocolMap } from '../minecraft/utils'
 import initiateConnection from '../minecraft/connection'
 import {
   ChatToJsx,
-  MinecraftChat,
   lightColorMap,
   mojangColorMap
 } from '../minecraft/chatToJsx'
@@ -52,7 +51,12 @@ const ServerScreen = () => {
   const darkMode = useDarkMode()
   const { servers, setServers } = useContext(ServersContext)
   const { accounts } = useContext(AccountsContext)
-  const { connection, setConnection } = useContext(ConnectionContext)
+  const {
+    connection,
+    setConnection,
+    disconnectReason,
+    setDisconnectReason
+  } = useContext(ConnectionContext)
   const initiatingConnection = useRef(false)
 
   const [ipAddr, setIpAddr] = useState('')
@@ -68,10 +72,6 @@ const ServerScreen = () => {
   const [pingResponses, setPingResponses] = useState<{
     [ip: string]: LegacyPing | Ping | null
   }>({})
-  const [disconnectDialog, setDisconnectDialog] = useState<{
-    server: string
-    reason: MinecraftChat
-  } | null>(null)
 
   useEffect(() => {
     if (Object.keys(pingResponses).length > 0) {
@@ -139,7 +139,7 @@ const ServerScreen = () => {
       const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
       if (!activeAccount) {
         initiatingConnection.current = false
-        return setDisconnectDialog({
+        return setDisconnectReason({
           server,
           reason:
             'No active account selected! Open the Accounts tab and add an account.'
@@ -156,7 +156,7 @@ const ServerScreen = () => {
       }
       if (protocolVersion < 754) {
         initiatingConnection.current = false
-        return setDisconnectDialog({
+        return setDisconnectReason({
           server,
           reason: 'EnderChat only supports 1.16.4 and newer for now.'
         })
@@ -174,8 +174,7 @@ const ServerScreen = () => {
       const onCloseOrError = () => {
         setConnection(undefined)
         if (newConn.disconnectReason) {
-          // TODO: This doesn't always hit correctly, since screen may be unrendered.
-          setDisconnectDialog({
+          setDisconnectReason({
             server,
             reason: JSON.parse(newConn.disconnectReason)
           })
@@ -213,13 +212,13 @@ const ServerScreen = () => {
           </Text>
         </Pressable>
       </Dialog>
-      {disconnectDialog && (
-        <Dialog visible onRequestClose={() => setDisconnectDialog(null)}>
+      {disconnectReason && (
+        <Dialog visible onRequestClose={() => setDisconnectReason()}>
           <Text style={dialogStyles.modalTitle}>
-            Disconnected from {disconnectDialog.server}
+            Disconnected from {disconnectReason.server}
           </Text>
           <ChatToJsx
-            chat={disconnectDialog.reason}
+            chat={disconnectReason.reason}
             component={Text}
             colorMap={darkMode ? mojangColorMap : lightColorMap}
             componentProps={{ style: styles.serverDescription }}
@@ -227,7 +226,7 @@ const ServerScreen = () => {
           <View style={dialogStyles.modalButtons}>
             <View style={globalStyle.flexSpacer} />
             <Pressable
-              onPress={() => setDisconnectDialog(null)}
+              onPress={() => setDisconnectReason()}
               android_ripple={{ color: '#aaa' }}
               style={dialogStyles.modalButton}
             >

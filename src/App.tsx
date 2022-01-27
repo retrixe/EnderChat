@@ -17,7 +17,10 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 
 import useAsyncStorage from './helpers/useAsyncStorage'
 import useJsonAsyncStorage from './helpers/useJsonAsyncStorage'
-import ConnectionContext, { Connection } from './context/connectionContext'
+import ConnectionContext, {
+  Connection,
+  DisconnectReason as Disconnect
+} from './context/connectionContext'
 import AccountsContext, { Accounts } from './context/accountsContext'
 import SettingsContext, { Settings } from './context/settingsContext'
 import ServersContext, { Servers } from './context/serversContext'
@@ -80,6 +83,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
 const App = () => {
   const colorScheme = useColorScheme()
   const [connection, setConnection] = React.useState<Connection | undefined>()
+  const [disconnect, setDisconnect] = React.useState<Disconnect | undefined>()
 
   const [settings, setSettings] = useJsonAsyncStorage<Settings>('@settings', {
     // TODO: Better defaults and settings e.g. join message is 140 chars (bad for <1.11).
@@ -120,7 +124,14 @@ const App = () => {
 
   return (
     <SafeAreaView style={globalStyle.flexSpacer}>
-      <ConnectionContext.Provider value={{ connection, setConnection }}>
+      <ConnectionContext.Provider
+        value={{
+          connection,
+          setConnection,
+          disconnectReason: disconnect,
+          setDisconnectReason: setDisconnect
+        }}
+      >
         <SettingsContext.Provider value={{ settings, setSettings }}>
           <ServersContext.Provider value={{ servers, setServers }}>
             <AccountsContext.Provider value={{ accounts, setAccounts }}>
