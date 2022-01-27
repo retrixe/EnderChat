@@ -174,7 +174,7 @@ const ServerScreen = () => {
       const onCloseOrError = () => {
         setConnection(undefined)
         if (newConn.disconnectReason) {
-          // LOW-TODO: This doesn't always hit correctly, since screen may be unrendered.
+          // TODO: This doesn't always hit correctly, since screen may be unrendered.
           setDisconnectDialog({
             server,
             reason: JSON.parse(newConn.disconnectReason)

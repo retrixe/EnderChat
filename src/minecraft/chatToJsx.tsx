@@ -188,7 +188,7 @@ const parseChatToJsx = (
         const style: StyleProp<TextStyle> = {}
         if (c.bold) style.fontWeight = 'bold'
         if (c.italic) style.fontStyle = 'italic'
-        // TODO: if (c.obfuscated) style.color = 'transparent'
+        if (c.obfuscated) c.text = (c.text || '').replace(/./g, '▒')
         if (c.underlined && c.strikethrough) {
           style.textDecorationLine = 'underline line-through'
         } else if (c.underlined) style.textDecorationLine = 'underline'
