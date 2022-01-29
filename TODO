@@ -1,8 +1,7 @@
+- Add command history.
 - Reduce bundled icons.
 - Add icon and configure app.json.
 - Fix issue with split-screen when connected.
 - Work on replacing auto /spawn with auto commands.
 - Handle graceful disconnect when being hit by the OOM killer?
 - https://reactnative.dev/docs/performance (esp when logging in)
-- Respect chat message length limits.
-- Add command history.

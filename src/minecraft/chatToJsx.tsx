@@ -222,6 +222,7 @@ const ChatToJsxNonMemo = ({
   trim?: boolean
 }) => parseChatToJsx(chat, component, colorMap, componentProps, trim)
 // Memoisation means this is only re-rendered if the props changed.
+// TODO: This over parsing might be hurting performance...
 export const ChatToJsx = React.memo(ChatToJsxNonMemo)
 
 export const parseValidJson = (text: string) => {

@@ -78,6 +78,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const darkMode = useDarkMode()
   const { settings } = useContext(SettingsContext)
   const { connection, setConnection } = useContext(ConnectionContext)
+  const [, setCommandHistory] = useState<string[]>([]) // TODO
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
@@ -162,10 +163,12 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   }, [connection, setConnection, navigation])
 
   const sendMessage = () => {
-    if (!connection || !message.trim()) return
+    const trim = message.trim()
+    if (!connection || !trim) return
     setMessage('')
+    if (trim.startsWith('/')) setCommandHistory(ch => ch.concat([trim]))
     connection.connection
-      .writePacket(0x03, concatPacketData([message.trim()]))
+      .writePacket(0x03, concatPacketData([trim]))
       .catch(createErrorHandler(colorMap.dark_red, addMessage, sendMessageErr))
   }
 

@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState } from 'react'
-import { StyleSheet, Pressable, Modal } from 'react-native'
+import { StyleSheet, Pressable, Modal, Platform } from 'react-native'
 import { WebView, WebViewNavigation } from 'react-native-webview'
 
 import useDarkMode from '../../context/useDarkMode'
@@ -123,6 +123,11 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
             originWhitelist={['*']}
             source={html ? { html } : { uri: loginUrl }}
             onNavigationStateChange={handleNavigationStateChange}
+            androidLayerType={
+              Platform.OS === 'android' && Platform.Version > 30
+                ? 'software' // TODO: Really choppy. Solve when you get Android 12?
+                : 'hardware'
+            }
           />
         </Pressable>
       </Pressable>
