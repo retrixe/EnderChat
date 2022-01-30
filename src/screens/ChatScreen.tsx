@@ -99,7 +99,8 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const darkMode = useDarkMode()
   const { settings } = useContext(SettingsContext)
   const { connection, setConnection } = useContext(ConnectionContext)
-  const [, setCommandHistory] = useState<string[]>([]) // TODO
+  // TODO: Show command history.
+  const [, setCommandHistory] = useState<string[]>([])
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
