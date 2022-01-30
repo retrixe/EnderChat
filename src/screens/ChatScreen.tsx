@@ -56,13 +56,9 @@ const ChatMessageList = (props: { messages: Message[]; darkMode: boolean }) => {
     />
   )
 }
-const ChatMessageListMemo = React.memo(
-  ChatMessageList,
-  (prevProps, nextProps) => prevProps.messages === nextProps.messages
-)
+const ChatMessageListMemo = React.memo(ChatMessageList) // Shallow prop compare.
 
-const createErrorHandler = (
-  color: string,
+const errorHandler = (
   addMessage: (text: MinecraftChat) => void,
   translated: string
 ) => (error: unknown) => {
@@ -89,7 +85,6 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     connection && connection.connection.options.protocolVersion >= 306 // 16w38a
       ? 256
       : 100
-  const colorMap = darkMode ? mojangColorMap : lightColorMap
   const addMessage = (text: MinecraftChat) =>
     setMessages(m => {
       const trunc = m.length > 500 ? m.slice(0, 499) : m
@@ -103,23 +98,18 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
       if (!loggedInRef.current && connection.connection.loggedIn) {
         setLoggedIn(true)
         loggedInRef.current = true
-        const errorHandler = createErrorHandler(
-          colorMap.dark_red,
-          addMessage,
-          sendMessageErr
-        )
         if (settings.sendJoinMessage) {
           connection.connection
             .writePacket(
               0x03,
               concatPacketData([settings.joinMessage.substring(charLimit)])
             )
-            .catch(errorHandler)
+            .catch(errorHandler(addMessage, sendMessageErr))
         }
         if (settings.sendSpawnCommand) {
           connection.connection
             .writePacket(0x03, concatPacketData(['/spawn']))
-            .catch(errorHandler)
+            .catch(errorHandler(addMessage, sendMessageErr))
         }
       } else if (packet.id === 0x0f) {
         try {
@@ -133,7 +123,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
             addMessage(parseValidJson(chatJson))
           }
         } catch (e) {
-          createErrorHandler(colorMap.dark_red, addMessage, parseMessageErr)(e)
+          errorHandler(addMessage, parseMessageErr)(e)
         }
       }
     })
@@ -141,7 +131,6 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
       connection.connection.removeAllListeners('packet')
     }
   }, [
-    colorMap,
     charLimit,
     connection,
     settings.joinMessage,
@@ -169,7 +158,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     if (trim.startsWith('/')) setCommandHistory(ch => ch.concat([trim]))
     connection.connection
       .writePacket(0x03, concatPacketData([trim]))
-      .catch(createErrorHandler(colorMap.dark_red, addMessage, sendMessageErr))
+      .catch(errorHandler(addMessage, sendMessageErr))
   }
 
   if (!connection) return <></> // This should never be hit hopefully.

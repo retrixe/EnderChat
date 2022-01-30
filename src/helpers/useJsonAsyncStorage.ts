@@ -10,7 +10,8 @@ const useMemoisedValue = <T>(value: T) => {
 }
 
 // This does not support deep merge, do not use it for deep merging.
-// This also requires JSON compatible objects to be passed.
+// LOW-TODO: This does not support removing existing keys.
+// This function requires JSON compatible objects to be passed.
 const useJsonAsyncStorage = <T extends {}>(
   name: string,
   passedDefaultValue: T
