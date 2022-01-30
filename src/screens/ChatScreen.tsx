@@ -128,7 +128,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
           connection.connection
             .writePacket(
               0x03,
-              concatPacketData([settings.joinMessage.substring(charLimit)])
+              concatPacketData([settings.joinMessage.substring(0, charLimit)])
             )
             .catch(errorHandler(addMessage, sendMessageErr))
         }
