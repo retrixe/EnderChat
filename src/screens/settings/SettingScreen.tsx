@@ -40,7 +40,7 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
           setValue={sendSpawnCommand => setSettings({ sendSpawnCommand })}
         />
         <Setting
-          name='Enable web links'
+          name='Enable clicking web links'
           value={settings.webLinks}
           setValue={webLinks => setSettings({ webLinks })}
         />

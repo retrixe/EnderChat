@@ -4,15 +4,17 @@ import {
   StyleSheet,
   View,
   ActivityIndicator,
-  Platform
+  Platform,
+  Linking,
+  Clipboard
 } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import globalStyle from '../globalStyle'
 import useDarkMode from '../context/useDarkMode'
-import SettingsContext from '../context/settingsContext'
 import ConnectionContext from '../context/connectionContext'
+import SettingsContext, { Settings } from '../context/settingsContext'
 import {
   ChatToJsx,
   parseValidJson,
@@ -37,22 +39,45 @@ interface Message {
   text: MinecraftChat
 }
 
-const renderItem = (colorMap: ColorMap) => {
+const renderItem = (colorMap: ColorMap, settings: Settings) => {
   const ItemRenderer = ({ item }: { item: Message }) => (
     <View style={styles.androidScaleInvert}>
-      <ChatToJsx chat={item.text} component={Text} colorMap={colorMap} />
+      <ChatToJsx
+        chat={item.text}
+        component={Text}
+        colorMap={colorMap}
+        clickEventHandler={async ce => {
+          // TODO: run_command, suggest_command and URL prompt support.
+          if (
+            ce.action === 'open_url' &&
+            settings.webLinks &&
+            (ce.value.startsWith('https://') || ce.value.startsWith('http://'))
+          ) {
+            await Linking.openURL(ce.value)
+          } else if (ce.action === 'copy_to_clipboard') {
+            Clipboard.setString(ce.value)
+          } // No open_file/change_page handling.
+        }}
+      />
     </View>
   )
   return ItemRenderer // LOW-TODO: Performance implications?
 } // https://reactnative.dev/docs/optimizing-flatlist-configuration
-const ChatMessageList = (props: { messages: Message[]; darkMode: boolean }) => {
+const ChatMessageList = (props: {
+  messages: Message[]
+  darkMode: boolean
+  settings: Settings
+}) => {
   return (
     <FlatList
       inverted={Platform.OS !== 'android'}
       data={props.messages}
       style={[styles.androidScaleInvert, styles.chatArea]}
       contentContainerStyle={styles.chatAreaScrollView}
-      renderItem={renderItem(props.darkMode ? mojangColorMap : lightColorMap)}
+      renderItem={renderItem(
+        props.darkMode ? mojangColorMap : lightColorMap,
+        props.settings
+      )}
     />
   )
 }
@@ -207,7 +232,11 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
       )}
       {loggedIn && (
         <>
-          <ChatMessageListMemo messages={messages} darkMode={darkMode} />
+          <ChatMessageListMemo
+            messages={messages}
+            darkMode={darkMode}
+            settings={settings}
+          />
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
             <TextField
               value={message}

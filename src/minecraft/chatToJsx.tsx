@@ -75,7 +75,6 @@ export interface TranslatedChat {
 export type MinecraftChat = PlainTextChat | TranslatedChat | string
 
 export interface ClickEvent {
-  // TODO: Build actual support for this.
   action:
     | 'open_url'
     | 'open_file'
@@ -166,6 +165,7 @@ const parseChatToJsx = (
   chat: MinecraftChat,
   Component: React.ComponentType<TextProps>,
   colorMap: ColorMap,
+  clickEventHandler: (clickEvent: ClickEvent) => void = () => {},
   componentProps?: {},
   trim = false
 ) => {
@@ -197,8 +197,15 @@ const parseChatToJsx = (
         if (c.color && c.color.startsWith('#')) style.color = c.color
         else if (c.color && colorMap[c.color]) style.color = colorMap[c.color]
 
+        const ce = c.clickEvent
         return (
-          <Component key={i} style={style}>
+          <Component
+            key={i}
+            style={style}
+            selectable
+            onPress={ce ? () => clickEventHandler(ce) : undefined}
+            onLongPress={() => {}}
+          >
             {c.text ? (trim ? trimLines(c.text) : c.text) : ''}
           </Component>
         )
@@ -208,21 +215,24 @@ const parseChatToJsx = (
 }
 
 // React Component-ised.
-const ChatToJsxNonMemo = ({
-  chat,
-  component,
-  colorMap,
-  componentProps,
-  trim
-}: {
+const ChatToJsxNonMemo = (props: {
   chat: MinecraftChat
   component: React.ComponentType<TextProps>
   colorMap: ColorMap
   componentProps?: {}
+  clickEventHandler?: (clickEvent: ClickEvent) => void
   trim?: boolean
-}) => parseChatToJsx(chat, component, colorMap, componentProps, trim)
+}) =>
+  parseChatToJsx(
+    props.chat,
+    props.component,
+    props.colorMap,
+    props.clickEventHandler,
+    props.componentProps,
+    props.trim
+  )
 // Memoisation means this is only re-rendered if the props changed.
-// TODO: This over parsing might be hurting performance...
+// TODO: This might be hurting performance...
 export const ChatToJsx = React.memo(ChatToJsxNonMemo)
 
 export const parseValidJson = (text: string) => {
