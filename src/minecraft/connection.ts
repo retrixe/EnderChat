@@ -196,8 +196,9 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                   '-----BEGIN PUBLIC KEY-----\n' +
                   publicKey.toString('base64') +
                   '\n-----END PUBLIC KEY-----'
-                const encryptedSharedSecret = publicEncrypt(pk, sharedSecret)
-                const encryptedVerifyToken = publicEncrypt(pk, verifyToken)
+                const ePrms = { key: pk, padding: 1 } // RSA_PKCS1_PADDING
+                const encryptedSharedSecret = publicEncrypt(ePrms, sharedSecret)
+                const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
                 // Send encryption response packet.
                 await conn.writePacket(
                   0x01,
@@ -212,7 +213,8 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                 const ss = sharedSecret
                 conn.aesDecipher = createDecipheriv('aes-128-cfb8', ss, ss)
                 conn.aesCipher = createCipheriv('aes-128-cfb8', ss, ss)
-              })().catch(() => {
+              })().catch(e => {
+                console.error(e)
                 conn.disconnectReason =
                   '{"text":"Failed to authenticate with Mojang servers!"}'
                 conn.close()
