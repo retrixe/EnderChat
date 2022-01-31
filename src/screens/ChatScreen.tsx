@@ -82,6 +82,7 @@ const errorHandler = (
 }
 const sendMessageErr = 'Failed to send message to server!'
 const parseMessageErr = 'An error occurred when parsing chat.'
+const inventoryCloseErr = 'An error occurred when closing an inventory window.'
 
 let id = 0
 // TODO: Ability to copy text.
@@ -127,7 +128,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
             .writePacket(0x03, concatPacketData(['/spawn']))
             .catch(errorHandler(addMessage, sendMessageErr))
         }
-      } else if (packet.id === 0x0f) {
+      } else if (packet.id === 0x0f /* Chat Message (clientbound) */) {
         try {
           const [chatLength, chatVarIntLength] = readVarInt(packet.data)
           const chatJson = packet.data
@@ -141,6 +142,14 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         } catch (e) {
           errorHandler(addMessage, parseMessageErr)(e)
         }
+      } else if (packet.id === 0x2e /* Open Window */) {
+        // Just close the window.
+        const [windowId] = readVarInt(packet.data)
+        const buf = Buffer.alloc(1)
+        buf.writeUInt8(windowId)
+        connection.connection // Close Window (serverbound)
+          .writePacket(0x09, buf)
+          .catch(errorHandler(addMessage, inventoryCloseErr))
       }
     })
     return () => {

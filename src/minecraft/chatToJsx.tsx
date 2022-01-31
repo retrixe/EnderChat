@@ -60,7 +60,7 @@ export interface BaseChat {
   extra?: PlainTextChat[]
   insertion?: string
   clickEvent?: ClickEvent
-  // HoverEvent unsupported atm.
+  hoverEvent?: HoverEvent
 }
 
 export interface PlainTextChat extends BaseChat {
@@ -83,6 +83,12 @@ export interface ClickEvent {
     | 'change_page'
     | 'copy_to_clipboard'
   value: string
+}
+
+// LOW-TODO: How can we display this in EnderChat?
+export interface HoverEvent {
+  action: 'show_text' | 'show_item' | 'show_entity' | 'show_achievement' // <1.12
+  value: MinecraftChat
 }
 
 const hasColorCodes = (s: string) => /§[0-9a-fk-orx]/.test(s)
