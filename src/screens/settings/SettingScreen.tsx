@@ -45,7 +45,7 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
           setValue={webLinks => setSettings({ webLinks })}
         />
         <Setting
-          name='Prompt on link click'
+          name='Prompt on opening links'
           value={settings.linkPrompt}
           setValue={linkPrompt => setSettings({ linkPrompt })}
         />

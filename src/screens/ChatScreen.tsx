@@ -13,14 +13,15 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import globalStyle from '../globalStyle'
 import useDarkMode from '../context/useDarkMode'
+import SettingsContext from '../context/settingsContext'
 import ConnectionContext from '../context/connectionContext'
-import SettingsContext, { Settings } from '../context/settingsContext'
 import {
   ChatToJsx,
   parseValidJson,
   mojangColorMap,
   lightColorMap,
   MinecraftChat,
+  ClickEvent,
   ColorMap
 } from '../minecraft/chatToJsx'
 import { concatPacketData } from '../minecraft/packet'
@@ -39,25 +40,17 @@ interface Message {
   text: MinecraftChat
 }
 
-const renderItem = (colorMap: ColorMap, settings: Settings) => {
+const renderItem = (
+  colorMap: ColorMap,
+  clickEventHandler: (ce: ClickEvent) => void
+) => {
   const ItemRenderer = ({ item }: { item: Message }) => (
     <View style={styles.androidScaleInvert}>
       <ChatToJsx
         chat={item.text}
         component={Text}
         colorMap={colorMap}
-        clickEventHandler={async ce => {
-          // TODO: run_command, suggest_command and URL prompt support.
-          if (
-            ce.action === 'open_url' &&
-            settings.webLinks &&
-            (ce.value.startsWith('https://') || ce.value.startsWith('http://'))
-          ) {
-            await Linking.openURL(ce.value)
-          } else if (ce.action === 'copy_to_clipboard') {
-            Clipboard.setString(ce.value)
-          } // No open_file/change_page handling.
-        }}
+        clickEventHandler={clickEventHandler}
       />
     </View>
   )
@@ -65,8 +58,8 @@ const renderItem = (colorMap: ColorMap, settings: Settings) => {
 } // https://reactnative.dev/docs/optimizing-flatlist-configuration
 const ChatMessageList = (props: {
   messages: Message[]
-  darkMode: boolean
-  settings: Settings
+  colorMap: ColorMap
+  clickEventHandler: (ce: ClickEvent) => void
 }) => {
   return (
     <FlatList
@@ -74,10 +67,7 @@ const ChatMessageList = (props: {
       data={props.messages}
       style={[styles.androidScaleInvert, styles.chatArea]}
       contentContainerStyle={styles.chatAreaScrollView}
-      renderItem={renderItem(
-        props.darkMode ? mojangColorMap : lightColorMap,
-        props.settings
-      )}
+      renderItem={renderItem(props.colorMap, props.clickEventHandler)}
     />
   )
 }
@@ -177,13 +167,14 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     }
   }, [connection, setConnection, navigation])
 
-  const sendMessage = () => {
-    const trim = message.trim()
-    if (!connection || !trim) return
+  const sendMessage = (msg: string, saveHistory: boolean) => {
+    if (!connection || !msg) return
     setMessage('')
-    if (trim.startsWith('/')) setCommandHistory(ch => ch.concat([trim]))
+    if (msg.startsWith('/') && saveHistory) {
+      setCommandHistory(ch => ch.concat([msg]))
+    }
     connection.connection
-      .writePacket(0x03, concatPacketData([trim]))
+      .writePacket(0x03, concatPacketData([msg]))
       .catch(errorHandler(addMessage, sendMessageErr))
   }
 
@@ -235,8 +226,25 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         <>
           <ChatMessageListMemo
             messages={messages}
-            darkMode={darkMode}
-            settings={settings}
+            colorMap={darkMode ? mojangColorMap : lightColorMap}
+            clickEventHandler={async ce => {
+              // TODO: URL prompt support.
+              if (
+                ce.action === 'open_url' &&
+                settings.webLinks &&
+                (ce.value.startsWith('https://') ||
+                  ce.value.startsWith('http://'))
+              ) {
+                await Linking.openURL(ce.value)
+              } else if (ce.action === 'copy_to_clipboard') {
+                Clipboard.setString(ce.value)
+              } else if (ce.action === 'run_command') {
+                // TODO: This should be a prompt - sendMessage(ce.value, false)
+                setMessage(ce.value)
+              } else if (ce.action === 'suggest_command') {
+                setMessage(ce.value)
+              } // No open_file/change_page handling.
+            }}
           />
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
             <TextField
@@ -244,7 +252,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
               maxLength={charLimit}
               onChangeText={setMessage}
               style={styles.textField}
-              onSubmitEditing={sendMessage}
+              onSubmitEditing={() => sendMessage(message.trim(), true)}
               enablesReturnKeyAutomatically
               returnKeyType='send'
               blurOnSubmit={false}
@@ -252,7 +260,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
             />
             <Ionicons.Button
               name='ios-send-sharp'
-              onPress={sendMessage}
+              onPress={() => sendMessage(message.trim(), true)}
               iconStyle={styles.sendButtonIcon}
               borderRadius={32}
             />
