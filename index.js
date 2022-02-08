@@ -16,5 +16,6 @@ global.process.env.NODE_ENV = __DEV__ ? 'development' : 'production'
 global.location = {
   protocol: 'file:'
 }
+// global.__DEV__ = false // For cleaner debugging with react-native-tcp
 
 AppRegistry.registerComponent(appName, () => App)

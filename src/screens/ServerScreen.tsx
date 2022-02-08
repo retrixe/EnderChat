@@ -71,7 +71,8 @@ const ServerScreen = () => {
   const [addServerDialogOpen, setAddServerDialogOpen] = useState(false)
   const [editServerDialogOpen, setEditServerDialogOpen] = useState('')
   const [pingResponses, setPingResponses] = useState<{
-    [ip: string]: LegacyPing | Ping | null
+    // false - no route, null - unknown err, undefined - pinging
+    [ip: string]: LegacyPing | Ping | false | null | undefined
   }>({})
 
   useEffect(() => {
@@ -88,7 +89,11 @@ const ServerScreen = () => {
       promises.push(
         modernPing({ host, port }) // Run in parallel.
           .then(resp => setPingResponses(p => ({ ...p, [ipAddress]: resp })))
-          .catch(() => {
+          .catch(err => {
+            if (err.toString() === 'Error: No route to host') {
+              setPingResponses(p => ({ ...p, [ipAddress]: false }))
+              return
+            }
             legacyPing({ host, port })
               .then(res => setPingResponses(p => ({ ...p, [ipAddress]: res })))
               .catch(() => setPingResponses(p => ({ ...p, [ipAddress]: null })))
@@ -322,7 +327,7 @@ const ServerScreen = () => {
                   android_ripple={{ color: '#aaa' }}
                   style={styles.serverPressable}
                 >
-                  {ping != null ? (
+                  {ping ? (
                     <Image
                       source={
                         (ping as Ping).favicon
@@ -344,7 +349,7 @@ const ServerScreen = () => {
                   )}
                   <View style={styles.serverContent}>
                     <Text style={styles.serverName}>{server.trim()}</Text>
-                    {ping != null ? (
+                    {ping ? (
                       <>
                         <Text style={styles.serverPlayers}>
                           {(ping as Ping).players?.online ??
@@ -367,8 +372,10 @@ const ServerScreen = () => {
                       </>
                     ) : (
                       <Text style={styles.serverDescription}>
-                        {ping === null // LOW-TODO: No UI feedback when No route to host.
-                          ? 'Error while pinging...'
+                        {ping === null
+                          ? 'An error occurred when pinging server.'
+                          : ping === false
+                          ? 'No route to host!'
                           : 'Pinging...'}
                       </Text>
                     )}

@@ -23,7 +23,7 @@ export const mojangColorMap: ColorMap = {
 
 export const lightColorMap: ColorMap = {
   ...mojangColorMap,
-  white: '#000000', // LOW-TODO: Should white be pure black?
+  white: '#000000',
   green: '#55c855',
   gray: '#999999',
   yellow: '#b9b955',
@@ -238,7 +238,7 @@ const ChatToJsxNonMemo = (props: {
     props.trim
   )
 // Memoisation means this is only re-rendered if the props changed.
-// TODO: This might be hurting performance...
+// TODO: This might be hurting memory usage.
 export const ChatToJsx = React.memo(ChatToJsxNonMemo)
 
 export const parseValidJson = (text: string) => {

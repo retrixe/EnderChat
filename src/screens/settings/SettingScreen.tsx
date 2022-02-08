@@ -58,7 +58,7 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
           value={settings.darkMode}
           setValue={darkMode => setSettings({ darkMode })}
         />
-        {/* TODO: Font Size, Chat Theme, Feedback/Support */}
+        {/* TODO: Text Font, Font Size, Chat Theme, Feedback/Support */}
         <Setting name='Version' value={version} />
         <Setting
           name='Privacy Policy'

@@ -7,16 +7,11 @@ import android.graphics.Color;
 import android.os.Build;
 import android.view.View;
 import android.view.Window;
-import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.uimanager.IllegalViewOperationException;
-import java.util.Map;
-import java.util.HashMap;
-
 
 public class NavBarColorModule extends ReactContextBaseJavaModule {
     NavBarColorModule(ReactApplicationContext context) {
