@@ -52,12 +52,8 @@ const ServerScreen = () => {
   const darkMode = useDarkMode()
   const { servers, setServers } = useContext(ServersContext)
   const { accounts } = useContext(AccountsContext)
-  const {
-    connection,
-    setConnection,
-    disconnectReason,
-    setDisconnectReason
-  } = useContext(ConnectionContext)
+  const { connection, setConnection, disconnectReason, setDisconnectReason } =
+    useContext(ConnectionContext)
   const initiatingConnection = useRef(false)
 
   const [ipAddr, setIpAddr] = useState('')
@@ -65,9 +61,8 @@ const ServerScreen = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [newServerName, setNewServerName] = useState('')
   const [serverNameRed, setServerNameRed] = useState(false)
-  const [serverVersion, setServerVersion] = useState<keyof typeof protocolMap>(
-    'auto'
-  )
+  const [serverVersion, setServerVersion] =
+    useState<keyof typeof protocolMap>('auto')
   const [addServerDialogOpen, setAddServerDialogOpen] = useState(false)
   const [editServerDialogOpen, setEditServerDialogOpen] = useState('')
   const [pingResponses, setPingResponses] = useState<{

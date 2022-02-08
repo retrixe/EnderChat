@@ -73,13 +73,12 @@ const ChatMessageList = (props: {
 }
 const ChatMessageListMemo = React.memo(ChatMessageList) // Shallow prop compare.
 
-const errorHandler = (
-  addMessage: (text: MinecraftChat) => void,
-  translated: string
-) => (error: unknown) => {
-  console.error(error)
-  addMessage('[EnderChat] ' + translated)
-}
+const errorHandler =
+  (addMessage: (text: MinecraftChat) => void, translated: string) =>
+  (error: unknown) => {
+    console.error(error)
+    addMessage('[EnderChat] ' + translated)
+  }
 const sendMessageErr = 'Failed to send message to server!'
 const parseMessageErr = 'An error occurred when parsing chat.'
 const inventoryCloseErr = 'An error occurred when closing an inventory window.'

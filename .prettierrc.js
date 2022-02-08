@@ -8,7 +8,7 @@ module.exports = {
   // Custom:
   semi: false,
   jsxSingleQuote: true,
+  bracketSameLine: false,
   bracketSpacing: true,
-  trailingComma: 'none',
-  jsxBracketSameLine: false
+  trailingComma: 'none'
 };

@@ -168,7 +168,8 @@ export const getGameProfile = async (
 }
 
 export const XstsErrorCodes: { [error: string]: string } = {
-  2148916235: 'The account is from a country where Xbox Live is not available/banned.',
+  2148916235:
+    'The account is from a country where Xbox Live is not available/banned.',
   2148916238:
     'The account is a child (under 18) and cannot proceed unless the account is added to' +
     ' a Family by an adult. This only seems to occur when using a custom Microsoft Azure' +
