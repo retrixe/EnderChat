@@ -31,7 +31,7 @@
     "react-native-safe-area-context": "^3.1.9",
     "react-native-screens": "^3.6.0",
     "react-native-tab-view": "^3.1.1",
-    "react-native-tcp": "^4.0.0",
+    "react-native-tcp": "github:aprock/react-native-tcp",
     "react-native-vector-icons": "^7.1.0",
     "react-native-webview": "^11.17.1",
     "stream-browserify": "^3.0.0"
