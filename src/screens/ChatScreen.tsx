@@ -24,8 +24,8 @@ import {
   ClickEvent,
   ColorMap
 } from '../minecraft/chatToJsx'
+import { readVarInt, writeVarInt } from '../minecraft/packetUtils'
 import { concatPacketData } from '../minecraft/packet'
-import { readVarInt } from '../minecraft/packetUtils'
 import TextField from '../components/TextField'
 import Text from '../components/Text'
 
@@ -73,17 +73,21 @@ const ChatMessageList = (props: {
 }
 const ChatMessageListMemo = React.memo(ChatMessageList) // Shallow prop compare.
 
+const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
+const sendMessageErr = 'Failed to send message to server!'
+const parseMessageErr = 'An error occurred when parsing chat.'
+const inventoryCloseErr = 'An error occurred when closing an inventory window.'
+const respawnErr = 'An error occurred when trying to respawn after death.'
+const deathRespawnMessage = enderChatPrefix + 'You died! Respawning...'
+const healthMessage =
+  enderChatPrefix + "You're losing health! \u00A7b%prev \u00A7f-> \u00A7c%new"
 const errorHandler =
   (addMessage: (text: MinecraftChat) => void, translated: string) =>
   (error: unknown) => {
     console.error(error)
-    addMessage('[EnderChat] ' + translated)
+    addMessage(enderChatPrefix + translated)
   }
-const sendMessageErr = 'Failed to send message to server!'
-const parseMessageErr = 'An error occurred when parsing chat.'
-const inventoryCloseErr = 'An error occurred when closing an inventory window.'
 
-let id = 0
 // TODO: Ability to copy text.
 const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const darkMode = useDarkMode()
@@ -96,6 +100,9 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const [loggedIn, setLoggedIn] = useState(false)
   const [message, setMessage] = useState('')
   const loggedInRef = useRef(false)
+  const idRef = useRef(0)
+
+  const healthRef = useRef<number | null>(null)
 
   const charLimit =
     connection && connection.connection.options.protocolVersion >= 306 // 16w38a
@@ -104,7 +111,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const addMessage = (text: MinecraftChat) =>
     setMessages(m => {
       const trunc = m.length > 500 ? m.slice(0, 499) : m
-      return [{ key: id++, text }].concat(trunc)
+      return [{ key: idRef.current++, text }].concat(trunc)
     })
 
   // Packet handler useEffect.
@@ -149,6 +156,30 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
         connection.connection // Close Window (serverbound)
           .writePacket(0x09, buf)
           .catch(errorHandler(addMessage, inventoryCloseErr))
+      } else if (packet.id === 0x35 /* Death Combat Event */) {
+        const [, playerIdLen] = readVarInt(packet.data)
+        const offset = playerIdLen + 4 // Entity ID
+        const [chatLen, chatVarIntLength] = readVarInt(packet.data, offset)
+        const jsonOffset = offset + chatVarIntLength
+        const deathMessage = parseValidJson(
+          packet.data.slice(jsonOffset, jsonOffset + chatLen).toString('utf8')
+        )
+        addMessage(deathRespawnMessage)
+        if (deathMessage?.text || deathMessage?.extra) addMessage(deathMessage)
+        // Automatically respawn.
+        // LOW-TODO: Should this be manual, or a dialog, like MC?
+        connection.connection // Client Status
+          .writePacket(0x04, writeVarInt(0))
+          .catch(errorHandler(addMessage, respawnErr))
+      } else if (packet.id === 0x52 /* Update Health */) {
+        const newHealth = packet.data.readFloatBE(0)
+        if (healthRef.current != null && healthRef.current > newHealth) {
+          const info = healthMessage
+            .replace('%prev', healthRef.current.toString())
+            .replace('%new', newHealth.toString())
+          addMessage(info)
+        } // LOW-TODO: Long-term it would be better to have a UI.
+        healthRef.current = newHealth
       }
     })
     return () => {
