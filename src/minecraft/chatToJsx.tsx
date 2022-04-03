@@ -178,11 +178,13 @@ const parseChatToJsx = (
   if (typeof chat !== 'string' && (chat as TranslatedChat).translate) {
     const translatedChat = chat as TranslatedChat
     const translation = translations[translatedChat.translate]
-      .split('%s')
-      .map((text, index) => [{ text }, translatedChat.with[index]])
-      .flat()
-      .filter(component => !!component)
-    chat = { extra: translation }
+      ?.split('%s')
+      ?.map((text, index) => [{ text }, translatedChat.with[index]])
+      ?.flat()
+      ?.filter(component => !!component)
+    chat = {
+      extra: translation ?? [{ text: '[EnderChat] Unknown translation.' }]
+    }
   }
   const flat =
     typeof chat === 'string'

@@ -102,16 +102,16 @@ const AccountScreen = () => {
                 />
                 <View>
                   <Text style={styles.username}>{accounts[uuid].username}</Text>
-                  {accounts[uuid].active && (
-                    <Text style={styles.active}>Active Account</Text>
-                  )}
                   <Text style={darkMode ? styles.authTxtDark : styles.authTxt}>
                     {accounts[uuid].type === 'mojang'
                       ? 'Mojang: ' + accounts[uuid].email
                       : accounts[uuid].type === 'microsoft'
                       ? 'Microsoft Account'
-                      : 'No Authentication'}
+                      : 'Offline Mode'}
                   </Text>
+                  {accounts[uuid].active && (
+                    <Text style={styles.active}>Active Account</Text>
+                  )}
                 </View>
               </Pressable>
             </ElevatedView>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginRight: 16
   },
-  active: { fontSize: 16 },
+  active: { fontSize: 14, fontWeight: 'bold' },
   username: { fontSize: 20, fontWeight: 'bold' },
   authTxt: { fontSize: 12, color: '#666', fontWeight: '400' },
   authTxtDark: { fontSize: 12, color: '#aaa', fontWeight: '400' },
