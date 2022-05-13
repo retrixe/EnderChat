@@ -24,7 +24,7 @@ import {
   ClickEvent,
   ColorMap
 } from '../minecraft/chatToJsx'
-import { readVarInt, writeVarInt } from '../minecraft/packetUtils'
+import { readVarInt, writeVarInt } from '../minecraft/utils'
 import { concatPacketData } from '../minecraft/packet'
 import TextField from '../components/TextField'
 import Text from '../components/Text'

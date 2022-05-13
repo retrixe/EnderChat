@@ -1,7 +1,6 @@
 import zlib from 'zlib'
 import { Buffer } from 'buffer'
-import { toggleEndian } from './utils'
-import { encodeString, readVarInt, writeVarInt } from './packetUtils'
+import { toggleEndian, encodeString, readVarInt, writeVarInt } from './utils'
 
 export const makeBasePacket = (packetId: number, data: Buffer) => {
   const finalData = Buffer.concat([writeVarInt(packetId), data])

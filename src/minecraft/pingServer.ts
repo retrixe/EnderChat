@@ -1,10 +1,15 @@
 import net from 'react-native-tcp'
 import { Buffer } from 'buffer'
 
+import {
+  toggleEndian,
+  padBufferToLength,
+  resolveHostname,
+  readVarInt,
+  writeVarInt
+} from './utils'
 import { makeBasePacket, concatPacketData, parsePacket, Packet } from './packet'
-import { toggleEndian, padBufferToLength, resolveHostname } from './utils'
 import { parseValidJson, PlainTextChat } from './chatToJsx'
-import { readVarInt, writeVarInt } from './packetUtils'
 
 export interface LegacyPing {
   ff: number

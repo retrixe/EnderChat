@@ -17,17 +17,14 @@ import {
   parseCompressedPacket,
   parsePacket
 } from './packet'
-import { resolveHostname } from './utils'
-import { readVarInt, writeVarInt } from './packetUtils'
-import { authUrl, generateSharedSecret, mcHexDigest } from './onlineMode'
-
-export declare interface ServerConnection {
-  on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
-    ((event: 'error', listener: (error: Error) => void) => this) &
-    ((event: 'data', listener: (data: Buffer) => void) => this) &
-    ((event: 'close', listener: () => void) => this) &
-    ((event: string, listener: Function) => this)
-}
+import {
+  readVarInt,
+  writeVarInt,
+  resolveHostname,
+  generateSharedSecret,
+  mcHexDigest,
+  authUrl
+} from './utils'
 
 export interface ConnectionOptions {
   host: string
@@ -36,6 +33,14 @@ export interface ConnectionOptions {
   protocolVersion: number
   selectedProfile?: string
   accessToken?: string
+}
+
+export declare interface ServerConnection {
+  on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
+    ((event: 'error', listener: (error: Error) => void) => this) &
+    ((event: 'data', listener: (data: Buffer) => void) => this) &
+    ((event: 'close', listener: () => void) => this) &
+    ((event: string, listener: Function) => this)
 }
 
 export class ServerConnection extends events.EventEmitter {
@@ -155,22 +160,10 @@ const initiateConnection = async (opts: ConnectionOptions) => {
               conn.close()
             } else if (packet.id === 0x01 && !conn.loggedIn) {
               // https://wiki.vg/Protocol_Encryption
-              const [serverIdLen, serverIdLenLen] = readVarInt(packet.data)
-              // ASCII encoding of the server id string from Encryption Request
-              const serverId = packet.data.slice(
-                serverIdLenLen,
-                serverIdLen + serverIdLenLen
-              )
-              const data = packet.data.slice(serverIdLen + serverIdLenLen)
-              const [pkLen, pkLenLen] = readVarInt(data)
-              // Server's encoded public key from Encryption Request
-              const publicKey = data.slice(pkLenLen, pkLen + pkLenLen)
-              const verifyTokenData = data.slice(pkLen + pkLenLen)
-              const [, verifyTokenLengthLength] = readVarInt(verifyTokenData)
-              const verifyToken = verifyTokenData.slice(verifyTokenLengthLength)
+              const [serverId, publicKey, verifyToken] =
+                parseEncryptionRequestPacket(packet)
               ;(async () => {
-                // Generate random 16-byte shared secret.
-                const sharedSecret = await generateSharedSecret()
+                const sharedSecret = await generateSharedSecret() // Generate random 16-byte shared secret.
                 // Generate hash.
                 const sha1 = createHash('sha1')
                 sha1.update(serverId) // ASCII encoding of the server id string from Encryption Request
@@ -200,6 +193,12 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                 const encryptedSharedSecret = publicEncrypt(ePrms, sharedSecret)
                 const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
                 // Send encryption response packet.
+                // From this point forward, everything is encrypted, including the Login Success packet.
+                conn.aesDecipher = createDecipheriv(
+                  'aes-128-cfb8',
+                  sharedSecret,
+                  sharedSecret
+                )
                 await conn.writePacket(
                   0x01,
                   concatPacketData([
@@ -209,10 +208,11 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                     encryptedVerifyToken
                   ])
                 )
-                // From this point forward, everything is encrypted, including the Login Success packet.
-                const ss = sharedSecret
-                conn.aesDecipher = createDecipheriv('aes-128-cfb8', ss, ss)
-                conn.aesCipher = createCipheriv('aes-128-cfb8', ss, ss)
+                conn.aesCipher = createCipheriv(
+                  'aes-128-cfb8',
+                  sharedSecret,
+                  sharedSecret
+                )
               })().catch(e => {
                 console.error(e)
                 conn.disconnectReason =
@@ -242,3 +242,20 @@ const initiateConnection = async (opts: ConnectionOptions) => {
 }
 
 export default initiateConnection
+
+const parseEncryptionRequestPacket = (packet: Packet) => {
+  // ASCII encoding of the server id string
+  let data = packet.data
+  const [sidLen, sidLenLen] = readVarInt(data)
+  const serverId = data.slice(sidLenLen, sidLenLen + sidLen)
+  // Server's encoded public key
+  data = data.slice(sidLen + sidLenLen)
+  const [pkLen, pkLenLen] = readVarInt(data)
+  const publicKey = data.slice(pkLenLen, pkLen + pkLenLen)
+  // Server's randomly generated verify token
+  data = data.slice(pkLen + pkLenLen)
+  const [vtLen, vtLenLen] = readVarInt(data)
+  const verifyToken = data.slice(vtLenLen, vtLenLen + vtLen)
+
+  return [serverId, publicKey, verifyToken]
+}

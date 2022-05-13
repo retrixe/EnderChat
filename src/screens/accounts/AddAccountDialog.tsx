@@ -8,7 +8,7 @@ import Dialog, { dialogStyles } from '../../components/Dialog'
 import TextField from '../../components/TextField'
 import useDarkMode from '../../context/useDarkMode'
 import UsersContext from '../../context/accountsContext'
-import { authenticate } from '../../minecraft/yggdrasil'
+import { authenticate } from '../../minecraft/authentication/yggdrasil'
 
 const AddAccountDialog = ({
   open,
