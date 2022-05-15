@@ -53,19 +53,24 @@ export interface Packet {
 
 export const parsePacket = (packet: Buffer): Packet | undefined => {
   if (packet.byteLength === 0) return
-  const [packetBodyLength, varIntLength] = readVarInt(packet)
-  if (packet.byteLength < packetBodyLength + varIntLength) return
-  const packetBody = packet.slice(varIntLength, varIntLength + packetBodyLength)
-  const [packetId, packetIdLength] = readVarInt(packetBody)
-  const packetData = packetBody.slice(packetIdLength)
-  return {
-    id: packetId,
-    data: packetData,
-    idLength: packetIdLength,
-    dataLength: packetBodyLength - packetIdLength,
-    packetLength: packetBodyLength + varIntLength,
-    lengthLength: varIntLength
-  }
+  try {
+    const [packetBodyLength, varIntLength] = readVarInt(packet)
+    if (packet.byteLength < packetBodyLength + varIntLength) return
+    const packetBody = packet.slice(
+      varIntLength,
+      varIntLength + packetBodyLength
+    )
+    const [packetId, packetIdLength] = readVarInt(packetBody)
+    const packetData = packetBody.slice(packetIdLength)
+    return {
+      id: packetId,
+      data: packetData,
+      idLength: packetIdLength,
+      dataLength: packetBodyLength - packetIdLength,
+      packetLength: packetBodyLength + varIntLength,
+      lengthLength: varIntLength
+    }
+  } catch (e) {} // If the packet is incomplete, readVarInt could error, so no packet parsed.
 }
 
 export const parseCompressedPacket = (packet: Buffer): Packet | undefined => {

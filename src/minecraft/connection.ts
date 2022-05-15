@@ -118,118 +118,6 @@ const initiateConnection = async (opts: ConnectionOptions) => {
         )
       )
     })
-    socket.on('data', newData => {
-      // Handle timeout after 20 seconds of no data.
-      if (conn.disconnectTimer) clearTimeout(conn.disconnectTimer)
-      conn.disconnectTimer = setTimeout(() => conn.close(), 20000)
-      // Run after interactions to improve user experience.
-      InteractionManager.runAfterInteractions(() => {
-        // Note: the entire packet is encrypted, including the length fields and the packet's data.
-        // https://github.com/PrismarineJS/node-minecraft-protocol/blob/master/src/transforms/encryption.js
-        let finalData = newData
-        if (conn.aesDecipher) finalData = conn.aesDecipher.update(newData)
-        // Buffer data for read.
-        conn.bufferedData = Buffer.concat([conn.bufferedData, finalData])
-        // ;(async () => { This would need a mutex.
-        while (true) {
-          const packet = conn.compressionEnabled
-            ? parseCompressedPacket(conn.bufferedData)
-            : parsePacket(conn.bufferedData)
-          if (packet) {
-            if (packet.id === 0x03 && !conn.loggedIn) {
-              const [threshold] = readVarInt(packet.data)
-              conn.compressionThreshold = threshold
-              conn.compressionEnabled = threshold >= 0
-            } else if (packet.id === 0x02 && !conn.loggedIn) {
-              conn.loggedIn = true
-            } else if (packet.id === 0x21) {
-              conn
-                .writePacket(0x0f, packet.data)
-                .catch(err => conn.emit('error', err))
-            } else if (
-              (packet.id === 0x00 && !conn.loggedIn) ||
-              (packet.id === 0x1a && conn.loggedIn)
-            ) {
-              const [chatLength, chatVarIntLength] = readVarInt(packet.data)
-              conn.disconnectReason = packet.data
-                .slice(chatVarIntLength, chatVarIntLength + chatLength)
-                .toString('utf8')
-            } else if (packet.id === 0x01 && !conn.loggedIn && !accessToken) {
-              conn.disconnectReason =
-                '{"text":"This server requires a premium account to be logged in!"}'
-              conn.close()
-            } else if (packet.id === 0x01 && !conn.loggedIn) {
-              // https://wiki.vg/Protocol_Encryption
-              const [serverId, publicKey, verifyToken] =
-                parseEncryptionRequestPacket(packet)
-              ;(async () => {
-                const sharedSecret = await generateSharedSecret() // Generate random 16-byte shared secret.
-                // Generate hash.
-                const sha1 = createHash('sha1')
-                sha1.update(serverId) // ASCII encoding of the server id string from Encryption Request
-                sha1.update(sharedSecret)
-                sha1.update(publicKey) // Server's encoded public key from Encryption Request
-                const hash = mcHexDigest(sha1.digest())
-                // Send hash to Mojang servers.
-                const body = JSON.stringify({
-                  accessToken,
-                  selectedProfile,
-                  serverId: hash
-                })
-                const req = await fetch(authUrl, {
-                  headers: { 'content-type': 'application/json' },
-                  method: 'POST',
-                  body
-                })
-                if (!req.ok) {
-                  throw new Error('Mojang online mode network request failed')
-                }
-                // Encrypt shared secret and verify token with public key.
-                const pk =
-                  '-----BEGIN PUBLIC KEY-----\n' +
-                  publicKey.toString('base64') +
-                  '\n-----END PUBLIC KEY-----'
-                const ePrms = { key: pk, padding: 1 } // RSA_PKCS1_PADDING
-                const encryptedSharedSecret = publicEncrypt(ePrms, sharedSecret)
-                const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
-                // Send encryption response packet.
-                // From this point forward, everything is encrypted, including the Login Success packet.
-                conn.aesDecipher = createDecipheriv(
-                  'aes-128-cfb8',
-                  sharedSecret,
-                  sharedSecret
-                )
-                await conn.writePacket(
-                  0x01,
-                  concatPacketData([
-                    writeVarInt(encryptedSharedSecret.byteLength),
-                    encryptedSharedSecret,
-                    writeVarInt(encryptedVerifyToken.byteLength),
-                    encryptedVerifyToken
-                  ])
-                )
-                conn.aesCipher = createCipheriv(
-                  'aes-128-cfb8',
-                  sharedSecret,
-                  sharedSecret
-                )
-              })().catch(e => {
-                console.error(e)
-                conn.disconnectReason =
-                  '{"text":"Failed to authenticate with Mojang servers!"}'
-                conn.close()
-              })
-            }
-            conn.bufferedData =
-              conn.bufferedData.length <= packet.packetLength
-                ? Buffer.alloc(0) // Avoid errors shortening.
-                : conn.bufferedData.slice(packet.packetLength)
-            conn.emit('packet', packet)
-          } else break
-        }
-        conn.emit('data', newData)
-      }).then(() => {}, console.error)
-    })
     socket.on('close', () => {
       conn.closed = true
       conn.emit('close')
@@ -237,6 +125,115 @@ const initiateConnection = async (opts: ConnectionOptions) => {
     socket.on('error', err => {
       if (!resolved) reject(err)
       else conn.emit('error', err)
+    })
+    socket.on('data', newData => {
+      // Handle timeout after 20 seconds of no data.
+      if (conn.disconnectTimer) clearTimeout(conn.disconnectTimer)
+      conn.disconnectTimer = setTimeout(() => conn.close(), 20000)
+      // Run after interactions to improve user experience.
+      InteractionManager.runAfterInteractions(() => {
+        try {
+          // Note: the entire packet is encrypted, including the length fields and the packet's data.
+          // https://github.com/PrismarineJS/node-minecraft-protocol/blob/master/src/transforms/encryption.js
+          let finalData = newData
+          if (conn.aesDecipher) finalData = conn.aesDecipher.update(newData)
+          // Buffer data for read.
+          conn.bufferedData = Buffer.concat([conn.bufferedData, finalData])
+          // ;(async () => { This would need a mutex.
+          while (true) {
+            const packet = conn.compressionEnabled
+              ? parseCompressedPacket(conn.bufferedData)
+              : parsePacket(conn.bufferedData)
+            if (packet) {
+              // Remove packet from buffered data.
+              conn.bufferedData =
+                conn.bufferedData.length <= packet.packetLength
+                  ? Buffer.alloc(0) // Avoid errors shortening.
+                  : conn.bufferedData.slice(packet.packetLength)
+              // Internally handle login packets.
+              if (packet.id === 0x03 && !conn.loggedIn) {
+                const [threshold] = readVarInt(packet.data)
+                conn.compressionThreshold = threshold
+                conn.compressionEnabled = threshold >= 0
+              } else if (packet.id === 0x02 && !conn.loggedIn) {
+                conn.loggedIn = true
+              } else if (packet.id === 0x21) {
+                conn
+                  .writePacket(0x0f, packet.data)
+                  .catch(err => conn.emit('error', err))
+              } else if (
+                (packet.id === 0x00 && !conn.loggedIn) ||
+                (packet.id === 0x1a && conn.loggedIn)
+              ) {
+                const [chatLength, chatVarIntLength] = readVarInt(packet.data)
+                conn.disconnectReason = packet.data
+                  .slice(chatVarIntLength, chatVarIntLength + chatLength)
+                  .toString('utf8')
+              } else if (packet.id === 0x01 && !conn.loggedIn && !accessToken) {
+                conn.disconnectReason =
+                  '{"text":"This server requires a premium account to be logged in!"}'
+                conn.close()
+              } else if (packet.id === 0x01 && !conn.loggedIn) {
+                // https://wiki.vg/Protocol_Encryption
+                const [serverId, publicKey, verifyToken] =
+                  parseEncryptionRequestPacket(packet)
+                ;(async () => {
+                  const secret = await generateSharedSecret() // Generate random 16-byte shared secret.
+                  // Generate hash.
+                  const sha1 = createHash('sha1')
+                  sha1.update(serverId) // ASCII encoding of the server id string from Encryption Request
+                  sha1.update(secret)
+                  sha1.update(publicKey) // Server's encoded public key from Encryption Request
+                  const hash = mcHexDigest(sha1.digest())
+                  // Send hash to Mojang servers.
+                  const body = JSON.stringify({
+                    accessToken,
+                    selectedProfile,
+                    serverId: hash
+                  })
+                  const req = await fetch(authUrl, {
+                    headers: { 'content-type': 'application/json' },
+                    method: 'POST',
+                    body
+                  })
+                  if (!req.ok) {
+                    throw new Error('Mojang online mode network request failed')
+                  }
+                  // Encrypt shared secret and verify token with public key.
+                  const pk =
+                    '-----BEGIN PUBLIC KEY-----\n' +
+                    publicKey.toString('base64') +
+                    '\n-----END PUBLIC KEY-----'
+                  const ePrms = { key: pk, padding: 1 } // RSA_PKCS1_PADDING
+                  const encryptedSharedSecret = publicEncrypt(ePrms, secret)
+                  const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
+                  // Send encryption response packet.
+                  // From this point forward, everything is encrypted, including the Login Success packet.
+                  const encryptionResponse = concatPacketData([
+                    writeVarInt(encryptedSharedSecret.byteLength),
+                    encryptedSharedSecret,
+                    writeVarInt(encryptedVerifyToken.byteLength),
+                    encryptedVerifyToken
+                  ])
+                  const AES_ALG = 'aes-128-cfb8'
+                  conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)
+                  await conn.writePacket(0x01, encryptionResponse)
+                  conn.aesCipher = createCipheriv(AES_ALG, secret, secret)
+                })().catch(e => {
+                  console.error(e)
+                  conn.disconnectReason =
+                    '{"text":"Failed to authenticate with Mojang servers!"}'
+                  conn.close()
+                })
+              }
+              conn.emit('packet', packet)
+            } else break
+          }
+          conn.emit('data', newData)
+        } catch (err) {
+          conn.emit('error', err)
+        }
+      }).then(() => {}, console.error)
     })
   })
 }
