@@ -1,6 +1,6 @@
-import zlib from 'zlib'
 import { Buffer } from 'buffer'
 import { toggleEndian, encodeString, readVarInt, writeVarInt } from './utils'
+import { compressData, decompressData } from './native/compression'
 
 export const makeBasePacket = (packetId: number, data: Buffer) => {
   const finalData = Buffer.concat([writeVarInt(packetId), data])
@@ -9,7 +9,7 @@ export const makeBasePacket = (packetId: number, data: Buffer) => {
   return Buffer.concat([finalDataLength, finalData])
 }
 
-export const makeBaseCompressedPacket = (
+export const makeBaseCompressedPacket = async (
   threshold: number,
   packetId: number,
   data: Buffer
@@ -24,7 +24,7 @@ export const makeBaseCompressedPacket = (
   /* : await new Promise((resolve, reject) => {
         zlib.deflate(finalData, (err, res) => err ? reject(err) : resolve(res))
       }) */
-  const dataToSend = toCompress ? zlib.deflateSync(finalData) : finalData
+  const dataToSend = toCompress ? await compressData(finalData) : finalData
   return makeBasePacket(dataLength, dataToSend)
 }
 
@@ -73,7 +73,9 @@ export const parsePacket = (packet: Buffer): Packet | undefined => {
   } catch (e) {} // If the packet is incomplete, readVarInt could error, so no packet parsed.
 }
 
-export const parseCompressedPacket = (packet: Buffer): Packet | undefined => {
+export const parseCompressedPacket = async (
+  packet: Buffer
+): Promise<Packet | undefined> => {
   const dissect = parsePacket(packet)
   if (!dissect) return
   else if (dissect.id === 0) {
@@ -92,7 +94,7 @@ export const parseCompressedPacket = (packet: Buffer): Packet | undefined => {
   const dataLength = dissect.id
   let dataWithId: Buffer
   try {
-    dataWithId = zlib.unzipSync(dissect.data, { finishFlush: 2 })
+    dataWithId = await decompressData(dissect.data)
   } catch (e) {
     console.error(`problem inflating chunk
 uncompressed length: ${dataLength}

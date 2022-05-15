@@ -1,3 +1,7 @@
+import { InteractionManager } from 'react-native'
+import Semaphore from 'semaphore-async-await'
+import net from 'react-native-tcp'
+import events from 'events'
 import {
   Cipher,
   createCipheriv,
@@ -6,9 +10,6 @@ import {
   Decipher,
   publicEncrypt
 } from 'react-native-crypto'
-import { InteractionManager } from 'react-native'
-import net from 'react-native-tcp'
-import events from 'events'
 import {
   concatPacketData,
   makeBaseCompressedPacket,
@@ -67,8 +68,9 @@ export class ServerConnection extends events.EventEmitter {
     data: Buffer,
     cb?: ((err?: Error | undefined) => void) | undefined
   ): Promise<boolean> {
+    const compressionThreshold = this.compressionThreshold
     const packet = this.compressionEnabled
-      ? makeBaseCompressedPacket(this.compressionThreshold, packetId, data)
+      ? await makeBaseCompressedPacket(compressionThreshold, packetId, data)
       : makeBasePacket(packetId, data)
     const toWrite = this.aesCipher ? this.aesCipher.update(packet) : packet
     return this.socket.write(toWrite, cb)
@@ -126,12 +128,14 @@ const initiateConnection = async (opts: ConnectionOptions) => {
       if (!resolved) reject(err)
       else conn.emit('error', err)
     })
+    const lock = new Semaphore(1)
     socket.on('data', newData => {
       // Handle timeout after 20 seconds of no data.
       if (conn.disconnectTimer) clearTimeout(conn.disconnectTimer)
       conn.disconnectTimer = setTimeout(() => conn.close(), 20000)
       // Run after interactions to improve user experience.
-      InteractionManager.runAfterInteractions(() => {
+      InteractionManager.runAfterInteractions(async () => {
+        await lock.acquire()
         try {
           // Note: the entire packet is encrypted, including the length fields and the packet's data.
           // https://github.com/PrismarineJS/node-minecraft-protocol/blob/master/src/transforms/encryption.js
@@ -139,10 +143,9 @@ const initiateConnection = async (opts: ConnectionOptions) => {
           if (conn.aesDecipher) finalData = conn.aesDecipher.update(newData)
           // Buffer data for read.
           conn.bufferedData = Buffer.concat([conn.bufferedData, finalData])
-          // ;(async () => { This would need a mutex.
           while (true) {
             const packet = conn.compressionEnabled
-              ? parseCompressedPacket(conn.bufferedData)
+              ? await parseCompressedPacket(conn.bufferedData)
               : parsePacket(conn.bufferedData)
             if (packet) {
               // Remove packet from buffered data.
@@ -233,6 +236,7 @@ const initiateConnection = async (opts: ConnectionOptions) => {
         } catch (err) {
           conn.emit('error', err)
         }
+        lock.release()
       }).then(() => {}, console.error)
     })
   })

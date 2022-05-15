@@ -1,11 +1,16 @@
 package com.enderchat;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Process;
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
 
 public class MainActivity extends ReactActivity {
+  private HandlerThread dataHandlerThread;
+  private Handler dataTransformsThreadHandler;
 
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
@@ -42,5 +47,19 @@ public class MainActivity extends ReactActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(null);
+    dataHandlerThread = new HandlerThread("enderchat-data-handler-thread",
+          Process.THREAD_PRIORITY_MORE_FAVORABLE);
+    dataHandlerThread.start();
+    dataTransformsThreadHandler = new Handler(dataHandlerThread.getLooper());
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    dataHandlerThread.quitSafely();
+  }
+
+  public Handler getDataTransformsThreadHandler() {
+    return dataTransformsThreadHandler;
   }
 }

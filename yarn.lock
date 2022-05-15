@@ -7568,6 +7568,11 @@
     "loose-envify" "^1.1.0"
     "object-assign" "^4.1.1"
 
+"semaphore-async-await@^1.5.1":
+  "integrity" "sha1-hXvvXjZEYBykuVcLh+nfXKEpdPo="
+  "resolved" "https://registry.npmjs.org/semaphore-async-await/-/semaphore-async-await-1.5.1.tgz"
+  "version" "1.5.1"
+
 "semver@^5.5.0":
   "integrity" "sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ=="
   "resolved" "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
