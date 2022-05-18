@@ -86,6 +86,7 @@
 		13B07FAE1A68108700A75B9A /* EnderChat */ = {
 			isa = PBXGroup;
 			children = (
+				D3B3AB2A28358D7C00F41999 /* Fonts */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -146,6 +147,13 @@
 				89C6BE57DB24E9ADA2F236DE /* Pods-EnderChat-EnderChatTests.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		D3B3AB2A28358D7C00F41999 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

@@ -112,6 +112,7 @@ const App = () => {
   // Change navigation bar colour on dark mode.
   // LOW-TODO: Doesn't work correctly in modals.
   useEffect(() => {
+    // TODO: Port NavBarColorModule to iOS.
     if (Platform.OS === 'android' && NativeModules.NavBarColorModule) {
       NativeModules.NavBarColorModule.setNavigationBarColor(
         darkMode ? '#121212' : '#ffffff',

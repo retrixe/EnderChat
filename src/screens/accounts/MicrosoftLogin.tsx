@@ -58,8 +58,14 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
     newNavState: WebViewNavigation
   ) => {
     if (!webview.current || !newNavState.url) return
-    webview.current.clearCache(true)
-    webview.current.clearHistory()
+    if (
+      Platform.OS === 'android' &&
+      webview.current.clearCache &&
+      webview.current.clearHistory
+    ) {
+      webview.current.clearCache(true)
+      webview.current.clearHistory()
+    }
     if (!loading && newNavState.url.startsWith(redirectUrlPrefix)) {
       try {
         setLoading(true)
