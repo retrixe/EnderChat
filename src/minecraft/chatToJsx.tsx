@@ -183,7 +183,9 @@ const parseChatToJsx = (
       ?.flat()
       ?.filter(component => !!component)
     chat = {
-      extra: translation ?? [{ text: '[EnderChat] Unknown translation.' }]
+      extra: translation ?? [
+        { text: `[EnderChat] Unknown translation ${translatedChat.translate}.` }
+      ]
     }
   }
   const flat =

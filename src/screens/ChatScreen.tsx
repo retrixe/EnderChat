@@ -24,7 +24,7 @@ import {
   ClickEvent,
   ColorMap
 } from '../minecraft/chatToJsx'
-import { readVarInt, writeVarInt } from '../minecraft/utils'
+import { protocolMap, readVarInt, writeVarInt } from '../minecraft/utils'
 import { concatPacketData } from '../minecraft/packet'
 import TextField from '../components/TextField'
 import Text from '../components/Text'
@@ -134,14 +134,39 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
             .writePacket(0x03, concatPacketData(['/spawn']))
             .catch(errorHandler(addMessage, sendMessageErr))
         }
-      } else if (packet.id === 0x0f /* Chat Message (clientbound) */) {
+      } else if (
+        packet.id === 0x0f /* Chat Message (clientbound) */ &&
+        connection.connection.options.protocolVersion < protocolMap['1.19']
+      ) {
         try {
           const [chatLength, chatVarIntLength] = readVarInt(packet.data)
           const chatJson = packet.data
             .slice(chatVarIntLength, chatVarIntLength + chatLength)
             .toString('utf8')
           const position = packet.data.readInt8(chatVarIntLength + chatLength)
-          // TODO: Support position 2 and sender.
+          // TODO: Support position 2 (also in 0x5f packet) and sender for disableChat/blocked players.
+          if (position === 0 || position === 1) {
+            addMessage(parseValidJson(chatJson))
+          }
+        } catch (e) {
+          errorHandler(addMessage, parseMessageErr)(e)
+        }
+      } else if (
+        packet.id === 0x30 /* Player Chat Message (clientbound) */ &&
+        connection.connection.options.protocolVersion >= protocolMap['1.19']
+      ) {
+        // TODO-1.19: Support player chat messages.
+      } else if (
+        packet.id === 0x5f /* System Chat Message (clientbound) */ &&
+        connection.connection.options.protocolVersion >= protocolMap['1.19']
+      ) {
+        try {
+          const [chatLength, chatVarIntLength] = readVarInt(packet.data)
+          const chatJson = packet.data
+            .slice(chatVarIntLength, chatVarIntLength + chatLength)
+            .toString('utf8')
+          const position = packet.data.readInt8(chatVarIntLength + chatLength)
+          // TODO-1.19 - 3: say command, 4: msg command, 5: team msg command, 6: emote command, 7: tellraw command
           if (position === 0 || position === 1) {
             addMessage(parseValidJson(chatJson))
           }
@@ -212,9 +237,20 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     if (msg.startsWith('/') && saveHistory) {
       setCommandHistory(ch => ch.concat([msg]))
     }
-    connection.connection
-      .writePacket(0x03, concatPacketData([msg]))
-      .catch(errorHandler(addMessage, sendMessageErr))
+    if (connection.connection.options.protocolVersion < protocolMap['1.19']) {
+      connection.connection
+        .writePacket(0x03, concatPacketData([msg]))
+        .catch(errorHandler(addMessage, sendMessageErr))
+    } else {
+      const timestamp = Buffer.alloc(8)
+      connection.connection
+        .writePacket(
+          0x04,
+          concatPacketData([msg, timestamp, writeVarInt(0), false])
+        )
+        .catch(errorHandler(addMessage, sendMessageErr))
+      // TODO-1.19: Support sending Chat Command/Chat Message/Chat Preview.
+    }
   }
 
   if (!connection) return <></> // This should never be hit hopefully.

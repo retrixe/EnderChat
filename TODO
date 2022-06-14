@@ -1,7 +1,5 @@
-- Finish online mode support.
 - Add icon and configure app.json.
 - Reduce bundled icons (1.3 MB per APK).
-- Fix issue with split-screen when connected.
 - Work on replacing auto /spawn with auto commands.
 - Handle graceful disconnect when being hit by the OOM killer?
 - https://reactnative.dev/docs/performance (esp when logging in, causes crashes)

@@ -24,7 +24,8 @@ import {
   resolveHostname,
   generateSharedSecret,
   mcHexDigest,
-  authUrl
+  authUrl,
+  protocolMap
 } from './utils'
 
 export interface ConnectionOptions {
@@ -112,7 +113,14 @@ const initiateConnection = async (opts: ConnectionOptions) => {
       socket.write(makeBasePacket(0x00, concatPacketData(handshakeData)), () =>
         // Send Login Start packet.
         socket.write(
-          makeBasePacket(0x00, concatPacketData([opts.username])),
+          makeBasePacket(
+            0x00,
+            concatPacketData(
+              opts.protocolVersion < protocolMap[1.19]
+                ? [opts.username]
+                : [opts.username, false] // TODO-1.19: Support chat signing keys.
+            )
+          ),
           () => {
             resolved = true
             resolve(conn)

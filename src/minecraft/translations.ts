@@ -90,6 +90,34 @@ const translations: { [translation: string]: string } = {
     'Incomplete set of tags received from server.\nPlease contact server operator.',
   'multiplayer.socialInteractions.not_available':
     'Social Interactions are only available in Multiplayer worlds',
+  'multiplayer.disconnect.missing_public_key':
+    'Missing profile public key.\nThis server requires secure profiles.',
+  'multiplayer.disconnect.invalid_public_key_signature':
+    'Invalid signature for profile public key.\nTry restarting your game.',
+  'multiplayer.disconnect.invalid_public_key':
+    'Unable to parse profile public key.',
+  'multiplayer.disconnect.out_of_order_chat':
+    'Out-of-order chat packet received. Did your system time change?',
+  'disconnect.genericReason': '%s',
+  'disconnect.unknownHost': 'Unknown host',
+  'disconnect.disconnected': 'Disconnected by Server',
+  'disconnect.lost': 'Connection Lost',
+  'disconnect.kicked': 'Was kicked from the game',
+  'disconnect.timeout': 'Timed out',
+  'disconnect.closed': 'Connection closed',
+  'disconnect.loginFailed': 'Failed to log in',
+  'disconnect.loginFailedInfo': 'Failed to log in: %s',
+  'disconnect.loginFailedInfo.serversUnavailable':
+    'The authentication servers are currently not reachable. Please try again.',
+  'disconnect.loginFailedInfo.invalidSession':
+    'Invalid session (Try restarting your game and the launcher)',
+  'disconnect.loginFailedInfo.insufficientPrivileges':
+    'Multiplayer is disabled. Please check your Microsoft account settings.',
+  'disconnect.quitting': 'Quitting',
+  'disconnect.endOfStream': 'End of stream',
+  'disconnect.overflow': 'Buffer overflow',
+  'disconnect.spam': 'Kicked for spamming',
+  'disconnect.exceeded_packet_rate': 'Kicked for exceeding packet rate limit',
   'chat.editBox': 'chat',
   'chat.cannotSend': 'Cannot send chat message',
   'chat.disabled.options': 'Chat disabled in client options',
