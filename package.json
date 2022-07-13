@@ -19,6 +19,7 @@
     "@react-navigation/native": "^6.0.2",
     "@react-navigation/native-stack": "^6.1.0",
     "assert": "^2.0.0",
+    "big-integer": "^1.6.51",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
     "events": "^3.3.0",

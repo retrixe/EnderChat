@@ -13,7 +13,7 @@ import {
   getXstsTokenAndUserHash,
   authenticateWithXsts,
   getGameProfile
-} from '../../minecraft/authentication/microsoft'
+} from '../../minecraft/api/microsoft'
 
 const MicrosoftLogin = ({ close }: { close: () => void }) => {
   const darkMode = useDarkMode()

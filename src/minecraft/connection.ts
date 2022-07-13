@@ -15,6 +15,7 @@ import {
   makeBaseCompressedPacket,
   makeBasePacket,
   Packet,
+  PacketDataTypes,
   parseCompressedPacket,
   parsePacket
 } from './packet'
@@ -24,9 +25,9 @@ import {
   resolveHostname,
   generateSharedSecret,
   mcHexDigest,
-  authUrl,
   protocolMap
 } from './utils'
+import { Certificate, joinMinecraftSession } from './api/mojang'
 
 export interface ConnectionOptions {
   host: string
@@ -35,6 +36,7 @@ export interface ConnectionOptions {
   protocolVersion: number
   selectedProfile?: string
   accessToken?: string
+  certificate?: Certificate
 }
 
 export declare interface ServerConnection {
@@ -92,6 +94,33 @@ export class ServerConnection extends events.EventEmitter {
   }
 }
 
+const getLoginPacket = (opts: ConnectionOptions) => {
+  const data: PacketDataTypes[] = [opts.username]
+  if (opts.protocolVersion >= protocolMap[1.19]) {
+    data.push(!!opts.certificate)
+    // TODO-1.19: Test if chat signing keys work.
+    if (opts.certificate) {
+      let buf = Buffer.alloc(8)
+      buf.writeBigInt64BE(
+        BigInt(new Date(opts.certificate.expiresAt).getTime())
+      )
+      data.push(buf)
+      const pkData = opts.certificate.keyPair.publicKey
+        .split('\n')
+        .filter(line => !line.startsWith('-----'))
+        .join('')
+        .trim()
+      buf = Buffer.from(pkData, 'base64')
+      data.push(writeVarInt(buf.byteLength))
+      data.push(buf)
+      buf = Buffer.from(opts.certificate.publicKeySignature, 'base64')
+      data.push(writeVarInt(buf.byteLength))
+      data.push(buf)
+    }
+  }
+  return concatPacketData(data)
+}
+
 const initiateConnection = async (opts: ConnectionOptions) => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<ServerConnection>((resolve, reject) => {
@@ -112,20 +141,10 @@ const initiateConnection = async (opts: ConnectionOptions) => {
       // Initialise Handshake with server.
       socket.write(makeBasePacket(0x00, concatPacketData(handshakeData)), () =>
         // Send Login Start packet.
-        socket.write(
-          makeBasePacket(
-            0x00,
-            concatPacketData(
-              opts.protocolVersion < protocolMap[1.19]
-                ? [opts.username]
-                : [opts.username, false] // TODO-1.19: Support chat signing keys.
-            )
-          ),
-          () => {
-            resolved = true
-            resolve(conn)
-          }
-        )
+        socket.write(makeBasePacket(0x00, getLoginPacket(opts)), () => {
+          resolved = true
+          resolve(conn)
+        })
       )
     })
     socket.on('close', () => {
@@ -197,16 +216,11 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                   sha1.update(publicKey) // Server's encoded public key from Encryption Request
                   const hash = mcHexDigest(sha1.digest())
                   // Send hash to Mojang servers.
-                  const body = JSON.stringify({
-                    accessToken,
-                    selectedProfile,
-                    serverId: hash
-                  })
-                  const req = await fetch(authUrl, {
-                    headers: { 'content-type': 'application/json' },
-                    method: 'POST',
-                    body
-                  })
+                  const req = await joinMinecraftSession(
+                    accessToken as string,
+                    selectedProfile as string,
+                    hash
+                  )
                   if (!req.ok) {
                     throw new Error('Mojang online mode network request failed')
                   }

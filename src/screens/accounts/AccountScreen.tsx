@@ -9,7 +9,7 @@ import Dialog, { dialogStyles } from '../../components/Dialog'
 import useDarkMode from '../../context/useDarkMode'
 import UsersContext from '../../context/accountsContext'
 import ElevatedView from '../../components/ElevatedView'
-import { invalidate } from '../../minecraft/authentication/yggdrasil'
+import { invalidate } from '../../minecraft/api/yggdrasil'
 
 // LOW-TODO: Reload to update account info for online mode using /refresh.
 // Also, to reload all the skin images?
