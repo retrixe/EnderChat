@@ -85,19 +85,23 @@ const App = () => {
   const [connection, setConnection] = React.useState<Connection | undefined>()
   const [disconnect, setDisconnect] = React.useState<Disconnect | undefined>()
 
-  const [settings, setSettings] = useJsonAsyncStorage<Settings>('@settings', {
-    // TODO: Better defaults and settings.
-    joinMessage:
-      "I'm using EnderChat, a well-built, ad-free ChatCraft alternative! Even this message can be disabled!",
-    sendJoinMessage: true,
-    sendSpawnCommand: true,
-    chatTheme: 'Colorless',
-    fontSize: 16,
-    webLinks: true,
-    darkMode: null,
-    linkPrompt: true,
-    disableAutoCorrect: false
-  })
+  const [settings, setSettings] = useJsonAsyncStorage<Settings>(
+    '@settings',
+    {
+      // TODO: Better defaults and settings.
+      joinMessage:
+        "I'm using EnderChat, a well-built, ad-free ChatCraft alternative! Even this message can be disabled!",
+      sendJoinMessage: true,
+      sendSpawnCommand: true,
+      chatTheme: 'Colorless',
+      fontSize: 16,
+      webLinks: true,
+      darkMode: null,
+      linkPrompt: true,
+      disableAutoCorrect: false
+    },
+    true
+  )
   const [accountsStore, setAccountsStore] = useAsyncStorage('@accounts', '{}')
   const [serversStore, setServersStore] = useAsyncStorage('@servers', '{}')
   const accounts: Accounts = JSON.parse(accountsStore)

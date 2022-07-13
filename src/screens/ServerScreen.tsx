@@ -63,8 +63,9 @@ const ServerScreen = () => {
   const [serverNameRed, setServerNameRed] = useState(false)
   const [serverVersion, setServerVersion] =
     useState<keyof typeof protocolMap>('auto')
-  const [addServerDialogOpen, setAddServerDialogOpen] = useState(false)
-  const [editServerDialogOpen, setEditServerDialogOpen] = useState('')
+  const [editServerDialogOpen, setEditServerDialogOpen] = useState<
+    string | boolean
+  >(false)
   const [pingResponses, setPingResponses] = useState<{
     // false - no route, null - unknown err, undefined - pinging
     [ip: string]: LegacyPing | Ping | false | null | undefined
@@ -102,32 +103,42 @@ const ServerScreen = () => {
   }, [servers, pingResponses])
 
   const invalidServerName = newServerName.length > 32
+  const openEditServerDialog = (server: string) => {
+    setEditServerDialogOpen(server)
+    setNewServerName(server)
+    setServerVersion(servers[server].version)
+    setIpAddr(servers[server].address)
+  }
   const cancelAddServer = () => {
-    setAddServerDialogOpen(false)
+    setEditServerDialogOpen(false)
     setServerVersion('auto')
     setNewServerName('')
     setIpAddr('')
     setIpAddrRed(false)
     setServerNameRed(false)
   }
-  const addServer = () => {
+  const deleteServer = () => {
+    if (typeof editServerDialogOpen !== 'string') return cancelAddServer()
+    delete servers[editServerDialogOpen]
+    setServers(servers)
+    cancelAddServer()
+  }
+  const editServer = () => {
+    const edit = typeof editServerDialogOpen === 'string'
     if (
       !newServerName ||
       invalidServerName ||
-      ipAddr === '' ||
-      servers[newServerName]
+      (!edit && servers[newServerName]) ||
+      (edit && servers[newServerName] && newServerName !== editServerDialogOpen)
     ) {
-      setIpAddrRed(ipAddr === '')
-      setServerNameRed(!newServerName)
-      return
+      return setServerNameRed(true)
+    } else if (ipAddr === '') {
+      return setIpAddrRed(true)
     }
-    setServers({
-      ...servers,
-      [newServerName]: {
-        version: serverVersion,
-        address: ipAddr
-      }
-    })
+    const newServers = { ...servers }
+    if (edit) delete newServers[editServerDialogOpen]
+    servers[newServerName] = { version: serverVersion, address: ipAddr }
+    setServers(newServers)
     setPingResponses({})
     cancelAddServer()
   }
@@ -172,7 +183,7 @@ const ServerScreen = () => {
         selectedProfile: uuid,
         accessToken: accounts[activeAccount].accessToken
       })
-      const onCloseOrError = () => {
+      const onCloseOrError: () => void = () => {
         setConnection(undefined)
         if (newConn.disconnectReason) {
           setDisconnectReason({
@@ -191,28 +202,11 @@ const ServerScreen = () => {
     }
   }
 
-  // LOW-TODO: Support editing servers.
+  const modalButtonCancelText = darkMode
+    ? dialogStyles.modalButtonCancelDarkText
+    : dialogStyles.modalButtonCancelText
   return (
     <>
-      <Dialog
-        visible={!!editServerDialogOpen}
-        onRequestClose={() => setEditServerDialogOpen('')}
-        containerStyles={styles.deleteServerDialog}
-      >
-        <Pressable
-          onPress={() => {
-            delete servers[editServerDialogOpen]
-            setEditServerDialogOpen('')
-            setServers(servers)
-          }}
-          android_ripple={{ color: '#aaa' }}
-          style={dialogStyles.modalButton}
-        >
-          <Text style={styles.deleteServerText}>
-            Delete '{editServerDialogOpen}' server
-          </Text>
-        </Pressable>
-      </Dialog>
       {disconnectReason && (
         <Dialog visible onRequestClose={() => setDisconnectReason()}>
           <Text style={dialogStyles.modalTitle}>
@@ -236,10 +230,12 @@ const ServerScreen = () => {
           </View>
         </Dialog>
       )}
-      <Dialog visible={addServerDialogOpen} onRequestClose={cancelAddServer}>
-        <Text style={dialogStyles.modalTitle}>Add Server</Text>
+      <Dialog visible={!!editServerDialogOpen} onRequestClose={cancelAddServer}>
+        <Text style={dialogStyles.modalTitle}>
+          {typeof editServerDialogOpen === 'string' ? 'Edit' : 'Add'} Server
+        </Text>
         <TextField
-          red={!!servers[newServerName] || serverNameRed || invalidServerName}
+          red={serverNameRed || invalidServerName}
           value={newServerName}
           onChangeText={setNewServerName}
           placeholder='Server Name'
@@ -264,28 +260,31 @@ const ServerScreen = () => {
           <Picker.Item label='1.16.4/1.16.5' value='1.16.4' />
         </Picker>
         <View style={dialogStyles.modalButtons}>
+          {typeof editServerDialogOpen === 'string' && (
+            <Pressable
+              onPress={deleteServer}
+              android_ripple={{ color: '#aaa' }}
+              style={dialogStyles.modalButton}
+            >
+              <Text style={styles.deleteServerButtonText}>DELETE</Text>
+            </Pressable>
+          )}
           <View style={globalStyle.flexSpacer} />
           <Pressable
             onPress={cancelAddServer}
             android_ripple={{ color: '#aaa' }}
             style={dialogStyles.modalButton}
           >
-            <Text
-              style={
-                darkMode
-                  ? dialogStyles.modalButtonCancelDarkText
-                  : dialogStyles.modalButtonCancelText
-              }
-            >
-              CANCEL
-            </Text>
+            <Text style={modalButtonCancelText}>CANCEL</Text>
           </Pressable>
           <Pressable
-            onPress={addServer}
+            onPress={() => editServer()}
             android_ripple={{ color: '#aaa' }}
             style={dialogStyles.modalButton}
           >
-            <Text style={dialogStyles.modalButtonText}>ADD</Text>
+            <Text style={dialogStyles.modalButtonText}>
+              {typeof editServerDialogOpen === 'string' ? 'EDIT' : 'ADD'}
+            </Text>
           </Pressable>
         </View>
       </Dialog>
@@ -294,7 +293,7 @@ const ServerScreen = () => {
         <View style={globalStyle.flexSpacer} />
         <Ionicons.Button
           name='add'
-          onPress={() => setAddServerDialogOpen(true)}
+          onPress={() => setEditServerDialogOpen(true)}
           iconStyle={globalStyle.iconStyle}
         >
           <Text style={globalStyle.iconButtonText}>Add</Text>
@@ -319,7 +318,7 @@ const ServerScreen = () => {
               <ElevatedView key={server} style={styles.serverView}>
                 <Pressable
                   onPress={async () => await connectToServer(server)}
-                  onLongPress={() => setEditServerDialogOpen(server)}
+                  onLongPress={() => openEditServerDialog(server)}
                   android_ripple={{ color: '#aaa' }}
                   style={styles.serverPressable}
                 >
@@ -406,10 +405,9 @@ const styles = StyleSheet.create({
   serverName: { fontSize: 20, fontWeight: 'bold' },
   serverPlayers: { fontSize: 12, fontWeight: 'bold' },
   serverDescription: { fontSize: 14 },
-  deleteServerText: { fontSize: 16 },
-  deleteServerDialog: { padding: 0 },
   addServerPickerDark: { color: '#ffffff' },
-  addServerPicker: { color: '#000000' }
+  addServerPicker: { color: '#000000' },
+  deleteServerButtonText: { color: '#ff0000', fontWeight: 'bold' }
 })
 
 export default ServerScreen

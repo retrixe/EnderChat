@@ -131,7 +131,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
             onNavigationStateChange={handleNavigationStateChange}
             androidLayerType={
               Platform.OS === 'android' && Platform.Version > 30
-                ? 'software' // TODO: Really choppy. Solve when you get Android 12?
+                ? 'software' // TODO: Really choppy. Seems to only happen on Google Pixel?
                 : 'hardware'
             }
           />

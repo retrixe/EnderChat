@@ -9,33 +9,43 @@ const useMemoisedValue = <T>(value: T) => {
   return ref.current
 }
 
-// This does not support deep merge, do not use it for deep merging.
-// LOW-TODO: This does not support removing existing keys.
 // This function requires JSON compatible objects to be passed.
+// This does not support deep merge, do not use it for nested objects.
 const useJsonAsyncStorage = <T extends {}>(
   name: string,
-  passedDefaultValue: T
+  defaultValue: T,
+  ignoreUnknownKeys = false
 ): [T, SetJsonAsyncStorage<T>] => {
-  const defaultValue = useMemoisedValue(passedDefaultValue)
-  const [state, setState] = useState(defaultValue)
+  const defaultValueMemo = useMemoisedValue(defaultValue)
+  const [state, setState] = useState(defaultValueMemo)
 
   useEffect(() => {
     AsyncStorage.getItem(name)
       .then(res => {
-        if (!res) return defaultValue
-        setState({ ...defaultValue, ...JSON.parse(res) })
+        if (res) {
+          if (ignoreUnknownKeys) {
+            const parsed = JSON.parse(res) as T
+            const newValue = { ...defaultValueMemo }
+            // Remove any values that aren't present in defaultValue.
+            for (const key in parsed) {
+              if (Object.prototype.hasOwnProperty.call(newValue, key)) {
+                newValue[key] = parsed[key]
+              }
+            }
+            setState(newValue)
+          } else setState({ ...defaultValueMemo, ...JSON.parse(res) })
+        }
       })
       .catch(err => console.error(err))
-  }, [name, defaultValue])
+  }, [name, defaultValueMemo, ignoreUnknownKeys])
 
   return [
     state,
     (value: Partial<T>) => {
       const merge = { ...state, ...value }
-      setState(merge)
-      AsyncStorage.setItem(name, JSON.stringify(merge)).catch(err =>
-        console.error(err)
-      )
+      AsyncStorage.setItem(name, JSON.stringify(merge))
+        .then(() => setState(merge))
+        .catch(err => console.error(err))
     }
   ]
 }
