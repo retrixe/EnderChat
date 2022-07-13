@@ -90,7 +90,9 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
         )
         setLoading(false)
         if (alreadyExists) {
-          setHtml('<h1>You are already logged into this account!</h1>')
+          setHtml(
+            '<h1>You are already logged into this account! However, your account credentials have been updated.</h1>'
+          )
         } else {
           setHtml('')
           close()

@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { StyleSheet, View, Switch, Pressable, Image } from 'react-native'
+import { StyleSheet, View, Pressable, Image } from 'react-native'
 
 import MicrosoftLogin from './MicrosoftLogin'
 import globalStyle from '../../globalStyle'
@@ -21,9 +21,9 @@ const AddAccountDialog = ({
   const { accounts, setAccounts } = useContext(UsersContext)
 
   const [userRed, setUserRed] = useState(false)
-  const [passRed, setPassRed] = useState(false)
+  // const [passRed, setPassRed] = useState(false)
   const [newUser, setNewUser] = useState('')
-  const [password, setPassword] = useState<string | null>('')
+  const [password, setPassword] = useState<string | null>(null)
   const [dialogError, setDialogError] = useState('')
   const [microsoftLogin, setMicrosoftLogin] = useState(false)
 
@@ -36,9 +36,9 @@ const AddAccountDialog = ({
     setMicrosoftLogin(false)
     setOpen(false)
     setUserRed(false)
-    setPassRed(false)
+    // setPassRed(false)
     setNewUser('')
-    setPassword('')
+    setPassword(null) // setPassword('')
     setDialogError('')
   }
   const addAccount = async () => {
@@ -46,7 +46,7 @@ const AddAccountDialog = ({
       !!accounts[newUser] ||
       !!Object.keys(accounts).find(id => accounts[id].email === newUser)
     if (!newUser || invalidNewUser || password === '' || accountExists) {
-      setPassRed(password === '')
+      // setPassRed(password === '')
       setUserRed(!newUser)
       if (accountExists) {
         setDialogError('This account already exists! Delete it first.')
@@ -81,7 +81,7 @@ const AddAccountDialog = ({
         cancelAddAccount()
       } catch (e: any) {
         setUserRed(true)
-        setPassRed(true)
+        // setPassRed(true)
         setDialogError((e.message || '').replace('Invalid credentials. ', ''))
       }
     }
@@ -99,6 +99,12 @@ const AddAccountDialog = ({
         <Image source={require('../../assets/microsoft.png')} />
         <Text style={styles.microsoftButtonText}>Login with Microsoft</Text>
       </Pressable>
+      <Text style={styles.discontinued}>
+        Note: Mojang Accounts are discontinued. Please migrate to Microsoft on
+        PC to login.
+      </Text>
+      <View style={styles.divider} />
+      <Text style={styles.subheader}>Offline Mode (discouraged)</Text>
       <TextField
         red={userRed || invalidNewUser}
         value={newUser}
@@ -106,7 +112,7 @@ const AddAccountDialog = ({
         keyboardType='email-address'
         placeholder={'Username' + (password !== null ? '/E-mail' : '')}
       />
-      <Pressable
+      {/* <Pressable
         style={styles.auth}
         onPress={() => setPassword(p => (p === null ? '' : null))}
       >
@@ -130,7 +136,7 @@ const AddAccountDialog = ({
           secureTextEntry
           placeholder='Password'
         />
-      )}
+      )} */}
       {dialogError ? (
         <Text style={styles.dialogError}>{dialogError}</Text>
       ) : (
@@ -179,6 +185,14 @@ const styles = StyleSheet.create({
   auth: { marginTop: 8, flexDirection: 'row', alignItems: 'center' },
   authText: { fontSize: 14, color: '#666666' },
   authTextDark: { fontSize: 14, color: '#aaa' },
+  divider: {
+    marginTop: 12,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#afafaf'
+  },
+  discontinued: { fontSize: 14, fontWeight: 'bold', marginTop: 8 },
+  subheader: { fontSize: 18, fontWeight: 'bold', marginBottom: 2 },
   ...dialogStyles
 })
 
