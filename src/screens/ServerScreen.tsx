@@ -30,12 +30,21 @@ import ConnectionContext from '../context/connectionContext'
 import { resolveHostname, protocolMap } from '../minecraft/utils'
 import initiateConnection from '../minecraft/connection'
 import {
+  refreshMSAuthToken,
+  getXboxLiveTokenAndUserHash,
+  getXstsTokenAndUserHash,
+  authenticateWithXsts
+} from '../minecraft/api/microsoft'
+import { Certificate, getPlayerCertificates } from '../minecraft/api/mojang'
+import { refresh } from '../minecraft/api/yggdrasil'
+import {
   ChatToJsx,
   lightColorMap,
   mojangColorMap,
   parseValidJson
 } from '../minecraft/chatToJsx'
 import useDarkMode from '../context/useDarkMode'
+import config from '../../config.json'
 
 const parseIp = (ipAddress: string): [string, number] => {
   const splitAddr = ipAddress.split(':')
@@ -48,10 +57,15 @@ const parseIp = (ipAddress: string): [string, number] => {
   return [splitAddr.join(':'), port]
 }
 
+interface Session {
+  certificate?: Certificate
+  accessToken: string
+}
+
 const ServerScreen = () => {
   const darkMode = useDarkMode()
   const { servers, setServers } = useContext(ServersContext)
-  const { accounts } = useContext(AccountsContext)
+  const { accounts, setAccounts } = useContext(AccountsContext)
   const { connection, setConnection, setDisconnectReason } =
     useContext(ConnectionContext)
   const initiatingConnection = useRef(false)
@@ -70,6 +84,7 @@ const ServerScreen = () => {
     // false - no route, null - unknown err, undefined - pinging
     [ip: string]: LegacyPing | Ping | false | null | undefined
   }>({})
+  const [sessions, setSessions] = useState<{ [uuid: string]: Session }>({})
 
   useEffect(() => {
     if (Object.keys(pingResponses).length > 0) {
@@ -103,12 +118,14 @@ const ServerScreen = () => {
   }, [servers, pingResponses])
 
   const invalidServerName = newServerName.length > 32
+
   const openEditServerDialog = (server: string) => {
     setEditServerDialogOpen(server)
     setNewServerName(server)
     setServerVersion(servers[server].version)
     setIpAddr(servers[server].address)
   }
+
   const cancelAddServer = () => {
     setEditServerDialogOpen(false)
     setServerVersion('auto')
@@ -117,12 +134,14 @@ const ServerScreen = () => {
     setIpAddrRed(false)
     setServerNameRed(false)
   }
+
   const deleteServer = () => {
     if (typeof editServerDialogOpen !== 'string') return cancelAddServer()
     delete servers[editServerDialogOpen]
     setServers(servers)
     cancelAddServer()
   }
+
   const editServer = () => {
     const edit = typeof editServerDialogOpen === 'string'
     if (
@@ -142,6 +161,7 @@ const ServerScreen = () => {
     setPingResponses({})
     cancelAddServer()
   }
+
   const connectToServer = async (server: string) => {
     if (initiatingConnection.current) return
     if (!connection) {
@@ -173,31 +193,86 @@ const ServerScreen = () => {
           reason: 'EnderChat only supports 1.16.4 and newer (for now).'
         })
       }
-      // TODO: Refresh token before trying to connect.
       const uuid = accounts[activeAccount].type ? activeAccount : undefined
-      const newConn = await initiateConnection({
-        host,
-        port,
-        username: accounts[activeAccount].username,
-        protocolVersion,
-        selectedProfile: uuid,
-        accessToken: accounts[activeAccount].accessToken
-      })
-      const onCloseOrError: () => void = () => {
-        setConnection(undefined)
-        if (newConn.disconnectReason) {
-          setDisconnectReason({
-            server,
-            reason: parseValidJson(newConn.disconnectReason)
-          })
+
+      // Create an updated "session" containing access tokens and certificates.
+      // LOW-TODO: Creating a session would be better with a loading screen, since Microsoft Login is slow.
+      // Maybe setConnection(null) to bring up ChatScreen while still being in a logged out state?
+      let session = sessions[activeAccount]
+      const is119 = protocolVersion >= protocolMap[1.19]
+      if (uuid && (!session || (!session.certificate && is119))) {
+        // LOW-TODO: Certificates and access tokens should be updated regularly.
+        try {
+          // Create a session with the latest access token.
+          const account = accounts[activeAccount]
+          if (!session && accounts[activeAccount].type === 'microsoft') {
+            const [msAccessToken, msRefreshToken] = await refreshMSAuthToken(
+              accounts[activeAccount].microsoftRefreshToken || '',
+              config.clientId,
+              config.scope
+            )
+            const [xlt, xuh] = await getXboxLiveTokenAndUserHash(msAccessToken)
+            const [xstsToken] = await getXstsTokenAndUserHash(xlt)
+            const accessToken = await authenticateWithXsts(xstsToken, xuh)
+            session = { accessToken }
+            setAccounts({
+              [activeAccount]: {
+                ...account,
+                accessToken,
+                microsoftAccessToken: msAccessToken,
+                microsoftRefreshToken: msRefreshToken
+              }
+            })
+          } else if (!session && accounts[activeAccount].type === 'mojang') {
+            const { accessToken, clientToken } = await refresh(
+              accounts[activeAccount].accessToken || '',
+              accounts[activeAccount].clientToken || '',
+              false
+            )
+            session = { accessToken }
+            setAccounts({
+              [activeAccount]: { ...account, accessToken, clientToken }
+            })
+          }
+          // If connecting to 1.19, get player certificates.
+          if (!session.certificate && is119) {
+            const token = session.accessToken
+            session.certificate = await getPlayerCertificates(token)
+          }
+          setSessions({ [activeAccount]: session })
+        } catch (e) {
+          const reason =
+            'Failed to create session! You may need to re-login with your Microsoft Account in the Accounts tab.'
+          setDisconnectReason({ server, reason })
+          initiatingConnection.current = false
+          return
         }
       }
-      newConn.on('close', onCloseOrError)
-      newConn.on('error', onCloseOrError)
-      setConnection({
-        serverName: server,
-        connection: newConn
-      })
+
+      // Connect to server after setting up the session.
+      try {
+        const newConn = await initiateConnection({
+          host,
+          port,
+          username: accounts[activeAccount].username,
+          protocolVersion,
+          selectedProfile: uuid,
+          accessToken: session?.accessToken,
+          certificate: session?.certificate // TODO: Chat Signing toggle?
+        })
+        const onCloseOrError = () => {
+          setConnection(undefined)
+          if (newConn.disconnectReason) {
+            const reason = parseValidJson(newConn.disconnectReason)
+            setDisconnectReason({ server, reason })
+          }
+        }
+        newConn.on('close', onCloseOrError)
+        newConn.on('error', onCloseOrError)
+        setConnection({ serverName: server, connection: newConn })
+      } catch (e) {
+        setDisconnectReason({ server, reason: 'Failed to connect to server!' })
+      }
       initiatingConnection.current = false
     }
   }

@@ -177,6 +177,7 @@ const parseChatToJsx = (
 ) => {
   if (typeof chat !== 'string' && (chat as TranslatedChat).translate) {
     const translatedChat = chat as TranslatedChat
+    if (!translatedChat.with) translatedChat.with = []
     const translation = translations[translatedChat.translate]
       ?.split('%s')
       ?.map((text, index) => [{ text }, translatedChat.with[index]])

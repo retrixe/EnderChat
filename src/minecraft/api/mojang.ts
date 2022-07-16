@@ -30,4 +30,4 @@ export const getPlayerCertificates = async (accessToken: string) =>
   await fetch(getPlayerCertificatesUrl, {
     headers: { Authorization: 'Bearer ' + accessToken },
     method: 'POST'
-  })
+  }).then(async res => (await res.json()) as Certificate)

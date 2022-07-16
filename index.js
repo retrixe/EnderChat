@@ -8,10 +8,10 @@ import { AppRegistry } from 'react-native'
 import App from './src/App'
 import { name as appName } from './app.json'
 
+global.BigInt = require('jsbi').BigInt
 global.Buffer = require('buffer').Buffer
 // global.process = require('process');
 global.process.env.NODE_ENV = __DEV__ ? 'development' : 'production'
-if (typeof BigInt === 'undefined') global.BigInt = require('big-integer')
 
 // Needed so that 'stream-http' chooses the right default protocol.
 global.location = {

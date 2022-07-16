@@ -43,7 +43,7 @@ export const refreshMSAuthToken = async (
 ): Promise<[string, string]> => {
   const body = `client_id=${clientId}
  &scope=${encodeURIComponent(scope)}
- &code=${encodeURIComponent(refreshToken)}
+ &refresh_token=${encodeURIComponent(refreshToken)}
  &grant_type=refresh_token
  &redirect_uri=${encodeURIComponent(redirectUri)}`
   const req = await fetch(authTokenUrl, {
@@ -51,8 +51,8 @@ export const refreshMSAuthToken = async (
     body,
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   })
-  const res = await req.json()
   if (!req.ok) throw new Error('Failed to request auth token from Microsoft!')
+  const res = await req.json()
   // { "expires_in":86400 }
   return [res.access_token, res.refresh_token]
 }
