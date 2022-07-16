@@ -14,6 +14,7 @@ import {
   authenticateWithXsts,
   getGameProfile
 } from '../../minecraft/api/microsoft'
+import config from '../../../config.json'
 
 const MicrosoftLogin = ({ close }: { close: () => void }) => {
   const darkMode = useDarkMode()
@@ -74,7 +75,11 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
         webview.current.reload()
         const suffix = newNavState.url.substring(redirectUrlPrefix.length)
         const authCode = suffix.substr(0, suffix.indexOf('&'))
-        const [msAccessToken, msRefreshToken] = await getMSAuthToken(authCode)
+        const [msAccessToken, msRefreshToken] = await getMSAuthToken(
+          authCode,
+          config.clientId,
+          config.scope
+        )
         const [xboxLiveToken, xboxUserHash] = await getXboxLiveTokenAndUserHash(
           msAccessToken
         )
@@ -114,6 +119,9 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
     }
   }
 
+  const uri = loginUrl
+    .replace('{CLIENT_ID}', config.clientId)
+    .replace('{SCOPE}', encodeURIComponent(config.scope))
   return (
     <Modal
       animationType='fade'
@@ -129,11 +137,11 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
             incognito
             ref={webview}
             originWhitelist={['*']}
-            source={html ? { html } : { uri: loginUrl }}
+            source={html ? { html } : { uri }}
             onNavigationStateChange={handleNavigationStateChange}
             androidLayerType={
               Platform.OS === 'android' && Platform.Version > 30
-                ? 'software' // TODO: Really choppy. Seems to only happen on Google Pixel?
+                ? 'software' // FIXME: Really choppy. Seems to only happen on Google Pixel?
                 : 'hardware'
             }
           />

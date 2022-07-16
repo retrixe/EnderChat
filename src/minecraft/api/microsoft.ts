@@ -1,8 +1,8 @@
 export const loginUrl =
   'https://login.live.com/oauth20_authorize.srf' +
-  '?client_id=00000000402b5328' +
+  '?client_id={CLIENT_ID}' +
   '&response_type=code' +
-  '&scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL' +
+  '&scope={SCOPE}' +
   '&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf'
 export const redirectUrlPrefix =
   'https://login.live.com/oauth20_desktop.srf?code='
@@ -16,10 +16,12 @@ const mcStoreUrl = 'https://api.minecraftservices.com/entitlements/mcstore'
 const mcProfileUrl = 'https://api.minecraftservices.com/minecraft/profile'
 
 export const getMSAuthToken = async (
-  authorizationCode: string
+  authorizationCode: string,
+  clientId: string,
+  scope: string
 ): Promise<[string, string]> => {
-  const body = `client_id=00000000402b5328
- &scope=${encodeURIComponent('service::user.auth.xboxlive.com::MBI_SSL')}
+  const body = `client_id=${clientId}
+ &scope=${encodeURIComponent(scope)}
  &code=${encodeURIComponent(authorizationCode)}
  &grant_type=authorization_code
  &redirect_uri=${encodeURIComponent(redirectUri)}`
@@ -35,10 +37,12 @@ export const getMSAuthToken = async (
 }
 
 export const refreshMSAuthToken = async (
-  refreshToken: string
+  refreshToken: string,
+  clientId: string,
+  scope: string
 ): Promise<[string, string]> => {
-  const body = `client_id=00000000402b5328
- &scope=${encodeURIComponent('service::user.auth.xboxlive.com::MBI_SSL')}
+  const body = `client_id=${clientId}
+ &scope=${encodeURIComponent(scope)}
  &code=${encodeURIComponent(refreshToken)}
  &grant_type=refresh_token
  &redirect_uri=${encodeURIComponent(redirectUri)}`
