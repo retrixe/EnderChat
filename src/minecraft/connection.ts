@@ -98,19 +98,18 @@ const getLoginPacket = (opts: ConnectionOptions) => {
   const data: PacketDataTypes[] = [opts.username]
   if (opts.protocolVersion >= protocolMap[1.19]) {
     data.push(!!opts.certificate)
-    // TODO-1.19: Test if chat signing keys work.
     if (opts.certificate) {
       let buf = Buffer.alloc(8)
       buf.writeBigInt64BE(
         BigInt(new Date(opts.certificate.expiresAt).getTime())
       )
       data.push(buf)
-      const pkData = opts.certificate.keyPair.publicKey
-        .split('\n')
-        .filter(line => !line.startsWith('-----'))
-        .join('')
+      const publicKeyBase64Data = opts.certificate.keyPair.publicKey
+        .replace(/\n/g, '')
+        .replace('-----BEGIN RSA PUBLIC KEY-----', '')
+        .replace('-----END RSA PUBLIC KEY-----', '')
         .trim()
-      buf = Buffer.from(pkData, 'base64')
+      buf = Buffer.from(publicKeyBase64Data, 'base64')
       data.push(writeVarInt(buf.byteLength))
       data.push(buf)
       buf = Buffer.from(opts.certificate.publicKeySignature, 'base64')
@@ -193,7 +192,12 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                   .catch(err => conn.emit('error', err))
               } else if (
                 (packet.id === 0x00 && !conn.loggedIn) ||
-                (packet.id === 0x1a && conn.loggedIn)
+                (packet.id === 0x1a &&
+                  conn.loggedIn &&
+                  opts.protocolVersion < protocolMap[1.19]) ||
+                (packet.id === 0x17 &&
+                  conn.loggedIn &&
+                  opts.protocolVersion >= protocolMap[1.19])
               ) {
                 const [chatLength, chatVarIntLength] = readVarInt(packet.data)
                 conn.disconnectReason = packet.data

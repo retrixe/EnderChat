@@ -2,10 +2,10 @@
 
 A React Native app for Android/iOS to chat on Minecraft servers from your phone.
 
-## Features
+## Features (still being worked on)
 
 - Fully open-source with no ads! Easily report issues through GitHub and get a direct response.
-- Supports connecting to Minecraft 1.16.4 through Minecraft 1.18.2 servers. (1.19 being worked on!)
+- Supports connecting to Minecraft 1.16.4 through Minecraft 1.19 servers. (Older versions planned.)
 - Supports all Minecraft chat features, which sometimes trip up other chat apps.
 - Send join messages and commands on connecting to a server.
 - Health change indicator and respawn on death support.
@@ -19,7 +19,7 @@ A React Native app for Android/iOS to chat on Minecraft servers from your phone.
 
 APKs are available to download for each EnderChat release [here.](https://github.com/retrixe/EnderChat/releases)
 
-Publishing to the Google Play Store is eventually planned for the betas and final release. ***While the license allows redistribution, I request that people do not abuse this privilege and publish EnderChat to the Play Store without my consent (for now).***
+Publishing to the Google Play Store is eventually planned for the betas and final release. ***While the license allows redistribution, I request people not to abuse this privilege and publish EnderChat to the Play Store without my permission (for now).***
 
 ### iOS
 
@@ -27,7 +27,7 @@ Publishing to the Google Play Store is eventually planned for the betas and fina
 
 Currently, you must build EnderChat yourself from source. However, IPA files are planned to be uploaded in the future for each EnderChat release (similar to Android), which can then be sideloaded using techniques like AltStore.
 
-There are no plans to publish EnderChat to the iOS App Store for now. ***While the license allows redistribution, I request that people do not abuse this privilege and publish EnderChat to the App Store without my consent (for now).***
+There are no plans to publish EnderChat to the iOS App Store for now. ***While the license allows redistribution, I request people not to abuse this privilege and publish EnderChat to the App Store without my permission (for now).***
 
 ## Development
 
@@ -45,4 +45,4 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ```
 
-The `src/minecraft` folder is independent of the rest of the project, and is licensed under MIT. Refer to the folder's own `README` and `LICENSE.md` files for more information.
+The `src/minecraft` folder is independent of the rest of the project, and is licensed under the terms of the MIT license. Refer to the folder's own `README.md` and `LICENSE` files for more information.

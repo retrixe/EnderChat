@@ -52,7 +52,7 @@ const ServerScreen = () => {
   const darkMode = useDarkMode()
   const { servers, setServers } = useContext(ServersContext)
   const { accounts } = useContext(AccountsContext)
-  const { connection, setConnection, disconnectReason, setDisconnectReason } =
+  const { connection, setConnection, setDisconnectReason } =
     useContext(ConnectionContext)
   const initiatingConnection = useRef(false)
 
@@ -170,7 +170,7 @@ const ServerScreen = () => {
         initiatingConnection.current = false
         return setDisconnectReason({
           server,
-          reason: 'EnderChat only supports 1.16.4 and newer for now.'
+          reason: 'EnderChat only supports 1.16.4 and newer (for now).'
         })
       }
       // TODO: Refresh token before trying to connect.
@@ -207,29 +207,6 @@ const ServerScreen = () => {
     : dialogStyles.modalButtonCancelText
   return (
     <>
-      {disconnectReason && (
-        <Dialog visible onRequestClose={() => setDisconnectReason()}>
-          <Text style={dialogStyles.modalTitle}>
-            Disconnected from {disconnectReason.server}
-          </Text>
-          <ChatToJsx
-            chat={disconnectReason.reason}
-            component={Text}
-            colorMap={darkMode ? mojangColorMap : lightColorMap}
-            componentProps={{ style: styles.serverDescription }}
-          />
-          <View style={dialogStyles.modalButtons}>
-            <View style={globalStyle.flexSpacer} />
-            <Pressable
-              onPress={() => setDisconnectReason()}
-              android_ripple={{ color: '#aaa' }}
-              style={dialogStyles.modalButton}
-            >
-              <Text style={dialogStyles.modalButtonText}>CLOSE</Text>
-            </Pressable>
-          </View>
-        </Dialog>
-      )}
       <Dialog visible={!!editServerDialogOpen} onRequestClose={cancelAddServer}>
         <Text style={dialogStyles.modalTitle}>
           {typeof editServerDialogOpen === 'string' ? 'Edit' : 'Add'} Server

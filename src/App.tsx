@@ -22,8 +22,12 @@ import ConnectionContext, {
   DisconnectReason as Disconnect
 } from './context/connectionContext'
 import AccountsContext, { Accounts } from './context/accountsContext'
-import SettingsContext, { Settings } from './context/settingsContext'
+import SettingsContext, {
+  defaultSettings,
+  Settings
+} from './context/settingsContext'
 import ServersContext, { Servers } from './context/serversContext'
+import DisconnectDialog from './components/DisconnectDialog'
 import ChatScreen from './screens/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
 import AccountScreen from './screens/accounts/AccountScreen'
@@ -87,19 +91,7 @@ const App = () => {
 
   const [settings, setSettings] = useJsonAsyncStorage<Settings>(
     '@settings',
-    {
-      // TODO: Better defaults and settings.
-      joinMessage:
-        "I'm using EnderChat, a well-built, ad-free ChatCraft alternative! Even this message can be disabled!",
-      sendJoinMessage: true,
-      sendSpawnCommand: true,
-      chatTheme: 'Colorless',
-      fontSize: 16,
-      webLinks: true,
-      darkMode: null,
-      linkPrompt: true,
-      disableAutoCorrect: false
-    },
+    defaultSettings,
     true
   )
   const [accountsStore, setAccountsStore] = useAsyncStorage('@accounts', '{}')
@@ -139,6 +131,7 @@ const App = () => {
         <SettingsContext.Provider value={{ settings, setSettings }}>
           <ServersContext.Provider value={{ servers, setServers }}>
             <AccountsContext.Provider value={{ accounts, setAccounts }}>
+              {disconnect && <DisconnectDialog />}
               <NavigationContainer theme={darkMode ? DarkTheme : undefined}>
                 <StatusBar
                   backgroundColor={darkMode ? '#242424' : '#ffffff'}

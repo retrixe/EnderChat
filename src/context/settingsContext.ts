@@ -13,25 +13,27 @@ export interface Settings {
   darkMode: boolean | null
 }
 
+export const defaultSettings: Settings = {
+  // TODO: Better defaults and settings.
+  joinMessage:
+    "I'm using EnderChat, a well-built, ad-free ChatCraft alternative! Even this message can be disabled!",
+  sendJoinMessage: true,
+  sendSpawnCommand: true,
+  chatTheme: 'Colorless',
+  fontSize: 16,
+  webLinks: true,
+  darkMode: null,
+  linkPrompt: true,
+  disableAutoCorrect: false
+}
+
 export interface SettingsContext {
   settings: Settings
   setSettings: (newSettings: Partial<Settings>) => void
 }
 
 const settingsContext = React.createContext<SettingsContext>({
-  settings: {
-    joinMessage:
-      'I connected using EnderChat, an ad-free, easy to use and well-built ' +
-      'alternative to ChatCraft for Android! Even this message can be disabled!',
-    sendJoinMessage: true,
-    sendSpawnCommand: true,
-    chatTheme: 'Colorless',
-    fontSize: 16,
-    webLinks: true,
-    darkMode: false,
-    linkPrompt: true,
-    disableAutoCorrect: false
-  },
+  settings: defaultSettings,
   setSettings: () => {}
 })
 
