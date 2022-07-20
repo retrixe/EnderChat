@@ -24,7 +24,9 @@ import Dialog, { dialogStyles } from '../components/Dialog'
 import Text from '../components/Text'
 import TextField from '../components/TextField'
 import ElevatedView from '../components/ElevatedView'
+import useDarkMode from '../context/useDarkMode'
 import ServersContext from '../context/serversContext'
+import SettingsContext from '../context/settingsContext'
 import AccountsContext from '../context/accountsContext'
 import ConnectionContext from '../context/connectionContext'
 import { resolveHostname, protocolMap } from '../minecraft/utils'
@@ -43,7 +45,6 @@ import {
   mojangColorMap,
   parseValidJson
 } from '../minecraft/chatToJsx'
-import useDarkMode from '../context/useDarkMode'
 import config from '../../config.json'
 
 const parseIp = (ipAddress: string): [string, number] => {
@@ -64,6 +65,7 @@ interface Session {
 
 const ServerScreen = () => {
   const darkMode = useDarkMode()
+  const { settings } = useContext(SettingsContext)
   const { servers, setServers } = useContext(ServersContext)
   const { accounts, setAccounts } = useContext(AccountsContext)
   const { connection, setConnection, setDisconnectReason } =
@@ -181,6 +183,7 @@ const ServerScreen = () => {
       if (protocolVersion === -1) {
         const ping = pingResponses[servers[server].address]
         // Try the latest.
+        // TODO: Make 1.19 the default.
         if (!ping) protocolVersion = protocolMap['1.18.2']
         else if (typeof ping.version === 'object') {
           protocolVersion = ping.version.protocol
@@ -258,7 +261,9 @@ const ServerScreen = () => {
           protocolVersion,
           selectedProfile: uuid,
           accessToken: session?.accessToken,
-          certificate: session?.certificate // TODO: Chat Signing toggle?
+          certificate: settings.enableChatSigning
+            ? session?.certificate
+            : undefined
         })
         const onCloseOrError = () => {
           setConnection(undefined)

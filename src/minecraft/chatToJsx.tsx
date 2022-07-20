@@ -69,7 +69,7 @@ export interface PlainTextChat extends BaseChat {
 
 export interface TranslatedChat {
   translate: string
-  with: PlainTextChat[]
+  with: string | PlainTextChat[]
 }
 
 export type MinecraftChat = PlainTextChat | TranslatedChat | string
@@ -175,12 +175,16 @@ const parseChatToJsx = (
   componentProps?: {},
   trim = false
 ) => {
-  if (typeof chat !== 'string' && (chat as TranslatedChat).translate) {
+  if (chat && typeof chat !== 'string' && (chat as TranslatedChat).translate) {
     const translatedChat = chat as TranslatedChat
     if (!translatedChat.with) translatedChat.with = []
     const translation = translations[translatedChat.translate]
       ?.split('%s')
-      ?.map((text, index) => [{ text }, translatedChat.with[index]])
+      ?.map((text, index) => {
+        let insert = translatedChat.with[index]
+        if (typeof insert === 'string') insert = { text: insert }
+        return [{ text }, insert]
+      })
       ?.flat()
       ?.filter(component => !!component)
     chat = {

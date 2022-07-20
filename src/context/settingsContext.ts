@@ -10,21 +10,23 @@ export interface Settings {
   webLinks: boolean
   linkPrompt: boolean
   disableAutoCorrect: boolean
+  enableChatSigning: boolean
   darkMode: boolean | null
 }
 
 export const defaultSettings: Settings = {
-  // TODO: Better defaults and settings.
+  // TODO: Better defaults and settings. webLinks and linkPrompt are questionable.
   joinMessage:
     "I'm using EnderChat, a well-built, ad-free ChatCraft alternative! Even this message can be disabled!",
   sendJoinMessage: true,
   sendSpawnCommand: true,
   chatTheme: 'Colorless',
   fontSize: 16,
-  webLinks: true,
   darkMode: null,
+  webLinks: true,
   linkPrompt: true,
-  disableAutoCorrect: false
+  disableAutoCorrect: false,
+  enableChatSigning: true
 }
 
 export interface SettingsContext {

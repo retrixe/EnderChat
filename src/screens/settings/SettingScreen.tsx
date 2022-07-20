@@ -22,6 +22,10 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
       </View>
       <ScrollView>
         {/* <Text>Hermes in use: {(global as any).HermesInternal ? 'true' : 'false'}</Text> */}
+        <DarkModeSetting
+          value={settings.darkMode}
+          setValue={darkMode => setSettings({ darkMode })}
+        />
         <Setting
           multiline
           maxLength={256}
@@ -50,13 +54,14 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
           setValue={linkPrompt => setSettings({ linkPrompt })}
         />
         <Setting
+          name='Enable 1.19 chat signing'
+          value={settings.enableChatSigning}
+          setValue={enableChatSigning => setSettings({ enableChatSigning })}
+        />
+        <Setting
           name='Disable auto-correct in chat'
           value={settings.disableAutoCorrect}
           setValue={disableAutoCorrect => setSettings({ disableAutoCorrect })}
-        />
-        <DarkModeSetting
-          value={settings.darkMode}
-          setValue={darkMode => setSettings({ darkMode })}
         />
         {/* TODO: Text Font, Font Size, Chat Theme, Feedback/Support */}
         <Setting name='Version' value={version} />

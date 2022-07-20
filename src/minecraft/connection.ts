@@ -238,15 +238,18 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                   const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
                   // Send encryption response packet.
                   // From this point forward, everything is encrypted, including the Login Success packet.
-                  const encryptionResponse = concatPacketData([
+                  const response: PacketDataTypes[] = [
                     writeVarInt(encryptedSharedSecret.byteLength),
                     encryptedSharedSecret,
                     writeVarInt(encryptedVerifyToken.byteLength),
                     encryptedVerifyToken
-                  ])
+                  ]
+                  if (opts.protocolVersion >= protocolMap[1.19]) {
+                    response.splice(2, 0, true)
+                  }
                   const AES_ALG = 'aes-128-cfb8'
                   conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)
-                  await conn.writePacket(0x01, encryptionResponse)
+                  await conn.writePacket(0x01, concatPacketData(response))
                   conn.aesCipher = createCipheriv(AES_ALG, secret, secret)
                 })().catch(e => {
                   console.error(e)
