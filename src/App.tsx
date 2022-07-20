@@ -28,7 +28,7 @@ import SettingsContext, {
 } from './context/settingsContext'
 import ServersContext, { Servers } from './context/serversContext'
 import DisconnectDialog from './components/DisconnectDialog'
-import ChatScreen from './screens/ChatScreen'
+import ChatScreen from './screens/chat/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
 import AccountScreen from './screens/accounts/AccountScreen'
 import SettingScreen from './screens/settings/SettingScreen'

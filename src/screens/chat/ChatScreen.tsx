@@ -11,25 +11,27 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
-import globalStyle from '../globalStyle'
-import useDarkMode from '../context/useDarkMode'
-import SettingsContext from '../context/settingsContext'
-import ConnectionContext from '../context/connectionContext'
+import packetHandler from './packetHandler'
+import globalStyle from '../../globalStyle'
+import useDarkMode from '../../context/useDarkMode'
+import SettingsContext from '../../context/settingsContext'
+import ConnectionContext from '../../context/connectionContext'
 import {
   ChatToJsx,
-  parseValidJson,
   mojangColorMap,
   lightColorMap,
   MinecraftChat,
   ClickEvent,
   ColorMap
-} from '../minecraft/chatToJsx'
-import { protocolMap, readVarInt, writeVarInt } from '../minecraft/utils'
-import { concatPacketData } from '../minecraft/packet'
-import TextField from '../components/TextField'
-import Text from '../components/Text'
+} from '../../minecraft/chatToJsx'
+import { protocolMap, writeVarInt } from '../../minecraft/utils'
+import { concatPacketData } from '../../minecraft/packet'
+import TextField from '../../components/TextField'
+import Text from '../../components/Text'
+import SettingScreen from '../settings/SettingScreen'
 
-import SettingScreen from './settings/SettingScreen'
+const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
+const sendMessageErr = 'Failed to send message to server!'
 
 type ChatNavigationProp = NativeStackNavigationProp<
   { Home: undefined; Chat: undefined },
@@ -40,22 +42,20 @@ interface Message {
   text: MinecraftChat
 }
 
-const renderItem = (
-  colorMap: ColorMap,
-  clickEventHandler: (ce: ClickEvent) => void
-) => {
+const renderItem = (colorMap: ColorMap, handleCe: (ce: ClickEvent) => void) => {
   const ItemRenderer = ({ item }: { item: Message }) => (
     <View style={styles.androidScaleInvert}>
       <ChatToJsx
         chat={item.text}
         component={Text}
         colorMap={colorMap}
-        clickEventHandler={clickEventHandler}
+        clickEventHandler={handleCe}
       />
     </View>
   )
-  return ItemRenderer // LOW-TODO: Performance implications?
-} // https://reactnative.dev/docs/optimizing-flatlist-configuration
+  // LOW-TODO: Performance implications? https://reactnative.dev/docs/optimizing-flatlist-configuration
+  return ItemRenderer
+}
 const ChatMessageList = (props: {
   messages: Message[]
   colorMap: ColorMap
@@ -73,15 +73,7 @@ const ChatMessageList = (props: {
 }
 const ChatMessageListMemo = React.memo(ChatMessageList) // Shallow prop compare.
 
-const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
-const sendMessageErr = 'Failed to send message to server!'
-const parseMessageErr = 'An error occurred when parsing chat.'
-const inventoryCloseErr = 'An error occurred when closing an inventory window.'
-const respawnErr = 'An error occurred when trying to respawn after death.'
-const deathRespawnMessage = enderChatPrefix + 'You died! Respawning...'
-const healthMessage =
-  enderChatPrefix + "You're losing health! \u00A7b%prev \u00A7f-> \u00A7c%new"
-const errorHandler =
+const handleError =
   (addMessage: (text: MinecraftChat) => void, translated: string) =>
   (error: unknown) => {
     console.error(error)
@@ -99,10 +91,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
   const [message, setMessage] = useState('')
-  const loggedInRef = useRef(false)
   const idRef = useRef(0)
-
-  const healthRef = useRef<number | null>(null)
 
   const charLimit =
     connection && connection.connection.options.protocolVersion >= 306 // 16w38a
@@ -115,98 +104,25 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     })
 
   // Packet handler useEffect.
+  const loggedInRef = useRef(false)
+  const healthRef = useRef<number | null>(null)
   useEffect(() => {
     if (!connection) return
-    connection.connection.on('packet', packet => {
-      if (!loggedInRef.current && connection.connection.loggedIn) {
-        setLoggedIn(true)
-        loggedInRef.current = true
-        if (settings.sendJoinMessage) {
-          connection.connection
-            .writePacket(
-              0x03,
-              concatPacketData([settings.joinMessage.substring(0, charLimit)])
-            )
-            .catch(errorHandler(addMessage, sendMessageErr))
-        }
-        if (settings.sendSpawnCommand) {
-          connection.connection
-            .writePacket(0x03, concatPacketData(['/spawn']))
-            .catch(errorHandler(addMessage, sendMessageErr))
-        }
-      } else if (
-        packet.id === 0x0f /* Chat Message (clientbound) */ &&
-        connection.connection.options.protocolVersion < protocolMap['1.19']
-      ) {
-        try {
-          const [chatLength, chatVarIntLength] = readVarInt(packet.data)
-          const chatJson = packet.data
-            .slice(chatVarIntLength, chatVarIntLength + chatLength)
-            .toString('utf8')
-          const position = packet.data.readInt8(chatVarIntLength + chatLength)
-          // TODO: Support position 2 (also in 0x5f packet) and sender for disableChat/blocked players.
-          if (position === 0 || position === 1) {
-            addMessage(parseValidJson(chatJson))
-          }
-        } catch (e) {
-          errorHandler(addMessage, parseMessageErr)(e)
-        }
-      } else if (
-        packet.id === 0x30 /* Player Chat Message (clientbound) */ &&
-        connection.connection.options.protocolVersion >= protocolMap['1.19']
-      ) {
-        // TODO-1.19: Support player chat messages.
-      } else if (
-        packet.id === 0x5f /* System Chat Message (clientbound) */ &&
-        connection.connection.options.protocolVersion >= protocolMap['1.19']
-      ) {
-        try {
-          const [chatLength, chatVarIntLength] = readVarInt(packet.data)
-          const chatJson = packet.data
-            .slice(chatVarIntLength, chatVarIntLength + chatLength)
-            .toString('utf8')
-          const position = packet.data.readInt8(chatVarIntLength + chatLength)
-          // TODO-1.19 - 3: say command, 4: msg command, 5: team msg command, 6: emote command, 7: tellraw command
-          if (position === 0 || position === 1) {
-            addMessage(parseValidJson(chatJson))
-          }
-        } catch (e) {
-          errorHandler(addMessage, parseMessageErr)(e)
-        }
-      } else if (packet.id === 0x2e /* Open Window */) {
-        // Just close the window.
-        const [windowId] = readVarInt(packet.data)
-        const buf = Buffer.alloc(1)
-        buf.writeUInt8(windowId)
-        connection.connection // Close Window (serverbound)
-          .writePacket(0x09, buf)
-          .catch(errorHandler(addMessage, inventoryCloseErr))
-      } else if (packet.id === 0x35 /* Death Combat Event */) {
-        const [, playerIdLen] = readVarInt(packet.data)
-        const offset = playerIdLen + 4 // Entity ID
-        const [chatLen, chatVarIntLength] = readVarInt(packet.data, offset)
-        const jsonOffset = offset + chatVarIntLength
-        const deathMessage = parseValidJson(
-          packet.data.slice(jsonOffset, jsonOffset + chatLen).toString('utf8')
-        )
-        addMessage(deathRespawnMessage)
-        if (deathMessage?.text || deathMessage?.extra) addMessage(deathMessage)
-        // Automatically respawn.
-        // LOW-TODO: Should this be manual, or a dialog, like MC?
-        connection.connection // Client Status
-          .writePacket(0x04, writeVarInt(0))
-          .catch(errorHandler(addMessage, respawnErr))
-      } else if (packet.id === 0x52 /* Update Health */) {
-        const newHealth = packet.data.readFloatBE(0)
-        if (healthRef.current != null && healthRef.current > newHealth) {
-          const info = healthMessage
-            .replace('%prev', healthRef.current.toString())
-            .replace('%new', newHealth.toString())
-          addMessage(info)
-        } // LOW-TODO: Long-term it would be better to have a UI.
-        healthRef.current = newHealth
-      }
-    })
+    connection.connection.on(
+      'packet',
+      packetHandler(
+        healthRef,
+        loggedInRef,
+        setLoggedIn,
+        connection.connection,
+        addMessage,
+        settings.joinMessage,
+        settings.sendJoinMessage,
+        settings.sendSpawnCommand,
+        handleError,
+        charLimit
+      )
+    )
     return () => {
       connection.connection.removeAllListeners('packet')
     }
@@ -240,7 +156,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     if (connection.connection.options.protocolVersion < protocolMap['1.19']) {
       connection.connection
         .writePacket(0x03, concatPacketData([msg]))
-        .catch(errorHandler(addMessage, sendMessageErr))
+        .catch(handleError(addMessage, sendMessageErr))
     } else {
       const timestamp = Buffer.alloc(8)
       connection.connection
@@ -248,7 +164,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
           0x04,
           concatPacketData([msg, timestamp, writeVarInt(0), false])
         )
-        .catch(errorHandler(addMessage, sendMessageErr))
+        .catch(handleError(addMessage, sendMessageErr))
       // TODO-1.19: Support sending Chat Command/Chat Message/Chat Preview.
     }
   }
@@ -351,9 +267,7 @@ const styles = StyleSheet.create({
   backButton: { marginRight: 8 },
   backButtonIcon: { marginRight: 0 },
   sendButtonIcon: { marginRight: 0, marginLeft: 4 },
-  androidScaleInvert: {
-    scaleY: Platform.OS === 'android' ? -1 : undefined
-  },
+  androidScaleInvert: { scaleY: Platform.OS === 'android' ? -1 : undefined },
   chatArea: { padding: 8, flex: 1, scaleY: -1 },
   chatAreaScrollView: { paddingBottom: 16 },
   loadingScreen: { flex: 1, alignItems: 'center', justifyContent: 'center' },
