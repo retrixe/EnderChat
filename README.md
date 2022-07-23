@@ -25,7 +25,7 @@ Publishing to the Google Play Store is eventually planned for the betas and fina
 
 **Note:** iOS support is currently untested and may have bugs and/or performance issues, since I don't have a Mac to properly support iOS as a target platform. Contributions to improve iOS support are welcome though!
 
-Currently, you must build EnderChat yourself from source. However, IPA files are planned to be uploaded in the future for each EnderChat release (similar to Android), which can then be sideloaded using techniques like AltStore.
+IPAs are available to download for each EnderChat release [here.](https://github.com/retrixe/EnderChat/releases) These can be sideloaded on your iPhone using techniques like AltStore.
 
 There are no plans to publish EnderChat to the iOS App Store for now. ***While the license allows redistribution, I request people not to abuse this privilege and publish EnderChat to the App Store without my permission (for now).***
 

@@ -1,4 +1,3 @@
-// Consider using Recoil instead of Context?
 import React from 'react'
 import { protocolMap } from '../minecraft/utils'
 

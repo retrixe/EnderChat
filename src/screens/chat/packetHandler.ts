@@ -4,16 +4,19 @@ import { ServerConnection } from '../../minecraft/connection'
 import { concatPacketData, Packet } from '../../minecraft/packet'
 import { protocolMap, readVarInt, writeVarInt } from '../../minecraft/utils'
 
-const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
-const parseMessageErr = 'An error occurred when parsing chat.'
-const inventoryCloseErr = 'An error occurred when closing an inventory window.'
-const respawnErr = 'An error occurred when trying to respawn after death.'
-const deathRespawnMessage = enderChatPrefix + 'You died! Respawning...'
-const sendMessageErr = 'Failed to send message to server!'
-const healthMessage =
+export const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
+export const parseMessageError = 'An error occurred when parsing chat.'
+export const inventoryCloseError =
+  'An error occurred when closing an inventory window.'
+export const respawnError =
+  'An error occurred when trying to respawn after death.'
+export const deathRespawnMessage = enderChatPrefix + 'You died! Respawning...'
+export const sendMessageError = 'Failed to send message to server!'
+export const healthMessage =
   enderChatPrefix + "You're losing health! \u00A7b%prev \u00A7f-> \u00A7c%new"
 
-export default (
+export const packetHandler =
+  (
     healthRef: React.MutableRefObject<number | null>,
     loggedInRef: React.MutableRefObject<boolean>,
     setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
@@ -38,12 +41,12 @@ export default (
             0x03,
             concatPacketData([joinMessage.substring(0, charLimit)])
           )
-          .catch(handleError(addMessage, sendMessageErr))
+          .catch(handleError(addMessage, sendMessageError))
       }
       if (sendSpawnCommand) {
         connection
           .writePacket(0x03, concatPacketData(['/spawn']))
-          .catch(handleError(addMessage, sendMessageErr))
+          .catch(handleError(addMessage, sendMessageError))
       }
     }
 
@@ -60,7 +63,7 @@ export default (
           addMessage(parseValidJson(chatJson))
         }
       } catch (e) {
-        handleError(addMessage, parseMessageErr)(e)
+        handleError(addMessage, parseMessageError)(e)
       }
     } else if (
       packet.id === 0x30 /* Player Chat Message (clientbound) */ &&
@@ -82,7 +85,7 @@ export default (
           addMessage(parseValidJson(chatJson))
         }
       } catch (e) {
-        handleError(addMessage, parseMessageErr)(e)
+        handleError(addMessage, parseMessageError)(e)
       }
     } else if (packet.id === 0x2e /* Open Window */) {
       // Just close the window.
@@ -91,7 +94,7 @@ export default (
       buf.writeUInt8(windowId)
       connection // Close Window (serverbound)
         .writePacket(0x09, buf)
-        .catch(handleError(addMessage, inventoryCloseErr))
+        .catch(handleError(addMessage, inventoryCloseError))
     } else if (packet.id === 0x35 /* Death Combat Event */) {
       const [, playerIdLen] = readVarInt(packet.data)
       const offset = playerIdLen + 4 // Entity ID
@@ -106,7 +109,7 @@ export default (
       // LOW-TODO: Should this be manual, or a dialog, like MC?
       connection // Client Status
         .writePacket(0x04, writeVarInt(0))
-        .catch(handleError(addMessage, respawnErr))
+        .catch(handleError(addMessage, respawnError))
     } else if (packet.id === 0x52 /* Update Health */) {
       const newHealth = packet.data.readFloatBE(0)
       if (healthRef.current != null && healthRef.current > newHealth) {
