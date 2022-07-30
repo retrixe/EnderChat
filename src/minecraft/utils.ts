@@ -39,6 +39,17 @@ export const toggleEndian = (buffer: Buffer, bytes: number = buffer.length) => {
   return output
 }
 
+export const parseIp = (ipAddress: string): [string, number] => {
+  const splitAddr = ipAddress.split(':')
+  const portStr = splitAddr.pop() || ''
+  let port = +portStr
+  if (isNaN(+portStr)) {
+    splitAddr.push(portStr)
+    port = 25565
+  }
+  return [splitAddr.join(':'), port]
+}
+
 export const resolveHostname = async (
   hostname: string,
   port: number,

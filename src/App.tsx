@@ -38,14 +38,19 @@ const Stacks = createNativeStackNavigator()
 const Tabs = createMaterialTopTabNavigator() // createBottomTabNavigator()
 
 type HomeNavigationProp = NativeStackNavigationProp<
-  { Home: undefined; Chat: undefined },
+  { Home: undefined; Chat: { serverName: string; version: number } },
   'Home'
 >
 
 const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
   const { connection } = React.useContext(ConnectionContext)
   React.useEffect(() => {
-    if (connection) navigation.push('Chat')
+    if (connection) {
+      navigation.push('Chat', {
+        serverName: connection.serverName,
+        version: connection.connection.options.protocolVersion
+      })
+    }
   }, [connection, navigation])
 
   return (
@@ -145,7 +150,13 @@ const App = () => {
                   }}
                 >
                   <Stacks.Screen name='Home' component={HomeScreen} />
-                  <Stacks.Screen name='Chat' component={ChatScreen} />
+                  <Stacks.Screen
+                    name='Chat'
+                    component={ChatScreen}
+                    getId={({ params }) => {
+                      return (params as { serverName: string }).serverName
+                    }}
+                  />
                 </Stacks.Navigator>
               </NavigationContainer>
             </AccountsContext.Provider>

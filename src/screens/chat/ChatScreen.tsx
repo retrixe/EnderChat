@@ -9,9 +9,13 @@ import {
   Clipboard
 } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-import packetHandler from './packetHandler'
+import {
+  packetHandler,
+  enderChatPrefix,
+  sendMessageError
+} from './packetHandler'
 import globalStyle from '../../globalStyle'
 import useDarkMode from '../../context/useDarkMode'
 import SettingsContext from '../../context/settingsContext'
@@ -30,13 +34,13 @@ import TextField from '../../components/TextField'
 import Text from '../../components/Text'
 import SettingScreen from '../settings/SettingScreen'
 
-const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
-const sendMessageErr = 'Failed to send message to server!'
+interface RootStackParamList {
+  [index: string]: any
+  Home: undefined
+  Chat: { serverName: string; version: number }
+}
+type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>
 
-type ChatNavigationProp = NativeStackNavigationProp<
-  { Home: undefined; Chat: undefined },
-  'Chat'
->
 interface Message {
   key: number
   text: MinecraftChat
@@ -81,7 +85,7 @@ const handleError =
   }
 
 // TODO: Ability to copy text.
-const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
+const ChatScreen = ({ navigation, route }: Props) => {
   const darkMode = useDarkMode()
   const { settings } = useContext(SettingsContext)
   const { connection, setConnection } = useContext(ConnectionContext)
@@ -156,7 +160,7 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
     if (connection.connection.options.protocolVersion < protocolMap['1.19']) {
       connection.connection
         .writePacket(0x03, concatPacketData([msg]))
-        .catch(handleError(addMessage, sendMessageErr))
+        .catch(handleError(addMessage, sendMessageError))
     } else {
       const timestamp = Buffer.alloc(8)
       connection.connection
@@ -164,16 +168,16 @@ const ChatScreen = ({ navigation }: { navigation: ChatNavigationProp }) => {
           0x04,
           concatPacketData([msg, timestamp, writeVarInt(0), false])
         )
-        .catch(handleError(addMessage, sendMessageErr))
+        .catch(handleError(addMessage, sendMessageError))
       // TODO-1.19: Support sending Chat Command/Chat Message/Chat Preview.
     }
   }
 
   if (!connection) return <></> // This should never be hit hopefully.
   const title =
-    connection.serverName.length > 12
-      ? connection.serverName.substring(0, 9) + '...'
-      : connection.serverName
+    route.params.serverName.length > 12
+      ? route.params.serverName.substring(0, 9) + '...'
+      : route.params.serverName
   const backButton = (
     <View style={styles.backButton}>
       <Ionicons.Button
