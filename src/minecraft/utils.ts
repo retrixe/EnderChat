@@ -11,6 +11,8 @@ export const protocolMap = {
   '1.18.1': 757,
   '1.18.2': 758,
   1.19: 759,
+  '1.19.1': 760,
+  '1.19.2': 760,
   auto: -1
 }
 
@@ -72,9 +74,9 @@ export const resolveHostname = async (
   } else return [hostname, port]
 }
 
-export const generateSharedSecret = async () =>
+export const getRandomBytes = async (size: number) =>
   await new Promise<Buffer>((resolve, reject) => {
-    randomBytes(16, (err, buf) => {
+    randomBytes(size, (err, buf) => {
       if (err) reject(err)
       else resolve(buf)
     })

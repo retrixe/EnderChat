@@ -162,14 +162,21 @@ const ChatScreen = ({ navigation, route }: Props) => {
         .writePacket(0x03, concatPacketData([msg]))
         .catch(handleError(addMessage, sendMessageError))
     } else {
+      const id = msg.startsWith('/') ? 0x03 : 0x04
       const timestamp = Buffer.alloc(8)
+      timestamp.writeIntBE(Date.now(), 2, 6) // writeBigInt64BE(BigInt(Date.now()))
+      const salt = connection.connection.msgSalt ?? Buffer.alloc(8)
+      // TODO-1.19: Send signature(s) and preview chat if possible.
+      const data = concatPacketData([
+        id === 0x03 ? msg.substring(1) : msg,
+        timestamp,
+        salt,
+        writeVarInt(0),
+        false
+      ])
       connection.connection
-        .writePacket(
-          0x04,
-          concatPacketData([msg, timestamp, writeVarInt(0), false])
-        )
+        .writePacket(id, data)
         .catch(handleError(addMessage, sendMessageError))
-      // TODO-1.19: Support sending Chat Command/Chat Message/Chat Preview.
     }
   }
 

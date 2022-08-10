@@ -58,7 +58,7 @@ export const packetHandler =
           .slice(chatVarIntLength, chatVarIntLength + chatLength)
           .toString('utf8')
         const position = packet.data.readInt8(chatVarIntLength + chatLength)
-        // TODO: Support position 2 (also in 0x5f packet) and sender for disableChat/blocked players.
+        // TODO: Support position 2 (also in 0x5f 1.19 packet) and sender for disableChat/blocked players.
         if (position === 0 || position === 1) {
           addMessage(parseValidJson(chatJson))
         }
@@ -87,7 +87,10 @@ export const packetHandler =
       } catch (e) {
         handleError(addMessage, parseMessageError)(e)
       }
-    } else if (packet.id === 0x2e /* Open Window */) {
+    } else if (
+      (packet.id === 0x2e && !is119) ||
+      (packet.id === 0x2b && is119) /* Open Window */
+    ) {
       // Just close the window.
       const [windowId] = readVarInt(packet.data)
       const buf = Buffer.alloc(1)
@@ -95,7 +98,10 @@ export const packetHandler =
       connection // Close Window (serverbound)
         .writePacket(0x09, buf)
         .catch(handleError(addMessage, inventoryCloseError))
-    } else if (packet.id === 0x35 /* Death Combat Event */) {
+    } else if (
+      (packet.id === 0x35 && !is119) ||
+      (packet.id === 0x33 && is119) /* Death Combat Event */
+    ) {
       const [, playerIdLen] = readVarInt(packet.data)
       const offset = playerIdLen + 4 // Entity ID
       const [chatLen, chatVarIntLength] = readVarInt(packet.data, offset)
@@ -108,7 +114,7 @@ export const packetHandler =
       // Automatically respawn.
       // LOW-TODO: Should this be manual, or a dialog, like MC?
       connection // Client Status
-        .writePacket(0x04, writeVarInt(0))
+        .writePacket(is119 ? 0x06 : 0x04, writeVarInt(0))
         .catch(handleError(addMessage, respawnError))
     } else if (packet.id === 0x52 /* Update Health */) {
       const newHealth = packet.data.readFloatBE(0)

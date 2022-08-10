@@ -231,7 +231,7 @@ const parseChatToJsx = (
 
 // React Component-ised.
 const ChatToJsxNonMemo = (props: {
-  chat: MinecraftChat
+  chat?: MinecraftChat
   component: React.ComponentType<TextProps>
   colorMap: ColorMap
   componentProps?: {}
@@ -239,7 +239,7 @@ const ChatToJsxNonMemo = (props: {
   trim?: boolean
 }) =>
   parseChatToJsx(
-    props.chat,
+    props.chat ?? { text: '' },
     props.component,
     props.colorMap,
     props.clickEventHandler,

@@ -23,9 +23,9 @@ import {
   readVarInt,
   writeVarInt,
   resolveHostname,
-  generateSharedSecret,
   mcHexDigest,
-  protocolMap
+  protocolMap,
+  getRandomBytes
 } from './utils'
 import { Certificate, joinMinecraftSession } from './api/mojang'
 
@@ -59,6 +59,7 @@ export class ServerConnection extends events.EventEmitter {
   disconnectReason?: string
   aesDecipher?: Decipher
   aesCipher?: Cipher
+  msgSalt?: Buffer
 
   constructor(socket: net.Socket, options: ConnectionOptions) {
     super()
@@ -180,39 +181,44 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                   ? Buffer.alloc(0) // Avoid errors shortening.
                   : conn.bufferedData.slice(packet.packetLength)
               // Internally handle login packets.
-              if (packet.id === 0x03 && !conn.loggedIn) {
+              const is119 = conn.options.protocolVersion >= protocolMap[1.19]
+              if (packet.id === 0x03 && !conn.loggedIn /* Set Compression */) {
                 const [threshold] = readVarInt(packet.data)
                 conn.compressionThreshold = threshold
                 conn.compressionEnabled = threshold >= 0
               } else if (packet.id === 0x02 && !conn.loggedIn) {
-                conn.loggedIn = true
-              } else if (packet.id === 0x21) {
+                conn.loggedIn = true // Login Success
+              } else if (
+                // Keep Alive (clientbound)
+                (packet.id === 0x21 && !is119) ||
+                (packet.id === 0x1e && is119)
+              ) {
                 conn
-                  .writePacket(0x0f, packet.data)
+                  .writePacket(is119 ? 0x11 : 0x0f, packet.data)
                   .catch(err => conn.emit('error', err))
               } else if (
+                // Disconnect (login) or Disconnect (play)
                 (packet.id === 0x00 && !conn.loggedIn) ||
-                (packet.id === 0x1a &&
-                  conn.loggedIn &&
-                  opts.protocolVersion < protocolMap[1.19]) ||
-                (packet.id === 0x17 &&
-                  conn.loggedIn &&
-                  opts.protocolVersion >= protocolMap[1.19])
+                (packet.id === 0x1a && conn.loggedIn && !is119) ||
+                (packet.id === 0x17 && conn.loggedIn && is119)
               ) {
                 const [chatLength, chatVarIntLength] = readVarInt(packet.data)
                 conn.disconnectReason = packet.data
                   .slice(chatVarIntLength, chatVarIntLength + chatLength)
                   .toString('utf8')
-              } else if (packet.id === 0x01 && !conn.loggedIn && !accessToken) {
-                conn.disconnectReason =
-                  '{"text":"This server requires a premium account to be logged in!"}'
-                conn.close()
               } else if (packet.id === 0x01 && !conn.loggedIn) {
+                /* Encryption Request */
+                if (!accessToken || !selectedProfile) {
+                  conn.disconnectReason =
+                    '{"text":"This server requires a premium account to be logged in!"}'
+                  conn.close()
+                  continue
+                }
                 // https://wiki.vg/Protocol_Encryption
                 const [serverId, publicKey, verifyToken] =
                   parseEncryptionRequestPacket(packet)
                 ;(async () => {
-                  const secret = await generateSharedSecret() // Generate random 16-byte shared secret.
+                  const secret = await getRandomBytes(16) // Generate random 16-byte shared secret.
                   // Generate hash.
                   const sha1 = createHash('sha1')
                   sha1.update(serverId) // ASCII encoding of the server id string from Encryption Request
@@ -221,8 +227,8 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                   const hash = mcHexDigest(sha1.digest())
                   // Send hash to Mojang servers.
                   const req = await joinMinecraftSession(
-                    accessToken as string,
-                    selectedProfile as string,
+                    accessToken,
+                    selectedProfile,
                     hash
                   )
                   if (!req.ok) {
@@ -244,7 +250,8 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                     writeVarInt(encryptedVerifyToken.byteLength),
                     encryptedVerifyToken
                   ]
-                  if (opts.protocolVersion >= protocolMap[1.19]) {
+                  if (is119) {
+                    conn.msgSalt = await getRandomBytes(8)
                     response.splice(2, 0, true)
                   }
                   const AES_ALG = 'aes-128-cfb8'
