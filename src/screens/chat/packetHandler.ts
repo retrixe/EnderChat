@@ -69,7 +69,50 @@ export const packetHandler =
       packet.id === 0x30 /* Player Chat Message (clientbound) */ &&
       is119
     ) {
-      // TODO-1.19: Support player chat messages.
+      try {
+        const [signedChatLen, signedChatViLen] = readVarInt(packet.data)
+        const signedChat = packet.data
+          .slice(signedChatViLen, signedChatViLen + signedChatLen)
+          .toString('utf8')
+        const totalSignedChatLen = signedChatViLen + signedChatLen
+        const hasUnsignedChat = packet.data.readInt8(totalSignedChatLen)
+        const moreData = packet.data.slice(totalSignedChatLen + 1)
+        if (hasUnsignedChat) {
+          const [unsignedChatLen, unsignedChatViLen] = readVarInt(moreData)
+          const unsignedChat = moreData
+            .slice(unsignedChatViLen, unsignedChatViLen + unsignedChatLen)
+            .toString('utf8')
+          const totalUnsignedChatLen = unsignedChatViLen + unsignedChatLen
+          const position = moreData.readInt8(totalUnsignedChatLen)
+          const [displayNameLen, displayNameViLen] = readVarInt(moreData, 17)
+          const nameViLenOffset = 17 + displayNameViLen
+          const displayName = moreData
+            .slice(nameViLenOffset, nameViLenOffset + displayNameLen)
+            .toString('utf8')
+          if (position === 0 || position === 1) {
+            addMessage({
+              translate: 'chat.type.text',
+              with: [parseValidJson(displayName), parseValidJson(unsignedChat)]
+            })
+          }
+        } else {
+          const position = moreData.readInt8()
+          const [displayNameLen, displayNameViLen] = readVarInt(moreData, 17)
+          const nameViLenOffset = 17 + displayNameViLen
+          const displayName = moreData
+            .slice(nameViLenOffset, nameViLenOffset + displayNameLen)
+            .toString('utf8')
+          if (position === 0 || position === 1) {
+            addMessage({
+              translate: 'chat.type.text',
+              with: [parseValidJson(displayName), parseValidJson(signedChat)]
+            })
+          }
+        }
+        // TODO-1.19: Support sender team name
+      } catch (e) {
+        handleError(addMessage, parseMessageError)(e)
+      }
     } else if (
       packet.id === 0x5f /* System Chat Message (clientbound) */ &&
       is119
@@ -81,6 +124,7 @@ export const packetHandler =
           .toString('utf8')
         const position = packet.data.readInt8(chatVarIntLength + chatLength)
         // TODO-1.19 - 3: say command, 4: msg command, 5: team msg command, 6: emote command, 7: tellraw command
+        // Also in Player Chat Message.
         if (position === 0 || position === 1) {
           addMessage(parseValidJson(chatJson))
         }

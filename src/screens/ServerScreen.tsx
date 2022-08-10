@@ -155,8 +155,7 @@ const ServerScreen = (props: Props) => {
       if (version === -1) {
         const ping = pingResponses[servers[server].address]
         // Try the latest.
-        // TODO: Make 1.19 the default.
-        if (!ping) version = protocolMap['1.18.2']
+        if (!ping) version = protocolMap['1.19']
         else if (typeof ping.version === 'object') {
           version = ping.version.protocol
         } else version = (ping as LegacyPing).protocol

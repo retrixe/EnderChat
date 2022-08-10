@@ -57,6 +57,8 @@ export interface BaseChat {
   obfuscated?: boolean
   underlined?: boolean
   strikethrough?: boolean
+  // TODO: This should be MinecraftChat, so translateChat should be
+  // called in flattenExtraComponents when the extra is translatable.
   extra?: PlainTextChat[]
   insertion?: string
   clickEvent?: ClickEvent
@@ -68,8 +70,9 @@ export interface PlainTextChat extends BaseChat {
 }
 
 export interface TranslatedChat {
+  // TODO: This should extend BaseChat, so this should apply to child withs.
   translate: string
-  with: string | PlainTextChat[]
+  with: MinecraftChat[]
 }
 
 export type MinecraftChat = PlainTextChat | TranslatedChat | string
@@ -167,6 +170,33 @@ const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
   return [...arr, ...flattenedExtra]
 }
 
+const translateChat = (chat: TranslatedChat): PlainTextChat[] => {
+  if (!chat.with) chat.with = []
+  const translation = translations[chat.translate]
+    ?.split('%s')
+    ?.map((text, index) => {
+      let insert = chat.with[index] ? [chat.with[index]] : []
+      if (typeof insert[0] === 'string') insert = [{ text: insert[0] }]
+      else if (insert[0] && (insert[0] as TranslatedChat).translate) {
+        insert = translateChat(insert[0] as TranslatedChat)
+      }
+      return [{ text }, ...insert] as PlainTextChat[]
+    })
+    ?.flat()
+  if (!translation) {
+    return [{ text: `[EnderChat] Unknown translation ${chat.translate}.` }]
+  } else return translation
+}
+
+const flattenTranslateComponents = (chat: MinecraftChat): PlainTextChat[] => {
+  if (typeof chat === 'string') return parseColorCodes(chat)
+  else if ((chat as TranslatedChat).translate) {
+    return translateChat(chat as TranslatedChat)
+  } else {
+    return flattenExtraComponents(chat as PlainTextChat)
+  }
+}
+
 const parseChatToJsx = (
   chat: MinecraftChat,
   Component: React.ComponentType<TextProps>,
@@ -175,28 +205,7 @@ const parseChatToJsx = (
   componentProps?: {},
   trim = false
 ) => {
-  if (chat && typeof chat !== 'string' && (chat as TranslatedChat).translate) {
-    const translatedChat = chat as TranslatedChat
-    if (!translatedChat.with) translatedChat.with = []
-    const translation = translations[translatedChat.translate]
-      ?.split('%s')
-      ?.map((text, index) => {
-        let insert = translatedChat.with[index]
-        if (typeof insert === 'string') insert = { text: insert }
-        return [{ text }, insert]
-      })
-      ?.flat()
-      ?.filter(component => !!component)
-    chat = {
-      extra: translation ?? [
-        { text: `[EnderChat] Unknown translation ${translatedChat.translate}.` }
-      ]
-    }
-  }
-  const flat =
-    typeof chat === 'string'
-      ? parseColorCodes(chat)
-      : flattenExtraComponents(chat as PlainTextChat)
+  const flat = flattenTranslateComponents(chat)
   return (
     <Component {...componentProps}>
       {flat.map((c, i) => {
