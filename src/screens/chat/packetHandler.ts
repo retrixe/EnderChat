@@ -50,8 +50,14 @@ export const packetHandler =
       }
     }
 
-    const is119 = connection.options.protocolVersion >= protocolMap['1.19']
-    if (packet.id === 0x0f /* Chat Message (clientbound) */ && !is119) {
+    const is117 = connection.options.protocolVersion >= protocolMap[1.17]
+    const is119 = connection.options.protocolVersion >= protocolMap[1.19]
+    const is1191 = connection.options.protocolVersion >= protocolMap['1.19.1']
+    if (
+      /* Chat Message (clientbound) */
+      (packet.id === 0x0e && !is117) ||
+      (packet.id === 0x0f && is117 && !is119)
+    ) {
       try {
         const [chatLength, chatVarIntLength] = readVarInt(packet.data)
         const chatJson = packet.data
@@ -66,8 +72,9 @@ export const packetHandler =
         handleError(addMessage, parseMessageError)(e)
       }
     } else if (
-      packet.id === 0x30 /* Player Chat Message (clientbound) */ &&
-      is119
+      /* Player Chat Message (clientbound) */
+      (packet.id === 0x30 && is119 && !is1191) ||
+      (packet.id === 0x33 && is1191)
     ) {
       try {
         const [signedChatLen, signedChatViLen] = readVarInt(packet.data)
@@ -114,37 +121,46 @@ export const packetHandler =
         handleError(addMessage, parseMessageError)(e)
       }
     } else if (
-      packet.id === 0x5f /* System Chat Message (clientbound) */ &&
-      is119
+      /* System Chat Message (clientbound) */
+      (packet.id === 0x5f && is119 && !is1191) ||
+      (packet.id === 0x62 && is1191)
     ) {
       try {
         const [chatLength, chatVarIntLength] = readVarInt(packet.data)
         const chatJson = packet.data
           .slice(chatVarIntLength, chatVarIntLength + chatLength)
           .toString('utf8')
+        // As of 1.19.1, this is a boolean which says if this is an action bar or not.
         const position = packet.data.readInt8(chatVarIntLength + chatLength)
         // TODO-1.19 - 3: say command, 4: msg command, 5: team msg command, 6: emote command, 7: tellraw command
         // Also in Player Chat Message.
-        if (position === 0 || position === 1) {
+        if (is119 && (position === 0 || position === 1)) {
+          addMessage(parseValidJson(chatJson))
+        } else if (is1191 && !position) {
           addMessage(parseValidJson(chatJson))
         }
       } catch (e) {
         handleError(addMessage, parseMessageError)(e)
       }
     } else if (
+      /* Open Window */
       (packet.id === 0x2e && !is119) ||
-      (packet.id === 0x2b && is119) /* Open Window */
+      (packet.id === 0x2b && is119 && !is1191) ||
+      (packet.id === 0x2d && is119)
     ) {
       // Just close the window.
       const [windowId] = readVarInt(packet.data)
       const buf = Buffer.alloc(1)
       buf.writeUInt8(windowId)
       connection // Close Window (serverbound)
-        .writePacket(0x09, buf)
+        .writePacket(is1191 ? 0x0c : is119 ? 0x0b : is117 ? 0x09 : 0x0a, buf)
         .catch(handleError(addMessage, inventoryCloseError))
     } else if (
-      (packet.id === 0x35 && !is119) ||
-      (packet.id === 0x33 && is119) /* Death Combat Event */
+      /* Death Combat Event */
+      (packet.id === 0x32 && !is117) ||
+      (packet.id === 0x35 && is117 && !is119) ||
+      (packet.id === 0x33 && is119 && !is1191) ||
+      (packet.id === 0x36 && is1191)
     ) {
       const [, playerIdLen] = readVarInt(packet.data)
       const offset = playerIdLen + 4 // Entity ID
@@ -158,9 +174,14 @@ export const packetHandler =
       // Automatically respawn.
       // LOW-TODO: Should this be manual, or a dialog, like MC?
       connection // Client Status
-        .writePacket(is119 ? 0x06 : 0x04, writeVarInt(0))
+        .writePacket(is1191 ? 0x07 : is119 ? 0x06 : 0x04, writeVarInt(0))
         .catch(handleError(addMessage, respawnError))
-    } else if (packet.id === 0x52 /* Update Health */) {
+    } else if (
+      /* Update Health */
+      (packet.id === 0x49 && !is117) ||
+      (packet.id === 0x52 && is117 && !is1191) ||
+      (packet.id === 0x55 && is1191)
+    ) {
       const newHealth = packet.data.readFloatBE(0)
       if (healthRef.current != null && healthRef.current > newHealth) {
         const info = healthMessage

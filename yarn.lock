@@ -5368,11 +5368,6 @@
     "argparse" "^1.0.7"
     "esprima" "^4.0.0"
 
-"jsbi@^3.2.5":
-  "integrity" "sha512-aBE4n43IPvjaddScbvWRA2YlTzKEynHzu7MqOyTipdHucf/VxS63ViCjxYRg86M8Rxwbt/GfzHl1kKERkt45fQ=="
-  "resolved" "https://registry.npmjs.org/jsbi/-/jsbi-3.2.5.tgz"
-  "version" "3.2.5"
-
 "jsbn@~0.1.0":
   "integrity" "sha1-peZUwuWi3rXyAdls77yoDA7y9RM="
   "resolved" "https://registry.npmjs.org/jsbn/-/jsbn-0.1.1.tgz"

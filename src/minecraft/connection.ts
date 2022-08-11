@@ -101,9 +101,7 @@ const getLoginPacket = (opts: ConnectionOptions) => {
     data.push(!!opts.certificate)
     if (opts.certificate) {
       let buf = Buffer.alloc(8)
-      buf.writeBigInt64BE(
-        BigInt(new Date(opts.certificate.expiresAt).getTime())
-      )
+      buf.writeIntBE(new Date(opts.certificate.expiresAt).getTime(), 2, 6) // writeBigInt64BE
       data.push(buf)
       const publicKeyBase64Data = opts.certificate.keyPair.publicKey
         .replace(/\n/g, '')
@@ -116,6 +114,13 @@ const getLoginPacket = (opts: ConnectionOptions) => {
       buf = Buffer.from(opts.certificate.publicKeySignature, 'base64')
       data.push(writeVarInt(buf.byteLength))
       data.push(buf)
+    }
+    if (opts.protocolVersion >= protocolMap['1.19.1']) {
+      if (opts.selectedProfile) {
+        const msb = Buffer.from(opts.selectedProfile.substring(0, 16), 'hex')
+        const lsb = Buffer.from(opts.selectedProfile.substring(16), 'hex')
+        data.push(concatPacketData([true, msb, lsb]))
+      } else data.push(concatPacketData([false]))
     }
   }
   return concatPacketData(data)
@@ -181,7 +186,12 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                   ? Buffer.alloc(0) // Avoid errors shortening.
                   : conn.bufferedData.slice(packet.packetLength)
               // Internally handle login packets.
+              const is1164 =
+                conn.options.protocolVersion >= protocolMap['1.16.4']
+              const is117 = conn.options.protocolVersion >= protocolMap[1.17]
               const is119 = conn.options.protocolVersion >= protocolMap[1.19]
+              const is1191 =
+                conn.options.protocolVersion >= protocolMap['1.19.1']
               if (packet.id === 0x03 && !conn.loggedIn /* Set Compression */) {
                 const [threshold] = readVarInt(packet.data)
                 conn.compressionThreshold = threshold
@@ -190,22 +200,32 @@ const initiateConnection = async (opts: ConnectionOptions) => {
                 conn.loggedIn = true // Login Success
               } else if (
                 // Keep Alive (clientbound)
-                (packet.id === 0x21 && !is119) ||
-                (packet.id === 0x1e && is119)
+                (packet.id === 0x1f && is1164 && !is117) ||
+                (packet.id === 0x21 && is117 && !is119) ||
+                (packet.id === 0x1e && is119 && !is1191) ||
+                (packet.id === 0x20 && is1191)
               ) {
+                const id = is1191 ? 0x12 : is119 ? 0x11 : is117 ? 0x0f : 0x10
                 conn
-                  .writePacket(is119 ? 0x11 : 0x0f, packet.data)
+                  .writePacket(id, packet.data)
                   .catch(err => conn.emit('error', err))
               } else if (
                 // Disconnect (login) or Disconnect (play)
                 (packet.id === 0x00 && !conn.loggedIn) ||
-                (packet.id === 0x1a && conn.loggedIn && !is119) ||
-                (packet.id === 0x17 && conn.loggedIn && is119)
+                (packet.id === 0x19 && conn.loggedIn && is1164 && !is117) ||
+                (packet.id === 0x1a && conn.loggedIn && is117 && !is119) ||
+                (packet.id === 0x17 && conn.loggedIn && is119 && !is1191) ||
+                (packet.id === 0x19 && conn.loggedIn && is1191)
               ) {
                 const [chatLength, chatVarIntLength] = readVarInt(packet.data)
                 conn.disconnectReason = packet.data
                   .slice(chatVarIntLength, chatVarIntLength + chatLength)
                   .toString('utf8')
+              } else if (packet.id === 0x04 && !conn.loggedIn) {
+                /* Login Plugin Request */
+                const [msgId] = readVarInt(packet.data)
+                const rs = concatPacketData([writeVarInt(msgId), false])
+                conn.writePacket(0x02, rs).catch(err => conn.emit('error', err))
               } else if (packet.id === 0x01 && !conn.loggedIn) {
                 /* Encryption Request */
                 if (!accessToken || !selectedProfile) {
