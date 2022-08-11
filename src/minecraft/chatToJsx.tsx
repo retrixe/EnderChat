@@ -57,9 +57,7 @@ export interface BaseChat {
   obfuscated?: boolean
   underlined?: boolean
   strikethrough?: boolean
-  // TODO: This should be MinecraftChat, so translateChat should be
-  // called in flattenExtraComponents when the extra is translatable.
-  extra?: PlainTextChat[]
+  extra?: MinecraftChat[]
   insertion?: string
   clickEvent?: ClickEvent
   hoverEvent?: HoverEvent
@@ -69,8 +67,7 @@ export interface PlainTextChat extends BaseChat {
   text?: string
 }
 
-export interface TranslatedChat {
-  // TODO: This should extend BaseChat, so this should apply to child withs.
+export interface TranslatedChat extends BaseChat {
   translate: string
   with: MinecraftChat[]
 }
@@ -155,7 +152,32 @@ const trimLines = (s: string) =>
         .join('\n')
     : s.trimLeft() // LOW-TODO: This is problematic, temporary workaround until this can be refined.
 
-const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
+const isTranslatedChat = (chat: MinecraftChat): chat is TranslatedChat =>
+  typeof (chat as TranslatedChat).translate === 'string'
+
+const translateChat = (chat: TranslatedChat): PlainTextChat => {
+  const { translate, with: tw, ...c } = chat
+  const translation = translations[translate]
+    ?.split('%s')
+    ?.flatMap((text, index) => {
+      let insert = tw && tw[index]
+      if (!insert) return { text }
+      else if (typeof insert === 'string') insert = { text: insert }
+      else if (isTranslatedChat(insert)) insert = translateChat(insert)
+      return [{ text }, insert]
+    })
+  if (!translation) {
+    return { text: `[EnderChat] Unknown translation ${translate}.` }
+  }
+  return {
+    ...c,
+    extra: Array.isArray(c.extra) ? [...translation, ...c.extra] : translation
+  }
+}
+
+const flattenComponents = (chat: MinecraftChat): PlainTextChat[] => {
+  if (typeof chat === 'string') return parseColorCodes(chat)
+  else if (isTranslatedChat(chat)) chat = translateChat(chat)
   const { extra, ...c } = chat
   const arr =
     c.text && hasColorCodes(c.text)
@@ -164,37 +186,11 @@ const flattenExtraComponents = (chat: PlainTextChat): PlainTextChat[] => {
       ? [c]
       : []
   if (!extra) return arr
-  const flattenedExtra = extra.flatMap(e =>
-    flattenExtraComponents({ ...c, ...e })
-  )
+  const flattenedExtra = extra.flatMap(e => {
+    if (typeof e === 'string') e = { text: e } // Colour codes will be parsed in the next step.
+    return flattenComponents({ ...c, ...e })
+  })
   return [...arr, ...flattenedExtra]
-}
-
-const translateChat = (chat: TranslatedChat): PlainTextChat[] => {
-  if (!chat.with) chat.with = []
-  const translation = translations[chat.translate]
-    ?.split('%s')
-    ?.map((text, index) => {
-      let insert = chat.with[index] ? [chat.with[index]] : []
-      if (typeof insert[0] === 'string') insert = [{ text: insert[0] }]
-      else if (insert[0] && (insert[0] as TranslatedChat).translate) {
-        insert = translateChat(insert[0] as TranslatedChat)
-      }
-      return [{ text }, ...insert] as PlainTextChat[]
-    })
-    ?.flat()
-  if (!translation) {
-    return [{ text: `[EnderChat] Unknown translation ${chat.translate}.` }]
-  } else return translation
-}
-
-const flattenTranslateComponents = (chat: MinecraftChat): PlainTextChat[] => {
-  if (typeof chat === 'string') return parseColorCodes(chat)
-  else if ((chat as TranslatedChat).translate) {
-    return translateChat(chat as TranslatedChat)
-  } else {
-    return flattenExtraComponents(chat as PlainTextChat)
-  }
 }
 
 const parseChatToJsx = (
@@ -205,7 +201,7 @@ const parseChatToJsx = (
   componentProps?: {},
   trim = false
 ) => {
-  const flat = flattenTranslateComponents(chat)
+  const flat = flattenComponents(chat)
   return (
     <Component {...componentProps}>
       {flat.map((c, i) => {
