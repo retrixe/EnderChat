@@ -28,17 +28,17 @@ export const createConnection = async (
   setConnection: (conn?: Connection) => void,
   setDisconnectReason: (reason: DisconnectReason) => void,
   closeChatScreen: () => void
-) => {
+): Promise<Connection | DisconnectReason> => {
   const [hostname, portNumber] = parseIp(servers[server].address)
   const [host, port] = await resolveHostname(hostname, portNumber)
   const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
   if (!activeAccount) {
     closeChatScreen()
-    return setDisconnectReason({
+    return {
       server,
       reason:
         'No active account selected! Open the Accounts tab and add an account.'
-    })
+    }
   }
   const uuid = accounts[activeAccount].type ? activeAccount : undefined
   // Create an updated "session" containing access tokens and certificates.
@@ -46,6 +46,7 @@ export const createConnection = async (
   const is119 = version >= protocolMap[1.19]
   if (uuid && (!session || (!session.certificate && is119))) {
     // LOW-TODO: Certificates and access tokens should be updated regularly.
+    // We should probably lock access to them via a semaphore.
     try {
       // Create a session with the latest access token.
       const account = accounts[activeAccount]
@@ -88,8 +89,7 @@ export const createConnection = async (
       closeChatScreen()
       const reason =
         'Failed to create session! You may need to re-login with your Microsoft Account in the Accounts tab.'
-      setDisconnectReason({ server, reason })
-      return
+      return { server, reason }
     }
   }
 
@@ -114,9 +114,9 @@ export const createConnection = async (
     }
     newConn.on('close', onCloseOrError)
     newConn.on('error', onCloseOrError)
-    setConnection({ serverName: server, connection: newConn })
+    return { serverName: server, connection: newConn }
   } catch (e) {
     closeChatScreen()
-    setDisconnectReason({ server, reason: 'Failed to connect to server!' })
+    return { server, reason: 'Failed to connect to server!' }
   }
 }

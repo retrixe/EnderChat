@@ -16,10 +16,14 @@ import {
   enderChatPrefix,
   sendMessageError
 } from './packetHandler'
+import { createConnection } from './sessionBuilder'
 import globalStyle from '../../globalStyle'
 import useDarkMode from '../../context/useDarkMode'
+import AccountsContext from '../../context/accountsContext'
+import ServersContext from '../../context/serversContext'
+import useSessionStore from '../../context/sessionStore'
 import SettingsContext from '../../context/settingsContext'
-import ConnectionContext from '../../context/connectionContext'
+import ConnectionContext, { Connection } from '../../context/connectionContext'
 import {
   ChatToJsx,
   mojangColorMap,
@@ -40,6 +44,8 @@ interface RootStackParamList {
   Chat: { serverName: string; version: number }
 }
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>
+
+export type Status = 'OPENING' | 'CONNECTING' | 'CONNECTED' | 'CLOSED'
 
 interface Message {
   key: number
@@ -84,17 +90,26 @@ const handleError =
     addMessage(enderChatPrefix + translated)
   }
 
+const isConnection = (connection: any): connection is Connection =>
+  !!(connection as Connection).connection
+
 // TODO: Ability to copy text.
 const ChatScreen = ({ navigation, route }: Props) => {
   const darkMode = useDarkMode()
   const { settings } = useContext(SettingsContext)
-  const { connection, setConnection } = useContext(ConnectionContext)
+  const { servers } = useContext(ServersContext)
+  const { accounts, setAccounts } = useContext(AccountsContext)
+  const { connection, setConnection, setDisconnectReason } =
+    useContext(ConnectionContext)
+  const { sessions, setSession } = useSessionStore()
   // TODO: Show command history.
   const [, setCommandHistory] = useState<string[]>([])
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
   const [message, setMessage] = useState('')
+  const healthRef = useRef<number | null>(null)
+  const statusRef = useRef<Status>(connection ? 'CONNECTING' : 'OPENING')
   const idRef = useRef(0)
 
   const charLimit =
@@ -106,17 +121,67 @@ const ChatScreen = ({ navigation, route }: Props) => {
       const trunc = m.length > 500 ? m.slice(0, 499) : m
       return [{ key: idRef.current++, text }].concat(trunc)
     })
+  const closeChatScreen = () => {
+    if (navigation.canGoBack() && statusRef.current !== 'CLOSED') {
+      navigation.goBack()
+    }
+  }
+
+  // Screen cleanup function.
+  useEffect(() =>
+    navigation.addListener('beforeRemove', () => {
+      statusRef.current = 'CLOSED'
+      // Gracefully disconnect on unmount, destroy will be called in 20s automatically if needed.
+      if (connection) {
+        connection.connection.close()
+        setConnection(undefined)
+      }
+    })
+  )
+
+  // Create connection useEffect.
+  useEffect(() => {
+    if (statusRef.current === 'OPENING') {
+      statusRef.current = 'CONNECTING'
+      createConnection(
+        route.params.serverName,
+        route.params.version,
+        servers,
+        settings,
+        accounts,
+        sessions,
+        setSession,
+        setAccounts,
+        setConnection,
+        setDisconnectReason,
+        closeChatScreen
+      )
+        .then(conn => {
+          console.log(statusRef.current)
+          console.log(isConnection(conn))
+          if (statusRef.current !== 'CLOSED') {
+            if (isConnection(conn)) setConnection(conn)
+            else setDisconnectReason(conn)
+          } else if (isConnection(conn)) conn.connection.close() // No memory leaky
+        })
+        .catch(() => {
+          closeChatScreen()
+          setDisconnectReason({
+            server: route.params.serverName,
+            reason: 'An error occurred resolving the server hostname!'
+          })
+        })
+    }
+  })
 
   // Packet handler useEffect.
-  const loggedInRef = useRef(false)
-  const healthRef = useRef<number | null>(null)
   useEffect(() => {
     if (!connection) return
     connection.connection.on(
       'packet',
       packetHandler(
         healthRef,
-        loggedInRef,
+        statusRef,
         setLoggedIn,
         connection.connection,
         addMessage,
@@ -137,19 +202,6 @@ const ChatScreen = ({ navigation, route }: Props) => {
     settings.sendJoinMessage,
     settings.sendSpawnCommand
   ])
-
-  // Cleanup useEffect on unload.
-  useEffect(() => {
-    if (!connection) {
-      navigation.goBack() // Safety net.
-      return
-    }
-    return () => {
-      // Gracefully disconnect, destroy will be called in 20s automatically if needed.
-      connection.connection.close()
-      setConnection(undefined)
-    }
-  }, [connection, setConnection, navigation])
 
   const sendMessage = (msg: string, saveHistory: boolean) => {
     if (!connection || !msg) return
@@ -191,7 +243,6 @@ const ChatScreen = ({ navigation, route }: Props) => {
     }
   }
 
-  if (!connection) return <></> // This should never be hit hopefully.
   const title =
     route.params.serverName.length > 12
       ? route.params.serverName.substring(0, 9) + '...'
@@ -203,7 +254,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
         iconStyle={styles.backButtonIcon}
         backgroundColor='#363636'
         onPress={() => {
-          settingsOpen ? setSettingsOpen(false) : navigation.goBack()
+          settingsOpen ? setSettingsOpen(false) : closeChatScreen()
         }}
       />
     </View>
@@ -223,7 +274,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
           onPress={() => setSettingsOpen(true)}
         />
       </View>
-      {!loggedIn && (
+      {(!loggedIn || !connection) && (
         <View style={styles.loadingScreen}>
           <ActivityIndicator
             color='#00aaff'
@@ -235,7 +286,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
           <Text style={styles.loadingScreenText}>Connecting...</Text>
         </View>
       )}
-      {loggedIn && (
+      {loggedIn && connection && (
         <>
           <ChatMessageListMemo
             messages={messages}

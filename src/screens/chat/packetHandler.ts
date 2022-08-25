@@ -1,4 +1,5 @@
 import React from 'react'
+import { Status } from './ChatScreen'
 import { MinecraftChat, parseValidJson } from '../../minecraft/chatToJsx'
 import { ServerConnection } from '../../minecraft/connection'
 import { concatPacketData, Packet } from '../../minecraft/packet'
@@ -47,7 +48,7 @@ const handleSystemMessage = (
 export const packetHandler =
   (
     healthRef: React.MutableRefObject<number | null>,
-    loggedInRef: React.MutableRefObject<boolean>,
+    statusRef: React.MutableRefObject<Status>,
     setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
     connection: ServerConnection,
     addMessage: (text: MinecraftChat) => any,
@@ -58,9 +59,9 @@ export const packetHandler =
     charLimit: number
   ) =>
   (packet: Packet) => {
-    if (!loggedInRef.current && connection.loggedIn) {
+    if (statusRef.current === 'CONNECTING' && connection.loggedIn) {
       setLoggedIn(true)
-      loggedInRef.current = true
+      statusRef.current = 'CONNECTED'
       if (sendJoinMessage) {
         connection
           .writePacket(

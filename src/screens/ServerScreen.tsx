@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import {
   StyleSheet,
   View,
@@ -27,9 +27,6 @@ import TextField from '../components/TextField'
 import ElevatedView from '../components/ElevatedView'
 import useDarkMode from '../context/useDarkMode'
 import ServersContext from '../context/serversContext'
-import useSessionStore from '../context/sessionStore'
-import SettingsContext from '../context/settingsContext'
-import AccountsContext from '../context/accountsContext'
 import ConnectionContext from '../context/connectionContext'
 import { parseIp, protocolMap } from '../minecraft/utils'
 import {
@@ -37,7 +34,6 @@ import {
   lightColorMap,
   mojangColorMap
 } from '../minecraft/chatToJsx'
-import { createConnection } from './chat/sessionBuilder'
 
 interface RootStackParamList {
   [index: string]: any
@@ -48,13 +44,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>
 
 const ServerScreen = (props: Props) => {
   const darkMode = useDarkMode()
-  const { settings } = useContext(SettingsContext)
   const { servers, setServers } = useContext(ServersContext)
-  const { accounts, setAccounts } = useContext(AccountsContext)
-  const { connection, setConnection, setDisconnectReason } =
-    useContext(ConnectionContext)
-  const { sessions, setSession } = useSessionStore()
-  const initiatingConnection = useRef(false)
+  const { setDisconnectReason } = useContext(ConnectionContext)
 
   const [ipAddr, setIpAddr] = useState('')
   const [ipAddrRed, setIpAddrRed] = useState(false)
@@ -147,46 +138,23 @@ const ServerScreen = (props: Props) => {
     cancelAddServer()
   }
 
-  const connectToServer = async (server: string) => {
-    if (initiatingConnection.current) return
-    if (!connection) {
-      initiatingConnection.current = true
-      let version = protocolMap[servers[server].version]
-      if (version === -1) {
-        const ping = pingResponses[servers[server].address]
-        // Try the latest.
-        if (!ping) version = protocolMap['1.19.1']
-        else if (typeof ping.version === 'object') {
-          version = ping.version.protocol
-        } else version = (ping as LegacyPing).protocol
-      }
-      if (version < 754) {
-        initiatingConnection.current = false
-        return setDisconnectReason({
-          server,
-          reason: 'EnderChat only supports 1.16.4 and newer (for now).'
-        })
-      }
-      // LOW-TODO: Creating a session would be better with a loading screen, since Microsoft Login is slow.
-      // Maybe setConnection(null) to bring up ChatScreen while still being in a logged out state?
-      // Or delegate this task to ChatScreen? Would make initiatingConnectionRef unnecessary.
-      try {
-        await createConnection(
-          server,
-          version,
-          servers,
-          settings,
-          accounts,
-          sessions,
-          setSession,
-          setAccounts,
-          setConnection,
-          setDisconnectReason,
-          () => {}
-        )
-      } catch (e) {}
-      initiatingConnection.current = false
+  const connectToServer = async (serverName: string) => {
+    let version = protocolMap[servers[serverName].version]
+    if (version === -1) {
+      const ping = pingResponses[servers[serverName].address]
+      // Try the latest.
+      if (!ping) version = protocolMap['1.19.1']
+      else if (typeof ping.version === 'object') {
+        version = ping.version.protocol
+      } else version = (ping as LegacyPing).protocol
     }
+    if (version < 754) {
+      return setDisconnectReason({
+        server: serverName,
+        reason: 'EnderChat only supports 1.16.4 and newer (for now).'
+      })
+    }
+    props.navigation.push('Chat', { serverName, version: version }) // getId prevents duplicate navigation.
   }
 
   const modalButtonCancelText = darkMode
