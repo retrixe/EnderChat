@@ -48,11 +48,11 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
           value={settings.webLinks}
           setValue={webLinks => setSettings({ webLinks })}
         />
-        <Setting
+        {/* <Setting
           name='Prompt on opening links'
           value={settings.linkPrompt}
           setValue={linkPrompt => setSettings({ linkPrompt })}
-        />
+        /> */}
         <Setting
           name='Enable 1.19 chat signing'
           value={settings.enableChatSigning}

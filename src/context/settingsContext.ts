@@ -4,26 +4,24 @@ export interface Settings {
   joinMessage: string
   sendJoinMessage: boolean
   sendSpawnCommand: boolean
-  chatTheme: 'Colorless'
-  fontSize: number
+  // chatTheme: 'Colorless', fontSize: number
   webLinks: boolean
-  linkPrompt: boolean
+  // linkPrompt: boolean
   disableAutoCorrect: boolean
   enableChatSigning: boolean
   darkMode: boolean | null
 }
 
 export const defaultSettings: Settings = {
-  // TODO: Better defaults and settings. webLinks and linkPrompt are questionable.
+  // TODO: Add chatTheme, fontSize, webLinks and linkPrompt. The last two are questionable.
   joinMessage:
     "I'm using EnderChat, a well-built, ad-free ChatCraft alternative! Even this message can be disabled!",
-  sendJoinMessage: true,
+  sendJoinMessage: false,
   sendSpawnCommand: true,
-  chatTheme: 'Colorless',
-  fontSize: 16,
+  // chatTheme: 'Colorless', fontSize: 16,
   darkMode: null,
   webLinks: true,
-  linkPrompt: true,
+  // linkPrompt: true,
   disableAutoCorrect: false,
   enableChatSigning: true
 }
