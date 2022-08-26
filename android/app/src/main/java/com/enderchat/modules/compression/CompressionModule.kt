@@ -1,6 +1,7 @@
-package com.enderchat
+package com.enderchat.modules.compression
 
 import android.util.Base64
+import com.enderchat.MainActivity
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -15,7 +16,8 @@ class CompressionModule(reactContext: ReactApplicationContext)
     override fun getName() = "CompressionModule"
 
     @ReactMethod fun compressData(data: String, promise: Promise) {
-        val handler = (reactApplicationContext.currentActivity as MainActivity).dataTransformsThreadHandler
+        val handler = (reactApplicationContext.currentActivity as MainActivity)
+            .dataTransformsThreadHandler
         val bytes = Base64.decode(data, Base64.DEFAULT)
         handler.post {
             try {
@@ -40,7 +42,8 @@ class CompressionModule(reactContext: ReactApplicationContext)
     }
 
     @ReactMethod fun decompressData(data: String, promise: Promise) {
-        val handler = (reactApplicationContext.currentActivity as MainActivity).dataTransformsThreadHandler
+        val handler = (reactApplicationContext.currentActivity as MainActivity)
+            .dataTransformsThreadHandler
         val bytes = Base64.decode(data, Base64.DEFAULT)
         handler.post {
             try {

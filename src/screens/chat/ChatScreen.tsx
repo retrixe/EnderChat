@@ -157,8 +157,6 @@ const ChatScreen = ({ navigation, route }: Props) => {
         closeChatScreen
       )
         .then(conn => {
-          console.log(statusRef.current)
-          console.log(isConnection(conn))
           if (statusRef.current !== 'CLOSED') {
             if (isConnection(conn)) setConnection(conn)
             else setDisconnectReason(conn)

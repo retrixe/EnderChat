@@ -1,5 +1,5 @@
 apply plugin: "com.android.application"
-apply plugin: "kotlin-android"
+apply plugin: "kotlin-android" // manual
 
 import com.android.build.OutputFile
 
@@ -257,8 +257,9 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-    implementation "androidx.core:core-ktx:1.5.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4" // manual
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion" // manual
+    implementation "androidx.core:core-ktx:1.8.0" // manual
 
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"  // From node_modules

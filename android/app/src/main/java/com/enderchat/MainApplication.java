@@ -2,6 +2,8 @@ package com.enderchat;
 
 import android.app.Application;
 import android.content.Context;
+import com.enderchat.modules.compression.CompressionPackage;
+import com.enderchat.modules.navbarcolor.NavBarColorPackage;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;

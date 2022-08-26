@@ -1,4 +1,4 @@
-package com.enderchat;
+package com.enderchat.modules.navbarcolor;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
