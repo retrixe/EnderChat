@@ -18,7 +18,7 @@ import {
   PacketDataTypes,
   parseCompressedPacket,
   parsePacket
-} from './packet'
+} from '../packet'
 import {
   readVarInt,
   writeVarInt,
@@ -26,20 +26,11 @@ import {
   mcHexDigest,
   protocolMap,
   getRandomBytes
-} from './utils'
-import { Certificate, joinMinecraftSession } from './api/mojang'
+} from '../utils'
+import { joinMinecraftSession } from '../api/mojang'
+import { ServerConnection, ConnectionOptions } from '.'
 
-export interface ConnectionOptions {
-  host: string
-  port: number
-  username: string
-  protocolVersion: number
-  selectedProfile?: string
-  accessToken?: string
-  certificate?: Certificate
-}
-
-export declare interface ServerConnection {
+export declare interface JavaScriptServerConnection {
   on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'data', listener: (data: Buffer) => void) => this) &
@@ -47,7 +38,12 @@ export declare interface ServerConnection {
     ((event: string, listener: Function) => this)
 }
 
-export class ServerConnection extends events.EventEmitter {
+/* eslint-disable @typescript-eslint/brace-style */
+export class JavaScriptServerConnection
+  extends events.EventEmitter
+  implements ServerConnection
+{
+  /* eslint-enable @typescript-eslint/brace-style */
   bufferedData: Buffer = Buffer.from([])
   compressionThreshold = -1
   compressionEnabled = false
@@ -126,11 +122,11 @@ const getLoginPacket = (opts: ConnectionOptions) => {
   return concatPacketData(data)
 }
 
-const initiateConnection = async (opts: ConnectionOptions) => {
+const initiateJavaScriptConnection = async (opts: ConnectionOptions) => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<ServerConnection>((resolve, reject) => {
     const socket = net.createConnection({ host, port })
-    const conn = new ServerConnection(socket, opts)
+    const conn = new JavaScriptServerConnection(socket, opts)
     let resolved = false
     const { accessToken, selectedProfile } = opts
     socket.on('connect', () => {
@@ -298,8 +294,6 @@ const initiateConnection = async (opts: ConnectionOptions) => {
   })
 }
 
-export default initiateConnection
-
 const parseEncryptionRequestPacket = (packet: Packet) => {
   // ASCII encoding of the server id string
   let data = packet.data
@@ -316,3 +310,5 @@ const parseEncryptionRequestPacket = (packet: Packet) => {
 
   return [serverId, publicKey, verifyToken]
 }
+
+export default initiateJavaScriptConnection

@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer'
+import { compressData, decompressData } from './compression'
 import { toggleEndian, encodeString, readVarInt, writeVarInt } from './utils'
-import { compressData, decompressData } from './native/compression'
 
 export const makeBasePacket = (packetId: number, data: Buffer) => {
   const finalData = Buffer.concat([writeVarInt(packetId), data])

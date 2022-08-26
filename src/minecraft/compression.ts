@@ -2,8 +2,9 @@ import { NativeModules } from 'react-native'
 import zlib from 'zlib'
 
 const { CompressionModule } = NativeModules
+// This actually introduces a performance penalty compared to JS zlib, hence it's disabled.
 const isCompressionModuleAvailable = false
-// compressionModule?.compressData && CompressionModule.decompressData
+// CompressionModule && CompressionModule.compressData && CompressionModule.decompressData
 
 export const compressData = async (data: Buffer): Promise<Buffer> => {
   if (isCompressionModuleAvailable) {
