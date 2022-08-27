@@ -2,7 +2,7 @@ package com.enderchat;
 
 import android.app.Application;
 import android.content.Context;
-import com.enderchat.modules.compression.CompressionPackage;
+import com.enderchat.modules.connection.ConnectionPackage;
 import com.enderchat.modules.navbarcolor.NavBarColorPackage;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
@@ -31,7 +31,7 @@ public class MainApplication extends Application implements ReactApplication {
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // packages.add(new MyReactNativePackage());
           packages.add(new NavBarColorPackage());
-          packages.add(new CompressionPackage());
+          packages.add(new ConnectionPackage());
           return packages;
         }
 

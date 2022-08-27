@@ -8,12 +8,12 @@ import { ConnectionOptions, ServerConnection } from '.'
 
 const { ConnectionModule } = NativeModules
 
-export const isNativeConnectionAvailable = () => !!ConnectionModule
+export const isNativeConnectionAvailable = () =>
+  !!ConnectionModule?.thisWontWork
 
 export declare interface NativeServerConnection {
   on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
     ((event: 'error', listener: (error: Error) => void) => this) &
-    ((event: 'data', listener: (data: Buffer) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
     ((event: string, listener: Function) => this)
 }
