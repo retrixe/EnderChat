@@ -159,10 +159,14 @@ const ChatScreen = ({ navigation, route }: Props) => {
         .then(conn => {
           if (statusRef.current !== 'CLOSED') {
             if (isConnection(conn)) setConnection(conn)
-            else setDisconnectReason(conn)
+            else {
+              closeChatScreen()
+              setDisconnectReason(conn)
+            }
           } else if (isConnection(conn)) conn.connection.close() // No memory leaky
         })
-        .catch(() => {
+        .catch(e => {
+          console.error(e)
           closeChatScreen()
           setDisconnectReason({
             server: route.params.serverName,

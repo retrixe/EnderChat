@@ -1,6 +1,14 @@
-import { ConnectionOptions } from '.'
+import { createHash, publicEncrypt } from 'react-native-crypto'
+import { ConnectionOptions, ServerConnection } from '.'
+import { joinMinecraftSession } from '../api/mojang'
 import { concatPacketData, Packet, PacketDataTypes } from '../packet'
-import { protocolMap, readVarInt, writeVarInt } from '../utils'
+import {
+  getRandomBytes,
+  mcHexDigest,
+  protocolMap,
+  readVarInt,
+  writeVarInt
+} from '../utils'
 
 export const parseEncryptionRequestPacket = (packet: Packet) => {
   // ASCII encoding of the server id string
@@ -48,4 +56,58 @@ export const getLoginPacket = (opts: ConnectionOptions) => {
     }
   }
   return concatPacketData(data)
+}
+
+export const handleEncryptionRequest = (
+  packet: Packet,
+  accessToken: string,
+  selectedProfile: string,
+  connection: ServerConnection,
+  is119: boolean,
+  callback: (secret: Buffer, response: Buffer) => Promise<void>
+) => {
+  // https://wiki.vg/Protocol_Encryption
+  const [serverId, publicKey, verifyToken] =
+    parseEncryptionRequestPacket(packet)
+  ;(async () => {
+    const secret = await getRandomBytes(16) // Generate random 16-byte shared secret.
+    // Generate hash.
+    const sha1 = createHash('sha1')
+    sha1.update(serverId) // ASCII encoding of the server id string from Encryption Request
+    sha1.update(secret)
+    sha1.update(publicKey) // Server's encoded public key from Encryption Request
+    const hash = mcHexDigest(sha1.digest())
+    // Send hash to Mojang servers.
+    const req = await joinMinecraftSession(accessToken, selectedProfile, hash)
+    if (!req.ok) {
+      throw new Error('Mojang online mode network request failed')
+    }
+    // Encrypt shared secret and verify token with public key.
+    const pk =
+      '-----BEGIN PUBLIC KEY-----\n' +
+      publicKey.toString('base64') +
+      '\n-----END PUBLIC KEY-----'
+    const ePrms = { key: pk, padding: 1 } // RSA_PKCS1_PADDING
+    const encryptedSharedSecret = publicEncrypt(ePrms, secret)
+    const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
+    // Send encryption response packet.
+    // From this point forward, everything is encrypted, including the Login Success packet.
+    const response: PacketDataTypes[] = [
+      writeVarInt(encryptedSharedSecret.byteLength),
+      encryptedSharedSecret,
+      writeVarInt(encryptedVerifyToken.byteLength),
+      encryptedVerifyToken
+    ]
+    if (is119) {
+      connection.msgSalt = await getRandomBytes(8)
+      response.splice(2, 0, true)
+    }
+    // This callback will send the response and enable the ciphers.
+    await callback(secret, concatPacketData(response))
+  })().catch(e => {
+    console.error(e)
+    connection.disconnectReason =
+      '{"text":"Failed to authenticate with Mojang servers!"}'
+    connection.close()
+  })
 }

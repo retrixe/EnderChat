@@ -4,19 +4,10 @@ import {
   NativeModules
 } from 'react-native'
 import events from 'events'
-import { createHash, publicEncrypt } from 'react-native-crypto'
-import { concatPacketData, Packet, PacketDataTypes } from '../packet'
-import {
-  readVarInt,
-  writeVarInt,
-  resolveHostname,
-  mcHexDigest,
-  protocolMap,
-  getRandomBytes
-} from '../utils'
-import { joinMinecraftSession } from '../api/mojang'
 import { ServerConnection, ConnectionOptions } from '.'
-import { getLoginPacket, parseEncryptionRequestPacket } from './shared'
+import { concatPacketData, Packet } from '../packet'
+import { getLoginPacket, handleEncryptionRequest } from './shared'
+import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
 
 const { ConnectionModule } = NativeModules
 
@@ -65,6 +56,10 @@ export class NativeServerConnection
     this.eventEmitter.addListener('packet', (event: NativePacketEvent) => {
       console.log(event)
       if (event.connectionId !== this.id) return
+      // Handle timeout after 20 seconds of no data. (TODO: Handle this natively.)
+      if (this.disconnectTimer) clearTimeout(this.disconnectTimer)
+      this.disconnectTimer = setTimeout(() => this.close(), 20000)
+      // Run after interactions to improve user experience.
       InteractionManager.runAfterInteractions(() => {
         const packet: Packet = {
           id: event.id,
@@ -75,16 +70,15 @@ export class NativeServerConnection
           lengthLength: event.lengthLength
         }
 
-        // Internally handle login packets.
-        // We aren't handling these in native for improved code sharing.
-        // TODO: Actually share code with the JavaScript back-end.
+        // Internally handle login packets. We aren't handling these in native to share code.
         const is1164 = options.protocolVersion >= protocolMap['1.16.4']
         const is117 = options.protocolVersion >= protocolMap[1.17]
         const is119 = options.protocolVersion >= protocolMap[1.19]
         const is1191 = options.protocolVersion >= protocolMap['1.19.1']
         // Set Compression and Keep Alive are handled in native for now.
-        if (packet.id === 0x02 && !this.loggedIn) {
-          this.loggedIn = true // Login Success
+        // When modifying this code, apply the same changes to the JavaScript back-end.
+        if (packet.id === 0x02 && !this.loggedIn /* Login Success */) {
+          this.loggedIn = true
         } else if (
           // Disconnect (login) or Disconnect (play)
           (packet.id === 0x00 && !this.loggedIn) ||
@@ -111,56 +105,19 @@ export class NativeServerConnection
             this.close()
             return
           }
-          // https://wiki.vg/Protocol_Encryption
-          const [serverId, publicKey, verifyToken] =
-            parseEncryptionRequestPacket(packet)
-          ;(async () => {
-            const secret = await getRandomBytes(16) // Generate random 16-byte shared secret.
-            // Generate hash.
-            const sha1 = createHash('sha1')
-            sha1.update(serverId) // ASCII encoding of the server id string from Encryption Request
-            sha1.update(secret)
-            sha1.update(publicKey) // Server's encoded public key from Encryption Request
-            const hash = mcHexDigest(sha1.digest())
-            // Send hash to Mojang servers.
-            const req = await joinMinecraftSession(
-              accessToken,
-              selectedProfile,
-              hash
-            )
-            if (!req.ok) {
-              throw new Error('Mojang online mode network request failed')
+          handleEncryptionRequest(
+            packet,
+            accessToken,
+            selectedProfile,
+            this,
+            is119,
+            async (secret: Buffer, response: Buffer) => {
+              // const AES_ALG = 'aes-128-cfb8'
+              // conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)
+              await this.writePacket(0x01, response)
+              // conn.aesCipher = createCipheriv(AES_ALG, secret, secret)
             }
-            // Encrypt shared secret and verify token with public key.
-            const pk =
-              '-----BEGIN PUBLIC KEY-----\n' +
-              publicKey.toString('base64') +
-              '\n-----END PUBLIC KEY-----'
-            const ePrms = { key: pk, padding: 1 } // RSA_PKCS1_PADDING
-            const encryptedSharedSecret = publicEncrypt(ePrms, secret)
-            const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
-            // Send encryption response packet.
-            // From this point forward, everything is encrypted, including the Login Success packet.
-            const response: PacketDataTypes[] = [
-              writeVarInt(encryptedSharedSecret.byteLength),
-              encryptedSharedSecret,
-              writeVarInt(encryptedVerifyToken.byteLength),
-              encryptedVerifyToken
-            ]
-            if (is119) {
-              this.msgSalt = await getRandomBytes(8)
-              response.splice(2, 0, true)
-            }
-            // const AES_ALG = 'aes-128-cfb8'
-            // this.aesDecipher = createDecipheriv(AES_ALG, secret, secret)
-            await this.writePacket(0x01, concatPacketData(response))
-            // this.aesCipher = createCipheriv(AES_ALG, secret, secret)
-          })().catch(e => {
-            console.error(e)
-            this.disconnectReason =
-              '{"text":"Failed to authenticate with Mojang servers!"}'
-            this.close()
-          })
+          )
         }
 
         this.emit('packet', packet)
@@ -200,7 +157,7 @@ export class NativeServerConnection
 
 const initiateNativeConnection = async (opts: ConnectionOptions) => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
-  const id = await ConnectionModule.createConnection({
+  const id = await ConnectionModule.openConnection({
     loginPacket: getLoginPacket(opts).toString('base64'),
     ...opts,
     host,

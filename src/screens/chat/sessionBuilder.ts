@@ -33,7 +33,6 @@ export const createConnection = async (
   const [host, port] = await resolveHostname(hostname, portNumber)
   const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
   if (!activeAccount) {
-    closeChatScreen()
     return {
       server,
       reason:
@@ -86,7 +85,6 @@ export const createConnection = async (
       }
       setSession(activeAccount, session)
     } catch (e) {
-      closeChatScreen()
       const reason =
         'Failed to create session! You may need to re-login with your Microsoft Account in the Accounts tab.'
       return { server, reason }
@@ -116,7 +114,7 @@ export const createConnection = async (
     newConn.on('error', onCloseOrError)
     return { serverName: server, connection: newConn }
   } catch (e) {
-    closeChatScreen()
+    console.error(e)
     return { server, reason: 'Failed to connect to server!' }
   }
 }

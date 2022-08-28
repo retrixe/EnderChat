@@ -6,30 +6,19 @@ import {
   Cipher,
   createCipheriv,
   createDecipheriv,
-  createHash,
-  Decipher,
-  publicEncrypt
+  Decipher
 } from 'react-native-crypto'
 import {
   concatPacketData,
   makeBaseCompressedPacket,
   makeBasePacket,
   Packet,
-  PacketDataTypes,
   parseCompressedPacket,
   parsePacket
 } from '../packet'
-import {
-  readVarInt,
-  writeVarInt,
-  resolveHostname,
-  mcHexDigest,
-  protocolMap,
-  getRandomBytes
-} from '../utils'
-import { joinMinecraftSession } from '../api/mojang'
 import { ServerConnection, ConnectionOptions } from '.'
-import { getLoginPacket, parseEncryptionRequestPacket } from './shared'
+import { getLoginPacket, handleEncryptionRequest } from './shared'
+import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
 
 export declare interface JavaScriptServerConnection {
   on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
@@ -200,56 +189,19 @@ const initiateJavaScriptConnection = async (opts: ConnectionOptions) => {
                   conn.close()
                   continue
                 }
-                // https://wiki.vg/Protocol_Encryption
-                const [serverId, publicKey, verifyToken] =
-                  parseEncryptionRequestPacket(packet)
-                ;(async () => {
-                  const secret = await getRandomBytes(16) // Generate random 16-byte shared secret.
-                  // Generate hash.
-                  const sha1 = createHash('sha1')
-                  sha1.update(serverId) // ASCII encoding of the server id string from Encryption Request
-                  sha1.update(secret)
-                  sha1.update(publicKey) // Server's encoded public key from Encryption Request
-                  const hash = mcHexDigest(sha1.digest())
-                  // Send hash to Mojang servers.
-                  const req = await joinMinecraftSession(
-                    accessToken,
-                    selectedProfile,
-                    hash
-                  )
-                  if (!req.ok) {
-                    throw new Error('Mojang online mode network request failed')
+                handleEncryptionRequest(
+                  packet,
+                  accessToken,
+                  selectedProfile,
+                  conn,
+                  is119,
+                  async (secret: Buffer, response: Buffer) => {
+                    const AES_ALG = 'aes-128-cfb8'
+                    conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)
+                    await conn.writePacket(0x01, response)
+                    conn.aesCipher = createCipheriv(AES_ALG, secret, secret)
                   }
-                  // Encrypt shared secret and verify token with public key.
-                  const pk =
-                    '-----BEGIN PUBLIC KEY-----\n' +
-                    publicKey.toString('base64') +
-                    '\n-----END PUBLIC KEY-----'
-                  const ePrms = { key: pk, padding: 1 } // RSA_PKCS1_PADDING
-                  const encryptedSharedSecret = publicEncrypt(ePrms, secret)
-                  const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
-                  // Send encryption response packet.
-                  // From this point forward, everything is encrypted, including the Login Success packet.
-                  const response: PacketDataTypes[] = [
-                    writeVarInt(encryptedSharedSecret.byteLength),
-                    encryptedSharedSecret,
-                    writeVarInt(encryptedVerifyToken.byteLength),
-                    encryptedVerifyToken
-                  ]
-                  if (is119) {
-                    conn.msgSalt = await getRandomBytes(8)
-                    response.splice(2, 0, true)
-                  }
-                  const AES_ALG = 'aes-128-cfb8'
-                  conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)
-                  await conn.writePacket(0x01, concatPacketData(response))
-                  conn.aesCipher = createCipheriv(AES_ALG, secret, secret)
-                })().catch(e => {
-                  console.error(e)
-                  conn.disconnectReason =
-                    '{"text":"Failed to authenticate with Mojang servers!"}'
-                  conn.close()
-                })
+                )
               }
               conn.emit('packet', packet)
             } else break

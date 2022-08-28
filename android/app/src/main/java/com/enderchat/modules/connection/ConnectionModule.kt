@@ -186,7 +186,6 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     buffer.write(bytes, packet.totalLength!!, bytes.size - packet.totalLength)
 
                     // We can handle Keep Alive, Login Success and Set Compression.
-                    // TODO: Maybe handle Keep Alive in JS. The overhead is minimal and would take away the disconnect timer from here.
                     if (packet.id.value == keepAliveClientBoundId) {
                         directlyWriteToConnection(keepAliveServerBoundId, packet.data)
                         continue
@@ -239,11 +238,15 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             .emit(eventName, params)
     }
 
-    @ReactMethod fun addListener(/* eventName: String */) {
+    @ReactMethod
+    @Suppress("UNUSED_PARAMETER")
+    fun addListener(eventName: String) {
         // Set up any upstream listeners or background tasks as necessary
     }
 
-    @ReactMethod fun removeListeners(/* count: Int */) {
+    @ReactMethod
+    @Suppress("UNUSED_PARAMETER")
+    fun removeListeners(count: Int) {
         // Remove upstream listeners, stop unnecessary background tasks
     }
 }
