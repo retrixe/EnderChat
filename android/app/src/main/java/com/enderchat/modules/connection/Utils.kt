@@ -4,6 +4,11 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.Deflater
 import java.util.zip.Inflater
 
+const val PROTOCOL_VERSION_1164 = 754
+const val PROTOCOL_VERSION_117 = 755
+const val PROTOCOL_VERSION_119 = 759
+const val PROTOCOL_VERSION_1191 = 760
+
 fun compressData(bytes: ByteArray): ByteArray {
     ByteArrayOutputStream(bytes.size).use {
         val deflater = Deflater().apply {
