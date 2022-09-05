@@ -53,12 +53,8 @@ export class NativeServerConnection
     super()
     this.id = id
     this.options = options
-    this.eventEmitter.addListener('packet', (event: NativePacketEvent) => {
-      console.log(event)
+    this.eventEmitter.addListener('ecm:packet', (event: NativePacketEvent) => {
       if (event.connectionId !== this.id) return
-      // Handle timeout after 20 seconds of no data. (TODO: Handle this natively.)
-      if (this.disconnectTimer) clearTimeout(this.disconnectTimer)
-      this.disconnectTimer = setTimeout(() => this.close(), 20000)
       // Run after interactions to improve user experience.
       InteractionManager.runAfterInteractions(() => {
         const packet: Packet = {
@@ -123,18 +119,16 @@ export class NativeServerConnection
         this.emit('packet', packet)
       }).then(() => {}, console.error)
     })
-    this.eventEmitter.addListener('error', (event: NativeErrorEvent) => {
-      console.log(event)
+    this.eventEmitter.addListener('ecm:error', (event: NativeErrorEvent) => {
       if (event.connectionId !== this.id) return
       console.error(event.stackTrace)
       this.emit('error', new Error(event.message))
     })
-    this.eventEmitter.addListener('close', (event: NativeEvent) => {
-      console.log(event)
+    this.eventEmitter.addListener('ecm:close', (event: NativeEvent) => {
       if (event.connectionId !== this.id) return
-      this.eventEmitter.removeAllListeners('packet')
-      this.eventEmitter.removeAllListeners('error')
-      this.eventEmitter.removeAllListeners('close')
+      this.eventEmitter.removeAllListeners('ecm:packet')
+      this.eventEmitter.removeAllListeners('ecm:error')
+      this.eventEmitter.removeAllListeners('ecm:close')
       this.closed = true
       this.emit('close')
     })
@@ -149,9 +143,9 @@ export class NativeServerConnection
     if (this.closed) return
     this.closed = true
     ConnectionModule.closeConnection(this.id)
-    this.eventEmitter.removeAllListeners('packet')
-    this.eventEmitter.removeAllListeners('error')
-    this.eventEmitter.removeAllListeners('close')
+    this.eventEmitter.removeAllListeners('ecm:packet')
+    this.eventEmitter.removeAllListeners('ecm:error')
+    this.eventEmitter.removeAllListeners('ecm:close')
   }
 }
 

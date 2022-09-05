@@ -46,7 +46,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         loggedIn = false
     }
 
-    private fun directlyWriteToConnection(id: Int, data: ByteArray): Boolean {
+    private fun directlyWritePacket(id: Int, data: ByteArray): Boolean {
         val packet = Packet(id, data)
         var asBytes =
             if (compressionEnabled) packet.writeCompressedPacket(compressionThreshold)
@@ -62,7 +62,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         return socketIsOpen
     }
 
-    @ReactMethod fun writeToConnection(
+    @ReactMethod fun writePacket(
         connId: String, packetId: Int, data: String, promise: Promise
     ) = runBlocking {
         launch(Dispatchers.Default) {
@@ -70,7 +70,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 if (connId == connectionId.toString()) {
                     try {
                         val dataBytes = Base64.decode(data, Base64.DEFAULT)
-                        promise.resolve(directlyWriteToConnection(packetId, dataBytes))
+                        promise.resolve(directlyWritePacket(packetId, dataBytes))
                     } catch (e: Exception) {
                         promise.reject(e)
                     }
@@ -107,7 +107,8 @@ class ConnectionModule(reactContext: ReactApplicationContext)
 
                 // Create socket and connection ID.
                 socket = Socket(host, port)
-                this.connectionId = UUID.randomUUID()
+                socket.soTimeout = 20 * 1000
+                this.connectionId = connectionId
 
                 // Create data to send in Handshake.
                 val portBuf = ByteBuffer.allocate(2)
@@ -123,7 +124,8 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 socket.getOutputStream().write(Packet(0x00, handshakeData.toByteArray()).writePacket())
 
                 // Send Login Start packet.
-                socket.getOutputStream().write(Base64.decode(loginPacket, Base64.DEFAULT))
+                val loginPacketData = Base64.decode(loginPacket, Base64.DEFAULT)
+                socket.getOutputStream().write(Packet(0x00, loginPacketData).writePacket())
 
                 // Update the current socket and resolve/reject.
                 this.socket = socket
@@ -159,15 +161,18 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             // Re-use the current thread, start reading from the socket.
             val buffer = ByteArrayOutputStream()
             val buf = ByteArray(4096)
-            var aesDecipher: Cipher?
-            while (lock.read {
-                    aesDecipher = this.aesDecipher
-                    return@read this.socket == socket
-            }) {
+            while (true) {
+                lock.readLock().lock()
+                if (this.socket != socket) {
+                    lock.readLock().unlock()
+                    break
+                }
                 try {
                     val n = socket.getInputStream().read(buf)
-                    if (n == -1)
+                    if (n == -1) {
+                        lock.readLock().unlock()
                         break
+                    }
 
                     // Decrypt if necessary.
                     if (aesDecipher != null) {
@@ -187,8 +192,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
 
                     // We can handle Keep Alive, Login Success and Set Compression.
                     if (packet.id.value == keepAliveClientBoundId) {
-                        directlyWriteToConnection(keepAliveServerBoundId, packet.data)
-                        continue
+                        directlyWritePacket(keepAliveServerBoundId, packet.data)
                     } else if (packet.id.value == setCompressionId && !loggedIn) {
                         val threshold = VarInt.read(packet.data)?.value ?: 0
                         compressionThreshold = threshold
@@ -199,7 +203,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
 
                     // Forward the packet to JavaScript.
                     val packetLengthLength =
-                        packet.totalLength - packet.data.size - packet.id.data.size
+                        packet.totalLength - (packet.data.size + packet.id.data.size)
                     val params = Arguments.createMap().apply {
                         putString("connectionId", connectionId.toString())
                         putDouble("id", packet.id.value.toDouble())
@@ -210,15 +214,18 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         putDouble("packetLength", packet.totalLength.toDouble())
                         putDouble("lengthLength", packetLengthLength.toDouble())
                     }
-                    sendEvent(reactContext = reactApplicationContext, "packet", params)
+                    sendEvent(reactContext = reactApplicationContext, "ecm:packet", params)
+                    lock.readLock().unlock()
                 } catch (e: Exception) {
-                    lock.write { directlyCloseConnection() }
+                    lock.readLock().unlock()
+                    lock.write { if (this.socket == socket) directlyCloseConnection() }
                     val params = Arguments.createMap().apply {
                         putString("connectionId", connectionId.toString())
                         putString("stackTrace", e.stackTraceToString())
                         putString("message", e.message)
                     }
-                    sendEvent(reactContext = reactApplicationContext, "error", params)
+                    sendEvent(reactContext = reactApplicationContext, "ecm:error", params)
+                    break
                 }
             }
 
@@ -228,7 +235,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             val params = Arguments.createMap().apply {
                 putString("connectionId", connectionId.toString())
             }
-            sendEvent(reactContext = reactApplicationContext, "close", params)
+            sendEvent(reactContext = reactApplicationContext, "ecm:close", params)
         }
     }
 
