@@ -12,7 +12,7 @@ import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
 const { ConnectionModule } = NativeModules
 
 export const isNativeConnectionAvailable = () =>
-  !!ConnectionModule?.openConnection && false
+  !!ConnectionModule?.openConnection
 
 interface NativeEvent {
   connectionId: string
@@ -53,6 +53,10 @@ export class NativeServerConnection
     super()
     this.id = id
     this.options = options
+    this.eventEmitter.addListener(
+      'ecm:log',
+      ({ log }: NativeEvent & { log: string }) => console.log(log)
+    )
     this.eventEmitter.addListener('ecm:packet', (event: NativePacketEvent) => {
       if (event.connectionId !== this.id) return
       // Run after interactions to improve user experience.

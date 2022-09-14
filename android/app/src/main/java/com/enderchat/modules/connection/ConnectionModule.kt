@@ -65,7 +65,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
     @ReactMethod fun writePacket(
         connId: String, packetId: Int, data: String, promise: Promise
     ) = runBlocking {
-        launch(Dispatchers.Default) {
+        launch(Dispatchers.IO) {
             lock.read {
                 if (connId == connectionId.toString()) {
                     try {
@@ -181,40 +181,43 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         buffer.write(buf, 0, n)
                     }
 
-                    // Read packet.
-                    val bytes = buffer.toByteArray()
-                    val packet =
-                        if (compressionEnabled) Packet.readCompressed(bytes) ?: continue
-                        else Packet.read(bytes) ?: continue
-                    // Reset the buffer, we've been reading byte-by-byte so this is fine to do.
-                    buffer.reset() // We know packet.totalLength exists for read/readCompressed.
-                    buffer.write(bytes, packet.totalLength!!, bytes.size - packet.totalLength)
+                    // TODO: This could be coroutined. Maybe some actor-style threading?
+                    while (true) {
+                        // Read packets from the buffer.
+                        val bytes = buffer.toByteArray()
+                        val packet =
+                            if (compressionEnabled) Packet.readCompressed(bytes) ?: break
+                            else Packet.read(bytes) ?: break
+                        // Reset the buffer, we've been reading byte-by-byte so this is fine to do.
+                        buffer.reset() // We know packet.totalLength exists for read/readCompressed.
+                        buffer.write(bytes, packet.totalLength!!, bytes.size - packet.totalLength)
 
-                    // We can handle Keep Alive, Login Success and Set Compression.
-                    if (packet.id.value == keepAliveClientBoundId) {
-                        directlyWritePacket(keepAliveServerBoundId, packet.data)
-                    } else if (packet.id.value == setCompressionId && !loggedIn) {
-                        val threshold = VarInt.read(packet.data)?.value ?: 0
-                        compressionThreshold = threshold
-                        compressionEnabled = threshold >= 0
-                    } else if (packet.id.value == loginSuccessId && !loggedIn) {
-                        loggedIn = true // Login Success
-                    }
+                        // We can handle Keep Alive, Login Success and Set Compression.
+                        if (packet.id.value == keepAliveClientBoundId) {
+                            directlyWritePacket(keepAliveServerBoundId, packet.data)
+                        } else if (packet.id.value == setCompressionId && !loggedIn) {
+                            val threshold = VarInt.read(packet.data)?.value ?: 0
+                            compressionThreshold = threshold
+                            compressionEnabled = threshold >= 0
+                        } else if (packet.id.value == loginSuccessId && !loggedIn) {
+                            loggedIn = true // Login Success
+                        }
 
-                    // Forward the packet to JavaScript.
-                    val packetLengthLength =
-                        packet.totalLength - (packet.data.size + packet.id.data.size)
-                    val params = Arguments.createMap().apply {
-                        putString("connectionId", connectionId.toString())
-                        putDouble("id", packet.id.value.toDouble())
-                        putString("data", Base64.encodeToString(packet.data, Base64.DEFAULT))
-                        putBoolean("compressed", compressionEnabled)
-                        putDouble("idLength", packet.id.data.size.toDouble())
-                        putDouble("dataLength", packet.data.size.toDouble())
-                        putDouble("packetLength", packet.totalLength.toDouble())
-                        putDouble("lengthLength", packetLengthLength.toDouble())
+                        // Forward the packet to JavaScript.
+                        val packetLengthLength =
+                            packet.totalLength - (packet.data.size + packet.id.data.size)
+                        val params = Arguments.createMap().apply {
+                            putString("connectionId", connectionId.toString())
+                            putDouble("id", packet.id.value.toDouble())
+                            putString("data", Base64.encodeToString(packet.data, Base64.DEFAULT))
+                            putBoolean("compressed", compressionEnabled)
+                            putDouble("idLength", packet.id.data.size.toDouble())
+                            putDouble("dataLength", packet.data.size.toDouble())
+                            putDouble("packetLength", packet.totalLength.toDouble())
+                            putDouble("lengthLength", packetLengthLength.toDouble())
+                        }
+                        sendEvent(reactContext = reactApplicationContext, "ecm:packet", params)
                     }
-                    sendEvent(reactContext = reactApplicationContext, "ecm:packet", params)
                     lock.readLock().unlock()
                 } catch (e: Exception) {
                     lock.readLock().unlock()
@@ -255,5 +258,11 @@ class ConnectionModule(reactContext: ReactApplicationContext)
     @Suppress("UNUSED_PARAMETER")
     fun removeListeners(count: Int) {
         // Remove upstream listeners, stop unnecessary background tasks
+    }
+
+    private fun println(log: Any?) {
+        sendEvent(reactContext = reactApplicationContext, "ecm:log", Arguments.createMap().apply {
+            putString("log", log.toString())
+        })
     }
 }
