@@ -15,6 +15,8 @@ import java.nio.ByteOrder
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 import kotlin.concurrent.read
 import kotlin.concurrent.thread
 import kotlin.concurrent.write
@@ -26,7 +28,6 @@ class ConnectionModule(reactContext: ReactApplicationContext)
     private var connectionId: UUID? = null
     private var compressionThreshold = -1
     private var compressionEnabled = false
-    // TODO: Use AES ciphers for reading and writing. Maybe JS can initialise these? Or do we handle Encryption Request?
     private var aesDecipher: Cipher? = null
     private var aesCipher: Cipher? = null
     private var loggedIn = false
@@ -71,6 +72,33 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     try {
                         val dataBytes = Base64.decode(data, Base64.DEFAULT)
                         promise.resolve(directlyWritePacket(packetId, dataBytes))
+                    } catch (e: Exception) {
+                        promise.reject(e)
+                    }
+                } else promise.resolve(false)
+            }
+        }
+    }
+
+    @ReactMethod fun enableEncryption(
+        connId: String, secret: String, packet: String, promise: Promise
+    ) = runBlocking {
+        launch(Dispatchers.IO) {
+            lock.write {
+                if (connId == connectionId.toString()) {
+                    try {
+                        val packetBytes = Base64.decode(packet, Base64.DEFAULT)
+                        val secretBytes = Base64.decode(secret, Base64.DEFAULT)
+                        val secretKey = SecretKeySpec(secretBytes, "AES")
+                        val iv = IvParameterSpec(secretBytes)
+                        aesDecipher = Cipher.getInstance("AES/CFB8/PKCS5Padding").apply {
+                            init(Cipher.DECRYPT_MODE, secretKey, iv)
+                        }
+                        val result = directlyWritePacket(0x01, packetBytes)
+                        aesCipher = Cipher.getInstance("AES/CFB8/PKCS5Padding").apply {
+                            init(Cipher.ENCRYPT_MODE, secretKey, iv)
+                        }
+                        promise.resolve(result)
                     } catch (e: Exception) {
                         promise.reject(e)
                     }

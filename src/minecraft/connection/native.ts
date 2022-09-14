@@ -112,10 +112,9 @@ export class NativeServerConnection
             this,
             is119,
             async (secret: Buffer, response: Buffer) => {
-              // const AES_ALG = 'aes-128-cfb8'
-              // conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)
-              await this.writePacket(0x01, response)
-              // conn.aesCipher = createCipheriv(AES_ALG, secret, secret)
+              const eSecret = secret.toString('base64')
+              const eResp = response.toString('base64')
+              return ConnectionModule.enableEncryption(this.id, eSecret, eResp)
             }
           )
         }
@@ -130,12 +129,7 @@ export class NativeServerConnection
     })
     this.eventEmitter.addListener('ecm:close', (event: NativeEvent) => {
       if (event.connectionId !== this.id) return
-      this.eventEmitter.removeAllListeners('ecm:packet')
-      this.eventEmitter.removeAllListeners('ecm:error')
-      this.eventEmitter.removeAllListeners('ecm:close')
-      this.eventEmitter.removeAllListeners('ecm:log')
-      this.closed = true
-      this.emit('close')
+      this.internalClose(false)
     })
   }
 
@@ -144,14 +138,19 @@ export class NativeServerConnection
     return ConnectionModule.writePacket(this.id, packetId, toWrite)
   }
 
-  close() {
+  internalClose(closeConnection: boolean) {
     if (this.closed) return
     this.closed = true
-    ConnectionModule.closeConnection(this.id)
+    if (closeConnection) ConnectionModule.closeConnection(this.id)
     this.eventEmitter.removeAllListeners('ecm:packet')
     this.eventEmitter.removeAllListeners('ecm:error')
     this.eventEmitter.removeAllListeners('ecm:close')
     this.eventEmitter.removeAllListeners('ecm:log')
+    this.emit('close')
+  }
+
+  close() {
+    this.internalClose(true)
   }
 }
 
