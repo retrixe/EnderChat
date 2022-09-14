@@ -133,6 +133,7 @@ export class NativeServerConnection
       this.eventEmitter.removeAllListeners('ecm:packet')
       this.eventEmitter.removeAllListeners('ecm:error')
       this.eventEmitter.removeAllListeners('ecm:close')
+      this.eventEmitter.removeAllListeners('ecm:log')
       this.closed = true
       this.emit('close')
     })
@@ -150,6 +151,7 @@ export class NativeServerConnection
     this.eventEmitter.removeAllListeners('ecm:packet')
     this.eventEmitter.removeAllListeners('ecm:error')
     this.eventEmitter.removeAllListeners('ecm:close')
+    this.eventEmitter.removeAllListeners('ecm:log')
   }
 }
 

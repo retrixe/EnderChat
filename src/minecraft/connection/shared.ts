@@ -30,6 +30,8 @@ export const parseEncryptionRequestPacket = (packet: Packet) => {
 export const getLoginPacket = (opts: ConnectionOptions) => {
   const data: PacketDataTypes[] = [opts.username]
   if (opts.protocolVersion >= protocolMap[1.19]) {
+    data.push(false)
+    /* TODO: Support chat signing properly.
     data.push(!!opts.certificate)
     if (opts.certificate) {
       let buf = Buffer.alloc(8)
@@ -46,7 +48,7 @@ export const getLoginPacket = (opts: ConnectionOptions) => {
       buf = Buffer.from(opts.certificate.publicKeySignature, 'base64')
       data.push(writeVarInt(buf.byteLength))
       data.push(buf)
-    }
+    } */
     if (opts.protocolVersion >= protocolMap['1.19.1']) {
       if (opts.selectedProfile) {
         const msb = Buffer.from(opts.selectedProfile.substring(0, 16), 'hex')

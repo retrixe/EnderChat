@@ -43,8 +43,8 @@ export const createConnection = async (
   // Create an updated "session" containing access tokens and certificates.
   let session = sessions[activeAccount]
   const is119 = version >= protocolMap[1.19]
+  // TODO: We should store session store in a persistent cache. Certificates and access tokens should be updated regularly.
   if (uuid && (!session || (!session.certificate && is119))) {
-    // LOW-TODO: Certificates and access tokens should be updated regularly.
     // We should probably lock access to them via a semaphore.
     try {
       // Create a session with the latest access token.
@@ -91,6 +91,7 @@ export const createConnection = async (
     }
   }
 
+  // TODO: Better connection cancellation support. The session load can take a lot of time.
   // Connect to server after setting up the session.
   try {
     const newConn = await initiateConnection({

@@ -108,6 +108,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
   const [message, setMessage] = useState('')
+  const messagesBufferRef = useRef<Message[]>([])
   const healthRef = useRef<number | null>(null)
   const statusRef = useRef<Status>(connection ? 'CONNECTING' : 'OPENING')
   const idRef = useRef(0)
@@ -117,15 +118,26 @@ const ChatScreen = ({ navigation, route }: Props) => {
       ? 256
       : 100
   const addMessage = (text: MinecraftChat) =>
-    setMessages(m => {
-      const trunc = m.length > 500 ? m.slice(0, 499) : m
-      return [{ key: idRef.current++, text }].concat(trunc)
-    })
+    messagesBufferRef.current.unshift({ key: idRef.current++, text })
   const closeChatScreen = () => {
     if (navigation.canGoBack() && statusRef.current !== 'CLOSED') {
       navigation.goBack()
     }
   }
+
+  // Chat message buffering function.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (messagesBufferRef.current.length) {
+        setMessages(m => {
+          const concat = messagesBufferRef.current.concat(m)
+          messagesBufferRef.current = []
+          return concat.length > 500 ? concat.slice(0, 499) : concat
+        })
+      }
+    }, 50)
+    return () => clearInterval(interval)
+  }, [])
 
   // Screen cleanup function.
   useEffect(() =>
