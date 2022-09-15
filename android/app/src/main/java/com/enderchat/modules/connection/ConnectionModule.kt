@@ -1,6 +1,5 @@
 package com.enderchat.modules.connection
 
-import android.os.Process
 import android.util.Base64
 import com.enderchat.modules.connection.datatypes.Packet
 import com.enderchat.modules.connection.datatypes.VarInt
@@ -10,6 +9,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
 import java.net.Socket
+import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.UUID
@@ -23,6 +23,10 @@ import kotlin.concurrent.write
 
 class ConnectionModule(reactContext: ReactApplicationContext)
     : ReactContextBaseJavaModule(reactContext) {
+    private val scope = CoroutineScope(SupervisorJob() +
+            Dispatchers.IO +
+            Dispatchers.Main +
+            Dispatchers.Default)
     private val lock = ReentrantReadWriteLock()
     private var socket: Socket? = null
     private var connectionId: UUID? = null
@@ -65,50 +69,48 @@ class ConnectionModule(reactContext: ReactApplicationContext)
 
     @ReactMethod fun writePacket(
         connId: String, packetId: Int, data: String, promise: Promise
-    ) = runBlocking {
-        launch(Dispatchers.IO) {
-            lock.read {
-                if (connId == connectionId.toString()) {
-                    try {
-                        val dataBytes = Base64.decode(data, Base64.DEFAULT)
-                        promise.resolve(directlyWritePacket(packetId, dataBytes))
-                    } catch (e: Exception) {
-                        promise.reject(e)
-                    }
-                } else promise.resolve(false)
-            }
+    ) = scope.launch(Dispatchers.IO) {
+        lock.read {
+            if (connId == connectionId.toString()) {
+                try {
+                    val dataBytes = Base64.decode(data, Base64.DEFAULT)
+                    promise.resolve(directlyWritePacket(packetId, dataBytes))
+                } catch (e: Exception) {
+                    promise.reject(e)
+                }
+            } else promise.reject(Exception("This connection is closed!"))
         }
     }
 
     @ReactMethod fun enableEncryption(
         connId: String, secret: String, packet: String, promise: Promise
-    ) = runBlocking {
-        launch(Dispatchers.IO) {
-            lock.write {
-                if (connId == connectionId.toString()) {
-                    try {
-                        val packetBytes = Base64.decode(packet, Base64.DEFAULT)
-                        val secretBytes = Base64.decode(secret, Base64.DEFAULT)
-                        val secretKey = SecretKeySpec(secretBytes, "AES")
-                        val iv = IvParameterSpec(secretBytes)
-                        aesDecipher = Cipher.getInstance("AES/CFB8/PKCS5Padding").apply {
-                            init(Cipher.DECRYPT_MODE, secretKey, iv)
-                        }
-                        val result = directlyWritePacket(0x01, packetBytes)
-                        aesCipher = Cipher.getInstance("AES/CFB8/PKCS5Padding").apply {
-                            init(Cipher.ENCRYPT_MODE, secretKey, iv)
-                        }
-                        promise.resolve(result)
-                    } catch (e: Exception) {
-                        promise.reject(e)
+    ) = scope.launch(Dispatchers.IO) {
+        lock.write {
+            if (connId == connectionId.toString()) {
+                try {
+                    val packetBytes = Base64.decode(packet, Base64.DEFAULT)
+                    val secretBytes = Base64.decode(secret, Base64.DEFAULT)
+                    val secretKey = SecretKeySpec(secretBytes, "AES")
+                    val iv = IvParameterSpec(secretBytes)
+                    aesDecipher = Cipher.getInstance("AES/CFB8/PKCS5Padding").apply {
+                        init(Cipher.DECRYPT_MODE, secretKey, iv)
                     }
-                } else promise.resolve(false)
-            }
+                    val result = directlyWritePacket(0x01, packetBytes)
+                    aesCipher = Cipher.getInstance("AES/CFB8/PKCS5Padding").apply {
+                        init(Cipher.ENCRYPT_MODE, secretKey, iv)
+                    }
+                    promise.resolve(result)
+                } catch (e: Exception) {
+                    promise.reject(e)
+                }
+            } else promise.reject(Exception("This connection is closed!"))
         }
     }
 
-    @ReactMethod fun closeConnection(id: String) = lock.write {
-        if (id == connectionId.toString()) directlyCloseConnection()
+    @ReactMethod fun closeConnection(id: String) = scope.launch(Dispatchers.IO) {
+        lock.write {
+            if (id == connectionId.toString()) directlyCloseConnection()
+        }
     }
 
     @ReactMethod fun openConnection(opts: ReadableMap, promise: Promise) {
@@ -123,9 +125,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
 
         // Start thread which handles creating the connection and then reads packets from it.
         // This avoids blocking the main thread on writeLock and keeps the UI thread responsive.
-        thread(start = true, name = "EnderChat-conn-read") {
-            Process.setThreadPriority(Process.THREAD_PRIORITY_MORE_FAVORABLE)
-
+        scope.launch(Dispatchers.IO) {
             lock.writeLock().lock()
             val socket: Socket
             val connectionId = UUID.randomUUID()
@@ -134,9 +134,10 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 directlyCloseConnection()
 
                 // Create socket and connection ID.
-                socket = Socket(host, port)
+                socket = Socket()
+                socket.connect(InetSocketAddress(host, port), 30 * 1000)
                 socket.soTimeout = 20 * 1000
-                this.connectionId = connectionId
+                this@ConnectionModule.connectionId = connectionId
 
                 // Create data to send in Handshake.
                 val portBuf = ByteBuffer.allocate(2)
@@ -156,14 +157,14 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 socket.getOutputStream().write(Packet(0x00, loginPacketData).writePacket())
 
                 // Update the current socket and resolve/reject.
-                this.socket = socket
+                this@ConnectionModule.socket = socket
                 lock.writeLock().unlock()
                 promise.resolve(connectionId.toString())
             } catch (e: Exception) {
                 directlyCloseConnection()
                 lock.writeLock().unlock()
                 promise.reject(e)
-                return@thread
+                return@launch
             }
 
             // Calculate the necessary packet IDs.
@@ -190,14 +191,15 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             val buffer = ByteArrayOutputStream()
             val buf = ByteArray(4096)
             while (true) {
-                lock.readLock().lock()
-                if (this.socket != socket) {
-                    lock.readLock().unlock()
-                    break
-                }
+                var lockAcquired = false
                 try {
                     val n = socket.getInputStream().read(buf)
-                    if (n == -1) {
+                    if (n == -1) break
+
+                    // Make sure this is the same socket we read from.
+                    lock.readLock().lock()
+                    lockAcquired = true
+                    if (this@ConnectionModule.socket != socket) {
                         lock.readLock().unlock()
                         break
                     }
@@ -209,7 +211,6 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         buffer.write(buf, 0, n)
                     }
 
-                    // TODO: This could be coroutined. Maybe some actor-style threading?
                     while (true) {
                         // Read packets from the buffer.
                         val bytes = buffer.toByteArray()
@@ -221,15 +222,14 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         buffer.write(bytes, packet.totalLength!!, bytes.size - packet.totalLength)
 
                         // We can handle Keep Alive, Login Success and Set Compression.
+                        // No write lock since writePacket isn't called during login sequence (usually).
                         if (packet.id.value == keepAliveClientBoundId) {
                             directlyWritePacket(keepAliveServerBoundId, packet.data)
                         } else if (packet.id.value == setCompressionId && !loggedIn) {
                             val threshold = VarInt.read(packet.data)?.value ?: 0
                             compressionThreshold = threshold
                             compressionEnabled = threshold >= 0
-                        } else if (packet.id.value == loginSuccessId && !loggedIn) {
-                            loggedIn = true // Login Success
-                        }
+                        } else if (packet.id.value == loginSuccessId && !loggedIn) loggedIn = true
 
                         // Forward the packet to JavaScript.
                         val packetLengthLength =
@@ -247,9 +247,10 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         sendEvent(reactContext = reactApplicationContext, "ecm:packet", params)
                     }
                     lock.readLock().unlock()
+                    lockAcquired = false
                 } catch (e: Exception) {
-                    lock.readLock().unlock()
-                    lock.write { if (this.socket == socket) directlyCloseConnection() }
+                    if (lockAcquired) lock.readLock().unlock()
+                    lock.write { if (this@ConnectionModule.socket == socket) directlyCloseConnection() }
                     val params = Arguments.createMap().apply {
                         putString("connectionId", connectionId.toString())
                         putString("stackTrace", e.stackTraceToString())
