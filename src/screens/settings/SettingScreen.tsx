@@ -1,7 +1,11 @@
 import React, { useContext } from 'react'
-import { View, ScrollView, Linking } from 'react-native'
+import { View, ScrollView, Linking, StyleSheet } from 'react-native'
+import { MaterialTopTabScreenProps } from '@react-navigation/material-top-tabs'
+import { NativeStackScreenProps } from '@react-navigation/native-stack'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 
 import { version } from '../../../package.json'
+import { RootStackParamList } from '../../App'
 import Text from '../../components/Text'
 import Setting from '../../components/Setting'
 import globalStyle from '../../globalStyle'
@@ -9,7 +13,10 @@ import useDarkMode from '../../context/useDarkMode'
 import SettingsContext from '../../context/settingsContext'
 import DarkModeSetting from './DarkModeSetting'
 
-const SettingScreen = (props: { button?: JSX.Element }) => {
+type StackProps = NativeStackScreenProps<RootStackParamList, 'Settings'>
+type TabProps = MaterialTopTabScreenProps<RootStackParamList, 'Settings'>
+
+const SettingScreen = ({ navigation }: StackProps | TabProps) => {
   const darkModeApp = useDarkMode()
   const { settings, setSettings } = useContext(SettingsContext)
 
@@ -17,7 +24,16 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
   return (
     <>
       <View style={darkModeApp ? globalStyle.darkHeader : globalStyle.header}>
-        {props.button ?? false}
+        {navigation.getId() === 'StackNavigator' && (
+          <View style={styles.backButton}>
+            <Ionicons.Button
+              name='chevron-back-sharp'
+              iconStyle={styles.backButtonIcon}
+              backgroundColor='#363636'
+              onPress={() => navigation.goBack()}
+            />
+          </View>
+        )}
         <Text style={globalStyle.title}>Settings</Text>
       </View>
       <ScrollView>
@@ -80,5 +96,10 @@ const SettingScreen = (props: { button?: JSX.Element }) => {
     </>
   )
 }
+
+const styles = StyleSheet.create({
+  backButton: { marginRight: 8 },
+  backButtonIcon: { marginRight: 0 }
+})
 
 export default SettingScreen

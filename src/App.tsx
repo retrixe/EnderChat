@@ -37,10 +37,12 @@ import globalStyle from './globalStyle'
 const Stacks = createNativeStackNavigator()
 const Tabs = createMaterialTopTabNavigator() // createBottomTabNavigator()
 
-type HomeNavigationProp = NativeStackNavigationProp<
-  { Home: undefined; Chat: { serverName: string; version: number } },
-  'Home'
->
+export interface RootStackParamList {
+  [index: string]: any
+  Home: undefined
+  Chat: { serverName: string; version: number }
+}
+type HomeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
 const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
   const { connection } = React.useContext(ConnectionContext)
@@ -143,6 +145,7 @@ const App = () => {
                   barStyle={darkMode ? 'light-content' : 'dark-content'}
                 />
                 <Stacks.Navigator
+                  id='StackNavigator'
                   initialRouteName='Home'
                   screenOptions={{
                     headerShown: false,
@@ -157,6 +160,7 @@ const App = () => {
                       return (params as { serverName: string }).serverName
                     }}
                   />
+                  <Stacks.Screen name='Settings' component={SettingScreen} />
                 </Stacks.Navigator>
               </NavigationContainer>
             </AccountsContext.Provider>

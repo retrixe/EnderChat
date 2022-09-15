@@ -17,6 +17,7 @@ import {
   sendMessageError
 } from './packetHandler'
 import { createConnection } from './sessionBuilder'
+import { RootStackParamList } from '../../App'
 import globalStyle from '../../globalStyle'
 import useDarkMode from '../../context/useDarkMode'
 import AccountsContext from '../../context/accountsContext'
@@ -36,13 +37,7 @@ import { protocolMap, writeVarInt } from '../../minecraft/utils'
 import { concatPacketData, PacketDataTypes } from '../../minecraft/packet'
 import TextField from '../../components/TextField'
 import Text from '../../components/Text'
-import SettingScreen from '../settings/SettingScreen'
 
-interface RootStackParamList {
-  [index: string]: any
-  Home: undefined
-  Chat: { serverName: string; version: number }
-}
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>
 
 export type Status = 'OPENING' | 'CONNECTING' | 'CONNECTED' | 'CLOSED'
@@ -104,7 +99,6 @@ const ChatScreen = ({ navigation, route }: Props) => {
   const { sessions, setSession } = useSessionStore()
   // TODO: Show command history.
   const [, setCommandHistory] = useState<string[]>([])
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
   const [message, setMessage] = useState('')
@@ -261,31 +255,25 @@ const ChatScreen = ({ navigation, route }: Props) => {
     route.params.serverName.length > 12
       ? route.params.serverName.substring(0, 9) + '...'
       : route.params.serverName
-  const backButton = (
-    <View style={styles.backButton}>
-      <Ionicons.Button
-        name='chevron-back-sharp'
-        iconStyle={styles.backButtonIcon}
-        backgroundColor='#363636'
-        onPress={() => {
-          settingsOpen ? setSettingsOpen(false) : closeChatScreen()
-        }}
-      />
-    </View>
-  )
-  // TODO: Use stack navigation for this so the physical back button works correctly.
-  if (settingsOpen) return <SettingScreen button={backButton} />
+
   return (
     <>
       <View style={darkMode ? globalStyle.darkHeader : globalStyle.header}>
-        {backButton}
+        <View style={styles.backButton}>
+          <Ionicons.Button
+            name='chevron-back-sharp'
+            iconStyle={styles.backButtonIcon}
+            backgroundColor='#363636'
+            onPress={() => closeChatScreen()}
+          />
+        </View>
         <Text style={[globalStyle.title, styles.title]}>Chat - {title}</Text>
         <View style={globalStyle.flexSpacer} />
         <Ionicons.Button
           name='settings-outline'
           iconStyle={styles.backButtonIcon}
           backgroundColor='#363636'
-          onPress={() => setSettingsOpen(true)}
+          onPress={() => navigation.push('Settings')}
         />
       </View>
       {(!loggedIn || !connection) && (

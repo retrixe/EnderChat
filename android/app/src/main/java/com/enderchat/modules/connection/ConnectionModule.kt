@@ -92,11 +92,11 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     val secretBytes = Base64.decode(secret, Base64.DEFAULT)
                     val secretKey = SecretKeySpec(secretBytes, "AES")
                     val iv = IvParameterSpec(secretBytes)
-                    aesDecipher = Cipher.getInstance("AES/CFB8/PKCS5Padding").apply {
+                    aesDecipher = Cipher.getInstance("AES/CFB8/NoPadding").apply {
                         init(Cipher.DECRYPT_MODE, secretKey, iv)
                     }
                     val result = directlyWritePacket(0x01, packetBytes)
-                    aesCipher = Cipher.getInstance("AES/CFB8/PKCS5Padding").apply {
+                    aesCipher = Cipher.getInstance("AES/CFB8/NoPadding").apply {
                         init(Cipher.ENCRYPT_MODE, secretKey, iv)
                     }
                     promise.resolve(result)
@@ -229,7 +229,9 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                             val threshold = VarInt.read(packet.data)?.value ?: 0
                             compressionThreshold = threshold
                             compressionEnabled = threshold >= 0
-                        } else if (packet.id.value == loginSuccessId && !loggedIn) loggedIn = true
+                        } else if (packet.id.value == loginSuccessId && !loggedIn) {
+                            loggedIn = true
+                        }
 
                         // Forward the packet to JavaScript.
                         val packetLengthLength =
