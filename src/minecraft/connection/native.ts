@@ -28,7 +28,8 @@ interface NativeErrorEvent extends NativeEvent {
 }
 
 export declare interface NativeServerConnection {
-  on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
+  on: ((event: 'connect', listener: () => void) => this) &
+    ((event: 'packet', listener: (packet: Packet) => void) => this) &
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
     ((event: string, listener: Function) => this)
@@ -57,6 +58,9 @@ export class NativeServerConnection
       'ecm:log',
       ({ log }: NativeEvent & { log: string }) => console.log(log)
     )
+    this.eventEmitter.addListener('ecm:connect', (event: NativeEvent) => {
+      if (event.connectionId === this.id) this.emit('connect')
+    })
     this.eventEmitter.addListener('ecm:packet', (event: NativePacketEvent) => {
       if (event.connectionId !== this.id) return
       // Run after interactions to improve user experience.
@@ -143,6 +147,7 @@ export class NativeServerConnection
     if (this.closed) return
     this.closed = true
     if (closeConnection) ConnectionModule.closeConnection(this.id)
+    this.eventEmitter.removeAllListeners('ecm:connect')
     this.eventEmitter.removeAllListeners('ecm:packet')
     this.eventEmitter.removeAllListeners('ecm:error')
     this.eventEmitter.removeAllListeners('ecm:close')

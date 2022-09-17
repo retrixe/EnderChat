@@ -125,18 +125,35 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         // Start thread which handles creating the connection and then reads packets from it.
         // This avoids blocking the main thread on writeLock and keeps the UI thread responsive.
         scope.launch(Dispatchers.IO) {
-            lock.writeLock().lock()
             val socket: Socket
             val connectionId = UUID.randomUUID()
             try {
-                // Only one connection at a time.
-                directlyCloseConnection()
+                lock.write {
+                    // Only one connection at a time.
+                    directlyCloseConnection()
 
-                // Create socket and connection ID.
-                socket = Socket()
+                    // Create socket and connection ID.
+                    socket = Socket()
+                    socket.soTimeout = 20 * 1000
+                    this@ConnectionModule.socket = socket
+                    this@ConnectionModule.connectionId = connectionId
+                    promise.resolve(connectionId.toString())
+                }
+            } catch (e: Exception) {
+                directlyCloseConnection()
+                promise.reject(e)
+                return@launch
+            }
+
+            try {
+                // Connect to the server.
                 socket.connect(InetSocketAddress(host, port), 30 * 1000)
-                socket.soTimeout = 20 * 1000
-                this@ConnectionModule.connectionId = connectionId
+
+                // Send connect event.
+                val params = Arguments.createMap().apply {
+                    putString("connectionId", connectionId.toString())
+                }
+                sendEvent(reactContext = reactApplicationContext, "ecm:connect", params)
 
                 // Create data to send in Handshake.
                 val portBuf = ByteBuffer.allocate(2)
@@ -154,15 +171,13 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 // Send Login Start packet.
                 val loginPacketData = Base64.decode(loginPacket, Base64.DEFAULT)
                 socket.getOutputStream().write(Packet(0x00, loginPacketData).writePacket())
-
-                // Update the current socket and resolve/reject.
-                this@ConnectionModule.socket = socket
-                lock.writeLock().unlock()
-                promise.resolve(connectionId.toString())
             } catch (e: Exception) {
-                directlyCloseConnection()
-                lock.writeLock().unlock()
-                promise.reject(e)
+                lock.write {
+                    if (this@ConnectionModule.socket == socket) {
+                        directlyCloseConnection()
+                        sendErrorEvent(connectionId, e)
+                    } else sendCloseEvent(connectionId)
+                }
                 return@launch
             }
 
@@ -252,12 +267,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 } catch (e: Exception) {
                     if (lockAcquired) lock.readLock().unlock()
                     lock.write { if (this@ConnectionModule.socket == socket) directlyCloseConnection() }
-                    val params = Arguments.createMap().apply {
-                        putString("connectionId", connectionId.toString())
-                        putString("stackTrace", e.stackTraceToString())
-                        putString("message", e.message)
-                    }
-                    sendEvent(reactContext = reactApplicationContext, "ecm:error", params)
+                    sendErrorEvent(connectionId, e)
                     break
                 }
             }
@@ -265,11 +275,24 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             // Dispatch close event to JS.
             // The only way this.socket != socket is if directlyCloseConnection was called.
             // If isInputStream returns -1, for now we assume the socket was closed too.
-            val params = Arguments.createMap().apply {
-                putString("connectionId", connectionId.toString())
-            }
-            sendEvent(reactContext = reactApplicationContext, "ecm:close", params)
+            sendCloseEvent(connectionId)
         }
+    }
+
+    private fun sendErrorEvent(connectionId: UUID, e: Exception) {
+        val params = Arguments.createMap().apply {
+            putString("connectionId", connectionId.toString())
+            putString("stackTrace", e.stackTraceToString())
+            putString("message", e.message)
+        }
+        sendEvent(reactContext = reactApplicationContext, "ecm:error", params)
+    }
+
+    private fun sendCloseEvent(connectionId: UUID) {
+        val params = Arguments.createMap().apply {
+            putString("connectionId", connectionId.toString())
+        }
+        sendEvent(reactContext = reactApplicationContext, "ecm:close", params)
     }
 
     private fun sendEvent(reactContext: ReactContext, eventName: String, params: WritableMap?) {

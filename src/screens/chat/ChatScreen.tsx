@@ -177,8 +177,8 @@ const ChatScreen = ({ navigation, route }: Props) => {
             if (typeof conn === 'string') {
               closeChatScreen({ server: serverName, reason: conn })
             } else {
+              conn.connection.on('connect', () => setLoading('Logging in...'))
               setConnection(conn)
-              setLoading('Logging in...')
             }
           } else if (typeof conn !== 'string') conn.connection.close()
         }

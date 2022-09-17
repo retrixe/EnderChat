@@ -29,7 +29,8 @@ export interface ServerConnection extends events.EventEmitter {
 
   close: () => void
 
-  on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
+  on: ((event: 'connect', listener: () => void) => this) &
+    ((event: 'packet', listener: (packet: Packet) => void) => this) &
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
     ((event: string, listener: Function) => this)
