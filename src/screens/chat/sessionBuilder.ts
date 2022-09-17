@@ -1,6 +1,6 @@
 import { Accounts } from '../../context/accountsContext'
 import { Connection, DisconnectReason } from '../../context/connectionContext'
-import { Sessions, SetSession } from '../../context/sessionStore'
+import { Session, Sessions, SetSession } from '../../context/sessionStore'
 import { Servers } from '../../context/serversContext'
 import { Settings } from '../../context/settingsContext'
 import {
@@ -16,40 +16,32 @@ import initiateConnection from '../../minecraft/connection'
 import { parseIp, protocolMap, resolveHostname } from '../../minecraft/utils'
 import config from '../../../config.json'
 
-export const createConnection = async (
-  server: string,
+export const getSession = async (
   version: number,
-  servers: Servers,
-  settings: Settings,
   accounts: Accounts,
   sessions: Sessions,
   setSession: SetSession,
-  setAccounts: (accs: Accounts) => void,
-  setConnection: (conn?: Connection) => void,
-  setDisconnectReason: (reason: DisconnectReason) => void,
-  closeChatScreen: () => void
-): Promise<Connection | DisconnectReason> => {
-  const [hostname, portNumber] = parseIp(servers[server].address)
-  const [host, port] = await resolveHostname(hostname, portNumber)
+  setLoading: (msg: string) => void,
+  setAccounts: (accs: Accounts) => void
+): Promise<Session | string> => {
   const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
   if (!activeAccount) {
-    return {
-      server,
-      reason:
-        'No active account selected! Open the Accounts tab and add an account.'
-    }
+    return 'No active account selected! Open the Accounts tab and add an account.'
   }
   const uuid = accounts[activeAccount].type ? activeAccount : undefined
+
   // Create an updated "session" containing access tokens and certificates.
   let session = sessions[activeAccount]
   const is119 = version >= protocolMap[1.19]
-  // TODO: We should store session store in a persistent cache. Certificates and access tokens should be updated regularly.
+  // TODO: We should store session store in a persistent cache.
+  // Certificates and access tokens should be updated regularly.
   if (uuid && (!session || (!session.certificate && is119))) {
     // We should probably lock access to them via a semaphore.
     try {
       // Create a session with the latest access token.
       const account = accounts[activeAccount]
       if (!session && accounts[activeAccount].type === 'microsoft') {
+        setLoading('Reloading your Microsoft Account...')
         const [msAccessToken, msRefreshToken] = await refreshMSAuthToken(
           accounts[activeAccount].microsoftRefreshToken || '',
           config.clientId,
@@ -68,6 +60,7 @@ export const createConnection = async (
           }
         })
       } else if (!session && accounts[activeAccount].type === 'mojang') {
+        setLoading('Reloading your Mojang Account...')
         const { accessToken, clientToken } = await refresh(
           accounts[activeAccount].accessToken || '',
           accounts[activeAccount].clientToken || '',
@@ -85,14 +78,37 @@ export const createConnection = async (
       }
       setSession(activeAccount, session)
     } catch (e) {
-      const reason =
-        'Failed to create session! You may need to re-login with your Microsoft Account in the Accounts tab.'
-      return { server, reason }
+      return 'Failed to create session! You may need to re-login with your Microsoft Account in the Accounts tab.'
     }
   }
+  return session
+}
 
-  // TODO: Better connection cancellation support. The session load can take a lot of time.
-  // Connect to server after setting up the session.
+export const createConnection = async (
+  server: string,
+  version: number,
+  servers: Servers,
+  session: Session | undefined,
+  settings: Settings,
+  accounts: Accounts,
+  setConnection: (conn?: Connection) => void,
+  closeChatScreen: (reason?: DisconnectReason) => void
+): Promise<Connection | string> => {
+  let host: string
+  let port: number
+  try {
+    const [hostname, portNumber] = parseIp(servers[server].address)
+    ;[host, port] = await resolveHostname(hostname, portNumber)
+  } catch (e) {
+    return 'Failed to resolve server hostname!'
+  }
+
+  const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
+  if (!activeAccount) {
+    return 'No active account selected! Open the Accounts tab and add an account.'
+  }
+  const uuid = accounts[activeAccount].type ? activeAccount : undefined
+
   try {
     const newConn = await initiateConnection({
       host,
@@ -104,18 +120,18 @@ export const createConnection = async (
       certificate: settings.enableChatSigning ? session?.certificate : undefined
     })
     const onCloseOrError = () => {
-      closeChatScreen()
+      closeChatScreen(
+        newConn.disconnectReason
+          ? { server, reason: parseValidJson(newConn.disconnectReason) }
+          : undefined
+      )
       setConnection(undefined)
-      if (newConn.disconnectReason) {
-        const reason = parseValidJson(newConn.disconnectReason)
-        setDisconnectReason({ server, reason })
-      }
     }
     newConn.on('close', onCloseOrError)
     newConn.on('error', onCloseOrError)
     return { serverName: server, connection: newConn }
   } catch (e) {
     console.error(e)
-    return { server, reason: 'Failed to connect to server!' }
+    return 'Failed to connect to server!'
   }
 }

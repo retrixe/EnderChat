@@ -49,7 +49,7 @@ export const packetHandler =
   (
     healthRef: React.MutableRefObject<number | null>,
     statusRef: React.MutableRefObject<Status>,
-    setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>,
+    setLoading: React.Dispatch<React.SetStateAction<string>>,
     connection: ServerConnection,
     addMessage: (text: MinecraftChat) => any,
     joinMessage: string,
@@ -60,7 +60,7 @@ export const packetHandler =
   ) =>
   (packet: Packet) => {
     if (statusRef.current === 'CONNECTING' && connection.loggedIn) {
-      setLoggedIn(true)
+      setLoading('')
       statusRef.current = 'CONNECTED'
       if (sendJoinMessage) {
         connection

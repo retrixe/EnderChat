@@ -16,7 +16,7 @@ import {
   enderChatPrefix,
   sendMessageError
 } from './packetHandler'
-import { createConnection } from './sessionBuilder'
+import { getSession, createConnection } from './sessionBuilder'
 import { RootStackParamList } from '../../App'
 import globalStyle from '../../globalStyle'
 import useDarkMode from '../../context/useDarkMode'
@@ -24,7 +24,9 @@ import AccountsContext from '../../context/accountsContext'
 import ServersContext from '../../context/serversContext'
 import useSessionStore from '../../context/sessionStore'
 import SettingsContext from '../../context/settingsContext'
-import ConnectionContext, { Connection } from '../../context/connectionContext'
+import ConnectionContext, {
+  DisconnectReason
+} from '../../context/connectionContext'
 import {
   ChatToJsx,
   mojangColorMap,
@@ -85,9 +87,6 @@ const handleError =
     addMessage(enderChatPrefix + translated)
   }
 
-const isConnection = (connection: any): connection is Connection =>
-  !!(connection as Connection).connection
-
 // TODO: Ability to copy text.
 const ChatScreen = ({ navigation, route }: Props) => {
   const darkMode = useDarkMode()
@@ -97,25 +96,27 @@ const ChatScreen = ({ navigation, route }: Props) => {
   const { connection, setConnection, setDisconnectReason } =
     useContext(ConnectionContext)
   const { sessions, setSession } = useSessionStore()
+
   // TODO: Show command history.
   const [, setCommandHistory] = useState<string[]>([])
   const [messages, setMessages] = useState<Message[]>([])
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [loading, setLoading] = useState('Connecting to server...')
   const [message, setMessage] = useState('')
+
   const messagesBufferRef = useRef<Message[]>([])
   const healthRef = useRef<number | null>(null)
   const statusRef = useRef<Status>(connection ? 'CONNECTING' : 'OPENING')
   const idRef = useRef(0)
 
-  const charLimit =
-    connection && connection.connection.options.protocolVersion >= 306 // 16w38a
-      ? 256
-      : 100
+  const { version, serverName } = route.params
+  const charLimit = version >= 306 /* 16w38a */ ? 256 : 100
+
   const addMessage = (text: MinecraftChat) =>
     messagesBufferRef.current.unshift({ key: idRef.current++, text })
-  const closeChatScreen = () => {
-    if (navigation.canGoBack() && statusRef.current !== 'CLOSED') {
-      navigation.goBack()
+  const closeChatScreen = (reason?: DisconnectReason) => {
+    if (statusRef.current !== 'CLOSED') {
+      if (navigation.canGoBack()) navigation.goBack()
+      if (reason) setDisconnectReason(reason)
     }
   }
 
@@ -149,36 +150,45 @@ const ChatScreen = ({ navigation, route }: Props) => {
   useEffect(() => {
     if (statusRef.current === 'OPENING') {
       statusRef.current = 'CONNECTING'
-      createConnection(
-        route.params.serverName,
-        route.params.version,
-        servers,
-        settings,
-        accounts,
-        sessions,
-        setSession,
-        setAccounts,
-        setConnection,
-        setDisconnectReason,
-        closeChatScreen
-      )
-        .then(conn => {
-          if (statusRef.current !== 'CLOSED') {
-            if (isConnection(conn)) setConnection(conn)
-            else {
-              closeChatScreen()
-              setDisconnectReason(conn)
+      ;(async () => {
+        const session = await getSession(
+          version,
+          accounts,
+          sessions,
+          setSession,
+          setLoading,
+          setAccounts
+        )
+        if (typeof session === 'string') {
+          closeChatScreen({ server: serverName, reason: session })
+        } else if (statusRef.current !== 'CLOSED') {
+          setLoading('Connecting to server...')
+          const conn = await createConnection(
+            serverName,
+            version,
+            servers,
+            session,
+            settings,
+            accounts,
+            setConnection,
+            closeChatScreen
+          )
+          if ((statusRef.current as 'CLOSED' | 'CONNECTING') !== 'CLOSED') {
+            if (typeof conn === 'string') {
+              closeChatScreen({ server: serverName, reason: conn })
+            } else {
+              setConnection(conn)
+              setLoading('Logging in...')
             }
-          } else if (isConnection(conn)) conn.connection.close() // No memory leaky
-        })
-        .catch(e => {
-          console.error(e)
-          closeChatScreen()
-          setDisconnectReason({
-            server: route.params.serverName,
-            reason: 'An error occurred resolving the server hostname!'
-          })
-        })
+          } else if (typeof conn !== 'string') conn.connection.close()
+        }
+      })().catch(err => {
+        console.error(err)
+        if (statusRef.current !== 'CLOSED') {
+          const reason = 'An unknown error occurred!\n' + err
+          closeChatScreen({ server: serverName, reason })
+        }
+      })
     }
   })
 
@@ -190,7 +200,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
       packetHandler(
         healthRef,
         statusRef,
-        setLoggedIn,
+        setLoading,
         connection.connection,
         addMessage,
         settings.joinMessage,
@@ -276,7 +286,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
           onPress={() => navigation.push('Settings')}
         />
       </View>
-      {(!loggedIn || !connection) && (
+      {(loading || !connection) && (
         <View style={styles.loadingScreen}>
           <ActivityIndicator
             color='#00aaff'
@@ -285,10 +295,12 @@ const ChatScreen = ({ navigation, route }: Props) => {
               default: 'large'
             })}
           />
-          <Text style={styles.loadingScreenText}>Connecting...</Text>
+          <Text style={styles.loadingScreenText}>
+            {loading || 'Connecting to server...'}
+          </Text>
         </View>
       )}
-      {loggedIn && connection && (
+      {!loading && connection && (
         <>
           <ChatMessageListMemo
             messages={messages}
