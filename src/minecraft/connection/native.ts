@@ -125,6 +125,7 @@ export class NativeServerConnection
     this.eventEmitter.addListener('ecm:error', (event: NativeErrorEvent) => {
       if (event.connectionId !== this.id) return
       console.error(event.stackTrace)
+      this.disconnectReason = event.message
       this.emit('error', new Error(event.message))
     })
     this.eventEmitter.addListener('ecm:close', (event: NativeEvent) => {

@@ -113,7 +113,10 @@ const initiateJavaScriptConnection = async (opts: ConnectionOptions) => {
     })
     socket.on('error', err => {
       if (!resolved) reject(err)
-      else conn.emit('error', err)
+      else {
+        conn.disconnectReason = err.message
+        conn.emit('error', err)
+      }
     })
     const lock = new Semaphore(1)
     socket.on('data', newData => {

@@ -18,7 +18,6 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.concurrent.read
-import kotlin.concurrent.thread
 import kotlin.concurrent.write
 
 class ConnectionModule(reactContext: ReactApplicationContext)
@@ -291,9 +290,9 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         // Remove upstream listeners, stop unnecessary background tasks
     }
 
-    private fun println(log: Any?) {
+    /* private fun println(log: Any?) {
         sendEvent(reactContext = reactApplicationContext, "ecm:log", Arguments.createMap().apply {
             putString("log", log.toString())
         })
-    }
+    } */
 }
