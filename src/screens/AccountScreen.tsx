@@ -2,14 +2,14 @@ import React, { useContext, useState } from 'react'
 import { StyleSheet, View, Image, Pressable } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
-import AddAccountDialog from './AddAccountDialog'
-import globalStyle from '../../globalStyle'
-import Text from '../../components/Text'
-import Dialog, { dialogStyles } from '../../components/Dialog'
-import useDarkMode from '../../context/useDarkMode'
-import UsersContext from '../../context/accountsContext'
-import ElevatedView from '../../components/ElevatedView'
-import { invalidate } from '../../minecraft/api/yggdrasil'
+import AddAccountDialog from '../components/accounts/AddAccountDialog'
+import globalStyle from '../globalStyle'
+import Text from '../components/Text'
+import Dialog, { dialogStyles } from '../components/Dialog'
+import useDarkMode from '../context/useDarkMode'
+import UsersContext from '../context/accountsContext'
+import ElevatedView from '../components/ElevatedView'
+import { invalidate } from '../minecraft/api/yggdrasil'
 
 // LOW-TODO: Reload to update account info for online mode using /refresh.
 // Also, to reload all the skin images?

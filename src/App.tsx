@@ -15,8 +15,8 @@ import {
 } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 
-import useAsyncStorage from './helpers/useAsyncStorage'
-import useJsonAsyncStorage from './helpers/useJsonAsyncStorage'
+import useAsyncStorage from './storage/useAsyncStorage'
+import useJsonAsyncStorage from './storage/useJsonAsyncStorage'
 import ConnectionContext, {
   Connection,
   DisconnectReason as Disconnect
@@ -30,8 +30,8 @@ import ServersContext, { Servers } from './context/serversContext'
 import DisconnectDialog from './components/DisconnectDialog'
 import ChatScreen from './screens/chat/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
-import AccountScreen from './screens/accounts/AccountScreen'
-import SettingScreen from './screens/settings/SettingScreen'
+import AccountScreen from './screens/AccountScreen'
+import SettingScreen from './screens/SettingScreen'
 import globalStyle from './globalStyle'
 
 const Stacks = createNativeStackNavigator()

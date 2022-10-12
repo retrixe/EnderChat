@@ -2147,7 +2147,7 @@
     "is-string" "^1.0.5"
 
 "asap@~2.0.6":
-  "integrity" "sha1-5QNHYR1+aQlDIIu9r+vLwvuGbUY="
+  "integrity" "sha512-BSHWgDSAiKs50o2Re8ppvp3seVHXSRM44cdSsT9FfNEUUZLOGWVCsiWaRPWM1Znn+mqZ1OfVZ3z3DWEzSp7hRA=="
   "resolved" "https://registry.npmjs.org/asap/-/asap-2.0.6.tgz"
   "version" "2.0.6"
 
@@ -6822,10 +6822,10 @@
     "get-intrinsic" "^1.0.2"
     "iterate-value" "^1.0.2"
 
-"promise@^8.0.3":
-  "integrity" "sha512-W04AqnILOL/sPRXziNicCjSNRruLAuIHEOVBazepu0545DDNGYHz7ar9ZgZ1fMU8/MA4mVxp5rkBWRi6OXIy3Q=="
-  "resolved" "https://registry.npmjs.org/promise/-/promise-8.1.0.tgz"
-  "version" "8.1.0"
+"promise@^8.2.0":
+  "integrity" "sha512-+CMAlLHqwRYwBMXKCP+o8ns7DN+xHDUiI+0nArsiJ9y+kJVPLFxEaSw6Ha9s9H0tftxg2Yzl25wqj9G7m5wLZg=="
+  "resolved" "https://registry.npmjs.org/promise/-/promise-8.2.0.tgz"
+  "version" "8.2.0"
   dependencies:
     "asap" "~2.0.6"
 
@@ -7033,10 +7033,10 @@
     "escape-string-regexp" "2.0.0"
     "invariant" "2.2.4"
 
-"react-native@*", "react-native@^0.0.0-0 || 0.60 - 0.69 || 1000.0.0", "react-native@>=0.57", "react-native@>=0.60.0", "react-native@0.69.5":
-  "integrity" "sha512-4Psrj1nDMLQjBXVH8n3UikzOHQc8+sa6NbxZQR0XKtpx8uC3HiJBgX+/FIum/RWxfi5J/Dt/+A2gLGmq2Hps8g=="
-  "resolved" "https://registry.npmjs.org/react-native/-/react-native-0.69.5.tgz"
-  "version" "0.69.5"
+"react-native@*", "react-native@^0.0.0-0 || 0.60 - 0.69 || 1000.0.0", "react-native@>=0.57", "react-native@>=0.60.0", "react-native@0.69.6":
+  "integrity" "sha512-wwXpqM+12kdEYdBZCJUb5SBu95CzgejrwFeYJ78RzHZV/Sj6DBRekbsHGrDDsY4R25QXALQxy4DQYQCObVvWjA=="
+  "resolved" "https://registry.npmjs.org/react-native/-/react-native-0.69.6.tgz"
+  "version" "0.69.6"
   dependencies:
     "@jest/create-cache-key-function" "^27.0.1"
     "@react-native-community/cli" "^8.0.4"
@@ -7059,7 +7059,7 @@
     "mkdirp" "^0.5.1"
     "nullthrows" "^1.1.1"
     "pretty-format" "^26.5.2"
-    "promise" "^8.0.3"
+    "promise" "^8.2.0"
     "react-devtools-core" "4.24.0"
     "react-native-codegen" "^0.69.2"
     "react-native-gradle-plugin" "^0.0.7"

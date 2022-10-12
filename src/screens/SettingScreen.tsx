@@ -4,14 +4,14 @@ import { MaterialTopTabScreenProps } from '@react-navigation/material-top-tabs'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
-import { version } from '../../../package.json'
-import { RootStackParamList } from '../../App'
-import Text from '../../components/Text'
-import Setting from '../../components/Setting'
-import globalStyle from '../../globalStyle'
-import useDarkMode from '../../context/useDarkMode'
-import SettingsContext from '../../context/settingsContext'
-import DarkModeSetting from './DarkModeSetting'
+import { version } from '../../package.json'
+import { RootStackParamList } from '../App'
+import Text from '../components/Text'
+import Setting from '../components/settings/Setting'
+import DarkModeSetting from '../components/settings/DarkModeSetting'
+import globalStyle from '../globalStyle'
+import useDarkMode from '../context/useDarkMode'
+import SettingsContext from '../context/settingsContext'
 
 type StackProps = NativeStackScreenProps<RootStackParamList, 'Settings'>
 type TabProps = MaterialTopTabScreenProps<RootStackParamList, 'Settings'>

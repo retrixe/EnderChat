@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   backButtonIcon: { marginRight: 0 },
   sendButtonIcon: { marginRight: 0, marginLeft: 4 },
   androidScaleInvert: { scaleY: Platform.OS === 'android' ? -1 : undefined },
-  chatArea: { padding: 8, flex: 1, scaleY: -1 },
+  chatArea: { padding: 8, flex: 1 },
   chatAreaScrollView: { paddingBottom: 16 },
   loadingScreen: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingScreenText: { paddingTop: 24, fontSize: 20 },

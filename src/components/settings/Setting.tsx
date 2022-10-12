@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { StyleSheet, View, Switch, Pressable } from 'react-native'
 
-import TextFieldDialog from './TextFieldDialog'
-import globalStyle from '../globalStyle'
-import Text from './Text'
-import useDarkMode from '../context/useDarkMode'
+import TextFieldDialog from '../TextFieldDialog'
+import globalStyle from '../../globalStyle'
+import Text from '../Text'
+import useDarkMode from '../../context/useDarkMode'
 
 const Setting = <T extends string | boolean>({
   name,
