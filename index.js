@@ -8,6 +8,10 @@ import { AppRegistry } from 'react-native'
 import App from './src/App'
 import { name as appName } from './app.json'
 
+// Add scaleY back to work around its removal in React Native 0.70.
+import ViewReactNativeStyleAttributes from 'react-native/Libraries/Components/View/ReactNativeStyleAttributes'
+ViewReactNativeStyleAttributes.scaleY = true
+
 global.Buffer = require('buffer').Buffer
 // global.process = require('process');
 global.process.env.NODE_ENV = __DEV__ ? 'development' : 'production'
