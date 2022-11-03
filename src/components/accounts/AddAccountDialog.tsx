@@ -41,7 +41,7 @@ const AddAccountDialog = ({
     setPassword(null) // setPassword('')
     setDialogError('')
   }
-  const addAccount = async () => {
+  const addAccount = () => {
     const accountExists =
       !!accounts[newUser] ||
       !!Object.keys(accounts).find(id => accounts[id].email === newUser)
@@ -62,28 +62,25 @@ const AddAccountDialog = ({
       })
       cancelAddAccount()
     } else {
-      try {
-        const {
-          clientToken,
-          accessToken,
-          selectedProfile: { name, id }
-        } = await authenticate(newUser, password, true)
-        setAccounts({
-          [id]: {
-            active: Object.keys(accounts).length === 0,
-            username: name,
-            email: newUser,
-            accessToken,
-            clientToken,
-            type: 'mojang'
-          }
+      authenticate(newUser, password, true)
+        .then(({ clientToken, accessToken, selectedProfile: { name, id } }) => {
+          setAccounts({
+            [id]: {
+              active: Object.keys(accounts).length === 0,
+              username: name,
+              email: newUser,
+              accessToken,
+              clientToken,
+              type: 'mojang'
+            }
+          })
+          cancelAddAccount()
         })
-        cancelAddAccount()
-      } catch (e: any) {
-        setUserRed(true)
-        // setPassRed(true)
-        setDialogError((e.message || '').replace('Invalid credentials. ', ''))
-      }
+        .catch(e => {
+          setUserRed(true)
+          // setPassRed(true)
+          setDialogError((e.message || '').replace('Invalid credentials. ', ''))
+        })
     }
   }
 

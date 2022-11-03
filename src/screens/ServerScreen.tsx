@@ -138,7 +138,7 @@ const ServerScreen = (props: Props) => {
     cancelAddServer()
   }
 
-  const connectToServer = async (serverName: string) => {
+  const connectToServer = (serverName: string) => {
     let version = protocolMap[servers[serverName].version]
     if (version === -1) {
       const ping = pingResponses[servers[serverName].address]
@@ -154,7 +154,7 @@ const ServerScreen = (props: Props) => {
         reason: 'EnderChat only supports 1.16.4 and newer (for now).'
       })
     }
-    props.navigation.push('Chat', { serverName, version: version }) // getId prevents duplicate navigation.
+    props.navigation.push('Chat', { serverName, version }) // getId prevents duplicate navigation.
   }
 
   const modalButtonCancelText = darkMode
@@ -251,7 +251,7 @@ const ServerScreen = (props: Props) => {
             return (
               <ElevatedView key={server} style={styles.serverView}>
                 <Pressable
-                  onPress={async () => await connectToServer(server)}
+                  onPress={() => connectToServer(server)}
                   onLongPress={() => openEditServerDialog(server)}
                   android_ripple={{ color: '#aaa' }}
                   style={styles.serverPressable}

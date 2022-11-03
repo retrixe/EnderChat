@@ -88,8 +88,9 @@ const SettingScreen = ({ navigation }: StackProps | TabProps) => {
         <Setting
           name='License'
           value='Mozilla Public License 2.0'
-          onClick={async () => {
-            await Linking.openURL('https://www.mozilla.org/en-US/MPL/2.0/')
+          onClick={() => {
+            const url = 'https://www.mozilla.org/en-US/MPL/2.0/'
+            Linking.openURL(url).catch(console.error)
           }}
         />
       </ScrollView>

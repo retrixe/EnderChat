@@ -59,7 +59,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
     <Tabs.Navigator
       tabBarPosition='bottom'
       screenOptions={({ route }) => ({
-        // eslint-disable-next-line react/prop-types,react/display-name
+        // eslint-disable-next-line react/no-unstable-nested-components
         tabBarIcon: ({ focused, color }) => {
           let Component = Ionicons
           let iconName = focused ? 'ios-list-circle' : 'ios-list'

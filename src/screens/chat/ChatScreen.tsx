@@ -305,7 +305,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
           <ChatMessageListMemo
             messages={messages}
             colorMap={darkMode ? mojangColorMap : lightColorMap}
-            clickEventHandler={async ce => {
+            clickEventHandler={ce => {
               // TODO: URL prompt support.
               if (
                 ce.action === 'open_url' &&
@@ -313,7 +313,9 @@ const ChatScreen = ({ navigation, route }: Props) => {
                 (ce.value.startsWith('https://') ||
                   ce.value.startsWith('http://'))
               ) {
-                await Linking.openURL(ce.value)
+                Linking.openURL(ce.value).catch(() =>
+                  addMessage(enderChatPrefix + 'Failed to open URL!')
+                )
               } else if (ce.action === 'copy_to_clipboard') {
                 Clipboard.setString(ce.value)
               } else if (ce.action === 'run_command') {

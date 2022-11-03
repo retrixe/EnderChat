@@ -43,14 +43,11 @@ const AccountScreen = () => {
         containerStyles={styles.deleteAccountDialog}
       >
         <Pressable
-          onPress={async () => {
+          onPress={() => {
             const { accessToken, clientToken } = accounts[deleteAccount]
             if (accessToken && clientToken) {
-              try {
-                await invalidate(accessToken, clientToken)
-              } catch (e) {
-                return // LOW-TODO: Do something more intelligent? Should alert the user.
-              }
+              // LOW-TODO: Do something more intelligent? Should alert the user.
+              invalidate(accessToken, clientToken).catch(console.error)
             }
             delete accounts[deleteAccount]
             setDeleteAccount('')

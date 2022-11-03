@@ -138,7 +138,9 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
             ref={webview}
             originWhitelist={['*']}
             source={html ? { html } : { uri }}
-            onNavigationStateChange={handleNavigationStateChange}
+            onNavigationStateChange={ev => {
+              handleNavigationStateChange(ev).catch(console.error)
+            }}
             androidLayerType={
               Platform.OS === 'android' && Platform.Version > 30
                 ? 'software' // FIXME: Really choppy. Seems to only happen on Google Pixel?
