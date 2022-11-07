@@ -21,6 +21,36 @@ type HandleError = (
   translated: string
 ) => (error: unknown) => any
 
+interface PlayerChatMessage {
+  signedChat: string
+  unsignedChat?: string
+  type: number
+  displayName: string
+}
+
+const parsePlayerChatMessage = (data: Buffer): PlayerChatMessage => {
+  const [signedChatLength, signedChatVarIntLength] = readVarInt(data)
+  data = data.slice(signedChatVarIntLength)
+  const signedChat = data.slice(0, signedChatLength).toString('utf8')
+  data = data.slice(signedChatLength)
+  const hasUnsignedChat = data.readInt8()
+  data = data.slice(1)
+  let unsignedChat
+  if (hasUnsignedChat) {
+    const [unsignedChatLength, unsignedChatVarIntLength] = readVarInt(data)
+    data = data.slice(unsignedChatVarIntLength)
+    unsignedChat = data.slice(0, unsignedChatLength).toString('utf8')
+    data = data.slice(unsignedChatLength)
+  }
+  const [type, typeLength] = readVarInt(data)
+  data = data.slice(typeLength)
+  data = data.slice(16) // Skip sender UUID
+  const [displayNameLength, displayNameVarIntLength] = readVarInt(data)
+  data = data.slice(displayNameVarIntLength)
+  const displayName = data.slice(0, displayNameLength).toString('utf8')
+  return { signedChat, unsignedChat, type, displayName }
+}
+
 const handleSystemMessage = (
   packet: Packet,
   addMessage: (text: MinecraftChat) => void,
@@ -98,46 +128,18 @@ export const packetHandler =
       (packet.id === 0x33 && is1191)
     ) {
       try {
-        const [signedChatLen, signedChatViLen] = readVarInt(packet.data)
-        const signedChat = packet.data
-          .slice(signedChatViLen, signedChatViLen + signedChatLen)
-          .toString('utf8')
-        const totalSignedChatLen = signedChatViLen + signedChatLen
-        const hasUnsignedChat = packet.data.readInt8(totalSignedChatLen)
-        const moreData = packet.data.slice(totalSignedChatLen + 1)
-        if (hasUnsignedChat) {
-          const [unsignedChatLen, unsignedChatViLen] = readVarInt(moreData)
-          const unsignedChat = moreData
-            .slice(unsignedChatViLen, unsignedChatViLen + unsignedChatLen)
-            .toString('utf8')
-          const totalUnsignedChatLen = unsignedChatViLen + unsignedChatLen
-          const position = moreData.readInt8(totalUnsignedChatLen)
-          const [displayNameLen, displayNameViLen] = readVarInt(moreData, 17)
-          const nameViLenOffset = 17 + displayNameViLen
-          const displayName = moreData
-            .slice(nameViLenOffset, nameViLenOffset + displayNameLen)
-            .toString('utf8')
-          if (position === 0 || position === 1) {
-            addMessage({
-              translate: 'chat.type.text',
-              with: [parseValidJson(displayName), parseValidJson(unsignedChat)]
-            })
-          }
-        } else {
-          const position = moreData.readInt8()
-          const [displayNameLen, displayNameViLen] = readVarInt(moreData, 17)
-          const nameViLenOffset = 17 + displayNameViLen
-          const displayName = moreData
-            .slice(nameViLenOffset, nameViLenOffset + displayNameLen)
-            .toString('utf8')
-          if (position === 0 || position === 1) {
-            addMessage({
-              translate: 'chat.type.text',
-              with: [parseValidJson(displayName), parseValidJson(signedChat)]
-            })
-          }
-        }
+        const { type, displayName, signedChat, unsignedChat } =
+          parsePlayerChatMessage(packet.data)
         // TODO-1.19: Support sender team name
+        if (type === 0 || type === 1) {
+          addMessage({
+            translate: 'chat.type.text',
+            with: [
+              parseValidJson(displayName),
+              parseValidJson(unsignedChat ?? signedChat)
+            ]
+          })
+        }
       } catch (e) {
         handleError(addMessage, parseMessageError)(e)
       }
@@ -172,7 +174,6 @@ export const packetHandler =
       const deathMessage = parseValidJson(
         data.slice(chatViLength, chatViLength + chatLen).toString('utf8')
       )
-      addMessage(deathRespawnMessage)
       if (
         (typeof deathMessage === 'string' && deathMessage.trim()) ||
         deathMessage?.text ||
@@ -182,6 +183,7 @@ export const packetHandler =
       }
       // Automatically respawn.
       // LOW-TODO: Should this be manual, or a dialog, like MC?
+      addMessage(deathRespawnMessage)
       connection // Client Status
         .writePacket(is1191 ? 0x07 : is119 ? 0x06 : 0x04, writeVarInt(0))
         .catch(handleError(addMessage, respawnError))
