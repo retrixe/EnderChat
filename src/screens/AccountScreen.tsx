@@ -1,14 +1,14 @@
 import React, { useContext, useState } from 'react'
-import { StyleSheet, View, Image, Pressable } from 'react-native'
+import { StyleSheet, View, Pressable } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
 import AddAccountDialog from '../components/accounts/AddAccountDialog'
+import AccountDisplay from '../components/accounts/AccountDisplay'
 import globalStyle from '../globalStyle'
 import Text from '../components/Text'
 import Dialog, { dialogStyles } from '../components/Dialog'
 import useDarkMode from '../context/useDarkMode'
 import UsersContext from '../context/accountsContext'
-import ElevatedView from '../components/ElevatedView'
 import { invalidate } from '../minecraft/api/yggdrasil'
 
 // LOW-TODO: Reload to update account info for online mode using /refresh.
@@ -49,9 +49,10 @@ const AccountScreen = () => {
               // LOW-TODO: Do something more intelligent? Should alert the user.
               invalidate(accessToken, clientToken).catch(console.error)
             }
-            delete accounts[deleteAccount]
+            const newAccounts = { ...accounts }
+            delete newAccounts[deleteAccount]
             setDeleteAccount('')
-            setAccounts(accounts)
+            setAccounts(newAccounts)
           }}
           android_ripple={{ color: '#aaa' }}
           style={styles.modalButton}
@@ -82,36 +83,14 @@ const AccountScreen = () => {
               : a.localeCompare(b)
           )
           .map(uuid => (
-            <ElevatedView key={uuid} style={styles.accountView}>
-              <Pressable
-                onPress={() => setActiveAccount(uuid)}
-                onLongPress={() => setDeleteAccount(uuid)}
-                android_ripple={{ color: '#aaa' }}
-                style={styles.accountPressable}
-              >
-                <Image
-                  source={{
-                    uri: `https://crafthead.net/avatar/${
-                      accounts[uuid].type ? uuid : accounts[uuid].username
-                    }/72`
-                  }}
-                  style={styles.accountImage}
-                />
-                <View>
-                  <Text style={styles.username}>{accounts[uuid].username}</Text>
-                  <Text style={darkMode ? styles.authTxtDark : styles.authTxt}>
-                    {accounts[uuid].type === 'mojang'
-                      ? 'Mojang: ' + accounts[uuid].email
-                      : accounts[uuid].type === 'microsoft'
-                      ? 'Microsoft Account'
-                      : 'Offline Mode'}
-                  </Text>
-                  {accounts[uuid].active && (
-                    <Text style={styles.active}>Active Account</Text>
-                  )}
-                </View>
-              </Pressable>
-            </ElevatedView>
+            <AccountDisplay
+              key={uuid}
+              uuid={uuid}
+              darkMode={darkMode}
+              account={accounts[uuid]}
+              setActiveAccount={setActiveAccount}
+              setDeleteAccount={setDeleteAccount}
+            />
           ))}
       </View>
     </>
@@ -119,19 +98,6 @@ const AccountScreen = () => {
 }
 
 const styles = StyleSheet.create({
-  accountView: { marginBottom: 12 },
-  accountPressable: { padding: 8, flexDirection: 'row' },
-  accountImage: {
-    padding: 4,
-    height: 72,
-    width: 72,
-    resizeMode: 'contain',
-    marginRight: 16
-  },
-  active: { fontSize: 14, fontWeight: 'bold' },
-  username: { fontSize: 20, fontWeight: 'bold' },
-  authTxt: { fontSize: 12, color: '#666', fontWeight: '400' },
-  authTxtDark: { fontSize: 12, color: '#aaa', fontWeight: '400' },
   deleteAccountText: { fontSize: 16 },
   deleteAccountDialog: { padding: 0 },
   ...dialogStyles

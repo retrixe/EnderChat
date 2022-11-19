@@ -106,9 +106,9 @@ const App = () => {
   const accounts: Accounts = JSON.parse(accountsStore)
   const servers: Servers = JSON.parse(serversStore)
   const setAccounts = (newAccounts: Accounts) =>
-    setAccountsStore(JSON.stringify({ ...accounts, ...newAccounts }))
+    setAccountsStore(JSON.stringify(newAccounts))
   const setServers = (newServers: Servers) =>
-    setServersStore(JSON.stringify({ ...servers, ...newServers }))
+    setServersStore(JSON.stringify(newServers))
   const systemDefault = colorScheme === null ? true : colorScheme === 'dark'
   const darkMode =
     settings.darkMode === null ? systemDefault : settings.darkMode

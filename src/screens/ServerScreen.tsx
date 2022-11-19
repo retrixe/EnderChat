@@ -1,19 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react'
-import {
-  StyleSheet,
-  View,
-  Image,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-  Platform,
-  RefreshControl
-} from 'react-native'
-import { Picker } from '@react-native-picker/picker'
+import { View, ScrollView, RefreshControl } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import allSettled from 'promise.allsettled'
 
+import EditServerDialog from '../components/servers/EditServerDialog'
+import ServerDisplay from '../components/servers/ServerDisplay'
 import globalStyle from '../globalStyle'
 import {
   LegacyPing,
@@ -21,19 +13,11 @@ import {
   modernPing,
   Ping
 } from '../minecraft/pingServer'
-import Dialog, { dialogStyles } from '../components/Dialog'
 import Text from '../components/Text'
-import TextField from '../components/TextField'
-import ElevatedView from '../components/ElevatedView'
 import useDarkMode from '../context/useDarkMode'
 import ServersContext from '../context/serversContext'
 import ConnectionContext from '../context/connectionContext'
 import { parseIp, protocolMap } from '../minecraft/utils'
-import {
-  ChatToJsx,
-  lightColorMap,
-  mojangColorMap
-} from '../minecraft/chatToJsx'
 
 interface RootStackParamList {
   [index: string]: any
@@ -47,13 +31,7 @@ const ServerScreen = (props: Props) => {
   const { servers, setServers } = useContext(ServersContext)
   const { setDisconnectReason } = useContext(ConnectionContext)
 
-  const [ipAddr, setIpAddr] = useState('')
-  const [ipAddrRed, setIpAddrRed] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [newServerName, setNewServerName] = useState('')
-  const [serverNameRed, setServerNameRed] = useState(false)
-  const [serverVersion, setServerVersion] =
-    useState<keyof typeof protocolMap>('auto')
   const [editServerDialogOpen, setEditServerDialogOpen] = useState<
     string | boolean
   >(false)
@@ -93,49 +71,27 @@ const ServerScreen = (props: Props) => {
     )
   }, [servers, pingResponses])
 
-  const invalidServerName = newServerName.length > 32
-
   const openEditServerDialog = (server: string) => {
     setEditServerDialogOpen(server)
-    setNewServerName(server)
-    setServerVersion(servers[server].version)
-    setIpAddr(servers[server].address)
   }
 
-  const cancelAddServer = () => {
-    setEditServerDialogOpen(false)
-    setServerVersion('auto')
-    setNewServerName('')
-    setIpAddr('')
-    setIpAddrRed(false)
-    setServerNameRed(false)
-  }
-
-  const deleteServer = () => {
-    if (typeof editServerDialogOpen !== 'string') return cancelAddServer()
-    delete servers[editServerDialogOpen]
-    setServers(servers)
-    cancelAddServer()
-  }
-
-  const editServer = () => {
+  const editServer = (
+    serverName: string,
+    version: keyof typeof protocolMap,
+    address: string
+  ) => {
     const edit = typeof editServerDialogOpen === 'string'
-    if (
-      !newServerName ||
-      invalidServerName ||
-      (!edit && servers[newServerName]) ||
-      (edit && servers[newServerName] && newServerName !== editServerDialogOpen)
-    ) {
-      return setServerNameRed(true)
-    } else if (ipAddr === '') {
-      return setIpAddrRed(true)
-    }
     const newServers = { ...servers }
     if (edit) delete newServers[editServerDialogOpen]
-    servers[newServerName] = { version: serverVersion, address: ipAddr }
+    newServers[serverName] = { version, address }
     setServers(newServers)
     setPingResponses({})
-    cancelAddServer()
+  }
+
+  const deleteServer = (server: string) => {
+    const newServers = { ...servers }
+    delete newServers[server]
+    setServers(newServers)
   }
 
   const connectToServer = (serverName: string) => {
@@ -157,71 +113,16 @@ const ServerScreen = (props: Props) => {
     props.navigation.push('Chat', { serverName, version }) // getId prevents duplicate navigation.
   }
 
-  const modalButtonCancelText = darkMode
-    ? dialogStyles.modalButtonCancelDarkText
-    : dialogStyles.modalButtonCancelText
   return (
     <>
-      <Dialog visible={!!editServerDialogOpen} onRequestClose={cancelAddServer}>
-        <Text style={dialogStyles.modalTitle}>
-          {typeof editServerDialogOpen === 'string' ? 'Edit' : 'Add'} Server
-        </Text>
-        <TextField
-          red={serverNameRed || invalidServerName}
-          value={newServerName}
-          onChangeText={setNewServerName}
-          placeholder='Server Name'
-        />
-        <TextField
-          red={ipAddrRed}
-          value={ipAddr}
-          onChangeText={setIpAddr}
-          placeholder='IP Address'
-        />
-        <Picker
-          selectedValue={serverVersion}
-          style={darkMode ? styles.addServerPickerDark : styles.addServerPicker}
-          onValueChange={itemValue => setServerVersion(itemValue)}
-          dropdownIconColor={darkMode ? '#ffffff' : '#000000'}
-        >
-          <Picker.Item label='Auto' value='auto' />
-          <Picker.Item label='1.19.1/1.19.2' value='1.19.1' />
-          <Picker.Item label='1.19' value='1.19' />
-          <Picker.Item label='1.18.2' value='1.18.2' />
-          <Picker.Item label='1.18/1.18.1' value='1.18' />
-          <Picker.Item label='1.17.1' value='1.17.1' />
-          <Picker.Item label='1.17' value='1.17' />
-          <Picker.Item label='1.16.4/1.16.5' value='1.16.4' />
-        </Picker>
-        <View style={dialogStyles.modalButtons}>
-          {typeof editServerDialogOpen === 'string' && (
-            <Pressable
-              onPress={deleteServer}
-              android_ripple={{ color: '#aaa' }}
-              style={dialogStyles.modalButton}
-            >
-              <Text style={styles.deleteServerButtonText}>DELETE</Text>
-            </Pressable>
-          )}
-          <View style={globalStyle.flexSpacer} />
-          <Pressable
-            onPress={cancelAddServer}
-            android_ripple={{ color: '#aaa' }}
-            style={dialogStyles.modalButton}
-          >
-            <Text style={modalButtonCancelText}>CANCEL</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => editServer()}
-            android_ripple={{ color: '#aaa' }}
-            style={dialogStyles.modalButton}
-          >
-            <Text style={dialogStyles.modalButtonText}>
-              {typeof editServerDialogOpen === 'string' ? 'EDIT' : 'ADD'}
-            </Text>
-          </Pressable>
-        </View>
-      </Dialog>
+      <EditServerDialog
+        servers={servers}
+        darkMode={darkMode}
+        editServer={editServer}
+        deleteServer={deleteServer}
+        editServerDialogOpen={editServerDialogOpen}
+        setEditServerDialogOpen={setEditServerDialogOpen}
+      />
       <View style={darkMode ? globalStyle.darkHeader : globalStyle.header}>
         <Text style={globalStyle.title}>EnderChat</Text>
         <View style={globalStyle.flexSpacer} />
@@ -246,97 +147,20 @@ const ServerScreen = (props: Props) => {
         }
       >
         <View style={globalStyle.outerView}>
-          {Object.keys(servers).map(server => {
-            const ping = pingResponses[servers[server].address]
-            return (
-              <ElevatedView key={server} style={styles.serverView}>
-                <Pressable
-                  onPress={() => connectToServer(server)}
-                  onLongPress={() => openEditServerDialog(server)}
-                  android_ripple={{ color: '#aaa' }}
-                  style={styles.serverPressable}
-                >
-                  {ping ? (
-                    <Image
-                      source={
-                        (ping as Ping).favicon
-                          ? { uri: (ping as Ping).favicon }
-                          : require('../assets/pack.png')
-                      }
-                      style={styles.serverImage}
-                    />
-                  ) : (
-                    <View style={styles.serverLoading}>
-                      <ActivityIndicator
-                        color='#00aaff'
-                        size={Platform.select<number | 'large'>({
-                          android: 48,
-                          default: 'large'
-                        })}
-                      />
-                    </View>
-                  )}
-                  <View style={styles.serverContent}>
-                    <Text style={styles.serverName}>{server.trim()}</Text>
-                    {ping ? (
-                      <>
-                        <Text style={styles.serverPlayers}>
-                          {(ping as Ping).players?.online ??
-                            (ping as LegacyPing).online}
-                          /
-                          {(ping as Ping).players?.max ??
-                            (ping as LegacyPing).maxPlayers}{' '}
-                          players online | Ping: {ping.ping}ms
-                        </Text>
-                        <ChatToJsx
-                          chat={
-                            (ping as Ping).description ??
-                            (ping as LegacyPing).motd
-                          }
-                          component={Text}
-                          colorMap={darkMode ? mojangColorMap : lightColorMap}
-                          componentProps={{ styles: styles.serverDescription }}
-                          trim
-                        />
-                      </>
-                    ) : (
-                      <Text style={styles.serverDescription}>
-                        {ping === null
-                          ? 'An error occurred when pinging server.'
-                          : ping === false
-                          ? 'No route to host!'
-                          : 'Pinging...'}
-                      </Text>
-                    )}
-                  </View>
-                </Pressable>
-              </ElevatedView>
-            )
-          })}
+          {Object.keys(servers).map(server => (
+            <ServerDisplay
+              key={server}
+              ping={pingResponses[servers[server].address]}
+              server={server}
+              darkMode={darkMode}
+              connectToServer={connectToServer}
+              openEditServerDialog={openEditServerDialog}
+            />
+          ))}
         </View>
       </ScrollView>
     </>
   )
 }
-
-const styles = StyleSheet.create({
-  serverView: { marginBottom: 12 },
-  serverPressable: { padding: 8, flexDirection: 'row' },
-  serverImage: { resizeMode: 'contain', padding: 4, height: 72, width: 72 },
-  serverLoading: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 4
-    // height: 72,
-    // width: 72,
-  },
-  serverContent: { marginLeft: 8, flex: 2 },
-  serverName: { fontSize: 20, fontWeight: 'bold' },
-  serverPlayers: { fontSize: 12, fontWeight: 'bold' },
-  serverDescription: { fontSize: 14 },
-  addServerPickerDark: { color: '#ffffff' },
-  addServerPicker: { color: '#000000' },
-  deleteServerButtonText: { color: '#ff0000', fontWeight: 'bold' }
-})
 
 export default ServerScreen
