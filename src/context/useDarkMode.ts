@@ -1,12 +1,7 @@
-import { useContext } from 'react'
-import { useColorScheme } from 'react-native'
-import SettingsContext from '../context/settingsContext'
+import { createContext, useContext } from 'react'
 
-const useDarkMode = () => {
-  const colorScheme = useColorScheme()
-  const { settings } = useContext(SettingsContext)
-  const systemDefault = colorScheme === null ? true : colorScheme === 'dark'
-  return settings.darkMode === null ? systemDefault : settings.darkMode
-}
+export const ColorSchemeContext = createContext<boolean>(false)
+
+const useDarkMode = () => useContext(ColorSchemeContext)
 
 export default useDarkMode

@@ -234,8 +234,8 @@ const parseChatToJsx = (
   )
 }
 
-// React Component-ised.
-const ChatToJsxNonMemo = (props: {
+// React Component-ised. Memoise if being called often.
+export const ChatToJsx = (props: {
   chat?: MinecraftChat
   component: React.ComponentType<TextProps>
   colorMap: ColorMap
@@ -251,9 +251,6 @@ const ChatToJsxNonMemo = (props: {
     props.componentProps,
     props.trim
   )
-// Memoisation means this is only re-rendered if the props changed.
-// TODO: This might be hurting memory usage.
-export const ChatToJsx = React.memo(ChatToJsxNonMemo)
 
 export const parseValidJson = (text: string) => {
   try {

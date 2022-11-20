@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 import {
   FlatList,
   StyleSheet,
@@ -49,36 +55,57 @@ interface Message {
   text: MinecraftChat
 }
 
-const renderItem = (colorMap: ColorMap, handleCe: (ce: ClickEvent) => void) => {
-  const ItemRenderer = ({ item }: { item: Message }) => (
-    <View style={styles.androidScaleInvert}>
-      <ChatToJsx
-        chat={item.text}
-        component={Text}
-        colorMap={colorMap}
-        clickEventHandler={handleCe}
-      />
-    </View>
-  )
-  // LOW-TODO: Performance implications? https://reactnative.dev/docs/optimizing-flatlist-configuration
-  return ItemRenderer
-}
+const ItemRenderer = (props: {
+  item: Message
+  colorMap: ColorMap
+  clickEventHandler: (event: ClickEvent) => void
+}) => (
+  <View style={styles.androidScaleInvert}>
+    <ChatToJsx
+      chat={props.item.text}
+      component={Text}
+      colorMap={props.colorMap}
+      clickEventHandler={props.clickEventHandler}
+    />
+  </View>
+)
+
+const ItemRendererMemo = React.memo(
+  ItemRenderer,
+  (prev, next) =>
+    prev.item.key === next.item.key &&
+    prev.colorMap === next.colorMap &&
+    prev.clickEventHandler === next.clickEventHandler
+)
+
 const ChatMessageList = (props: {
   messages: Message[]
   colorMap: ColorMap
   clickEventHandler: (ce: ClickEvent) => void
 }) => {
+  // If colorMap/clickEventHandler changes, this will change and cause a re-render.
+  // If messages changes, FlatList will execute this function for all messages, and
+  // ItemRendererMemo will check if props have changed instead of this useCallback.
+  const renderItem = useCallback(
+    ({ item }) => (
+      <ItemRendererMemo
+        item={item}
+        colorMap={props.colorMap}
+        clickEventHandler={props.clickEventHandler}
+      />
+    ),
+    [props.colorMap, props.clickEventHandler]
+  )
   return (
     <FlatList
       inverted={Platform.OS !== 'android'}
       data={props.messages}
       style={[styles.androidScaleInvert, styles.chatArea]}
       contentContainerStyle={styles.chatAreaScrollView}
-      renderItem={renderItem(props.colorMap, props.clickEventHandler)}
+      renderItem={renderItem}
     />
   )
 }
-const ChatMessageListMemo = React.memo(ChatMessageList) // Shallow prop compare.
 
 const handleError =
   (addMessage: (text: MinecraftChat) => void, translated: string) =>
@@ -261,6 +288,29 @@ const ChatScreen = ({ navigation, route }: Props) => {
     }
   }
 
+  const handleClickEvent = useCallback(
+    (ce: ClickEvent) => {
+      // TODO: URL prompt support.
+      if (
+        ce.action === 'open_url' &&
+        settings.webLinks &&
+        (ce.value.startsWith('https://') || ce.value.startsWith('http://'))
+      ) {
+        Linking.openURL(ce.value).catch(() =>
+          addMessage(enderChatPrefix + 'Failed to open URL!')
+        )
+      } else if (ce.action === 'copy_to_clipboard') {
+        Clipboard.setString(ce.value)
+      } else if (ce.action === 'run_command') {
+        // TODO: This should be a prompt - sendMessage(ce.value, false)
+        setMessage(ce.value)
+      } else if (ce.action === 'suggest_command') {
+        setMessage(ce.value)
+      } // No open_file/change_page handling.
+    },
+    [settings.webLinks]
+  )
+
   const title =
     route.params.serverName.length > 12
       ? route.params.serverName.substring(0, 9) + '...'
@@ -302,29 +352,10 @@ const ChatScreen = ({ navigation, route }: Props) => {
       )}
       {!loading && connection && (
         <>
-          <ChatMessageListMemo
+          <ChatMessageList
             messages={messages}
             colorMap={darkMode ? mojangColorMap : lightColorMap}
-            clickEventHandler={ce => {
-              // TODO: URL prompt support.
-              if (
-                ce.action === 'open_url' &&
-                settings.webLinks &&
-                (ce.value.startsWith('https://') ||
-                  ce.value.startsWith('http://'))
-              ) {
-                Linking.openURL(ce.value).catch(() =>
-                  addMessage(enderChatPrefix + 'Failed to open URL!')
-                )
-              } else if (ce.action === 'copy_to_clipboard') {
-                Clipboard.setString(ce.value)
-              } else if (ce.action === 'run_command') {
-                // TODO: This should be a prompt - sendMessage(ce.value, false)
-                setMessage(ce.value)
-              } else if (ce.action === 'suggest_command') {
-                setMessage(ce.value)
-              } // No open_file/change_page handling.
-            }}
+            clickEventHandler={handleClickEvent}
           />
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
             <TextField

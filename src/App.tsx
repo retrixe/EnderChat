@@ -27,6 +27,7 @@ import SettingsContext, {
   Settings
 } from './context/settingsContext'
 import ServersContext, { Servers } from './context/serversContext'
+import { ColorSchemeContext } from './context/useDarkMode'
 import DisconnectDialog from './components/DisconnectDialog'
 import ChatScreen from './screens/chat/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
@@ -92,7 +93,6 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
 }
 
 const App = () => {
-  const colorScheme = useColorScheme()
   const [connection, setConnection] = React.useState<Connection | undefined>()
   const [disconnect, setDisconnect] = React.useState<Disconnect | undefined>()
 
@@ -109,6 +109,8 @@ const App = () => {
     setAccountsStore(JSON.stringify(newAccounts))
   const setServers = (newServers: Servers) =>
     setServersStore(JSON.stringify(newServers))
+
+  const colorScheme = useColorScheme()
   const systemDefault = colorScheme === null ? true : colorScheme === 'dark'
   const darkMode =
     settings.darkMode === null ? systemDefault : settings.darkMode
@@ -138,31 +140,33 @@ const App = () => {
         <SettingsContext.Provider value={{ settings, setSettings }}>
           <ServersContext.Provider value={{ servers, setServers }}>
             <AccountsContext.Provider value={{ accounts, setAccounts }}>
-              {disconnect && <DisconnectDialog />}
-              <NavigationContainer theme={darkMode ? DarkTheme : undefined}>
-                <StatusBar
-                  backgroundColor={darkMode ? '#242424' : '#ffffff'}
-                  barStyle={darkMode ? 'light-content' : 'dark-content'}
-                />
-                <Stacks.Navigator
-                  id='StackNavigator'
-                  initialRouteName='Home'
-                  screenOptions={{
-                    headerShown: false,
-                    animation: 'slide_from_right'
-                  }}
-                >
-                  <Stacks.Screen name='Home' component={HomeScreen} />
-                  <Stacks.Screen
-                    name='Chat'
-                    component={ChatScreen}
-                    getId={({ params }) => {
-                      return (params as { serverName: string }).serverName
-                    }}
+              <ColorSchemeContext.Provider value={darkMode}>
+                {disconnect && <DisconnectDialog />}
+                <NavigationContainer theme={darkMode ? DarkTheme : undefined}>
+                  <StatusBar
+                    backgroundColor={darkMode ? '#242424' : '#ffffff'}
+                    barStyle={darkMode ? 'light-content' : 'dark-content'}
                   />
-                  <Stacks.Screen name='Settings' component={SettingScreen} />
-                </Stacks.Navigator>
-              </NavigationContainer>
+                  <Stacks.Navigator
+                    id='StackNavigator'
+                    initialRouteName='Home'
+                    screenOptions={{
+                      headerShown: false,
+                      animation: 'slide_from_right'
+                    }}
+                  >
+                    <Stacks.Screen name='Home' component={HomeScreen} />
+                    <Stacks.Screen
+                      name='Chat'
+                      component={ChatScreen}
+                      getId={({ params }) => {
+                        return (params as { serverName: string }).serverName
+                      }}
+                    />
+                    <Stacks.Screen name='Settings' component={SettingScreen} />
+                  </Stacks.Navigator>
+                </NavigationContainer>
+              </ColorSchemeContext.Provider>
             </AccountsContext.Provider>
           </ServersContext.Provider>
         </SettingsContext.Provider>
