@@ -92,12 +92,10 @@ export const packetHandler =
     if (statusRef.current === 'CONNECTING' && connection.loggedIn) {
       setLoading('')
       statusRef.current = 'CONNECTED'
-      if (sendJoinMessage) {
+      const joinMessageToSend = joinMessage.substring(0, charLimit).trim()
+      if (sendJoinMessage && joinMessageToSend) {
         connection
-          .writePacket(
-            0x03,
-            concatPacketData([joinMessage.substring(0, charLimit)])
-          )
+          .writePacket(0x03, concatPacketData([joinMessageToSend]))
           .catch(handleError(addMessage, sendMessageError))
       }
       if (sendSpawnCommand) {
