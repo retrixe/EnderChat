@@ -121,6 +121,14 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         // val accessToken = opts.getString("accessToken")
         // val certificate = opts.getMap("certificate")
         val loginPacket = opts.getString("loginPacket")
+        val packetFilter = opts.getArray("packetFilter")?.let {
+            val hashSet = hashSetOf<Int>()
+            for (i in 0 until it.size()) {
+                val value = it.getDynamic(i)
+                if (value.type == ReadableType.Number) hashSet.add(value.asInt())
+            }
+            hashSet
+        }
 
         // Start thread which handles creating the connection and then reads packets from it.
         // This avoids blocking the main thread on writeLock and keeps the UI thread responsive.
@@ -248,19 +256,21 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         }
 
                         // Forward the packet to JavaScript.
-                        val packetLengthLength =
-                            packet.totalLength - (packet.data.size + packet.id.data.size)
-                        val params = Arguments.createMap().apply {
-                            putString("connectionId", connectionId.toString())
-                            putDouble("id", packet.id.value.toDouble())
-                            putString("data", Base64.encodeToString(packet.data, Base64.DEFAULT))
-                            putBoolean("compressed", compressionEnabled)
-                            putDouble("idLength", packet.id.data.size.toDouble())
-                            putDouble("dataLength", packet.data.size.toDouble())
-                            putDouble("packetLength", packet.totalLength.toDouble())
-                            putDouble("lengthLength", packetLengthLength.toDouble())
+                        if (packetFilter?.contains(packet.id.value) != false) {
+                            val packetLengthLength =
+                                packet.totalLength - (packet.data.size + packet.id.data.size)
+                            val params = Arguments.createMap().apply {
+                                putString("connectionId", connectionId.toString())
+                                putDouble("id", packet.id.value.toDouble())
+                                putString("data", Base64.encodeToString(packet.data, Base64.DEFAULT))
+                                putBoolean("compressed", compressionEnabled)
+                                putDouble("idLength", packet.id.data.size.toDouble())
+                                putDouble("dataLength", packet.data.size.toDouble())
+                                putDouble("packetLength", packet.totalLength.toDouble())
+                                putDouble("lengthLength", packetLengthLength.toDouble())
+                            }
+                            sendEvent(reactContext = reactApplicationContext, "ecm:packet", params)
                         }
-                        sendEvent(reactContext = reactApplicationContext, "ecm:packet", params)
                     }
                     lock.readLock().unlock()
                     lockAcquired = false

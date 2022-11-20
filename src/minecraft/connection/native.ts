@@ -65,14 +65,24 @@ export class NativeServerConnection
       if (event.connectionId !== this.id) return
       // Run after interactions to improve user experience.
       InteractionManager.runAfterInteractions(() => {
-        const packet: Packet = {
-          id: event.id,
-          data: Buffer.from(event.data, 'base64'),
-          idLength: event.idLength,
-          dataLength: event.dataLength,
-          packetLength: event.packetLength,
-          lengthLength: event.lengthLength
-        }
+        const packet: Packet = new Proxy(
+          {
+            id: event.id,
+            data: event.data, // Buffer.from(event.data, 'base64'),
+            idLength: event.idLength,
+            dataLength: event.dataLength,
+            packetLength: event.packetLength,
+            lengthLength: event.lengthLength
+          } as unknown as Packet,
+          {
+            get(target, p, receiver) {
+              if (p === 'data' && typeof target.data === 'string') {
+                target.data = Buffer.from(target.data, 'base64')
+              }
+              return Reflect.get(target, p, receiver)
+            }
+          }
+        )
 
         // Internally handle login packets. We aren't handling these in native to share code.
         const is1164 = options.protocolVersion >= protocolMap['1.16.4']
