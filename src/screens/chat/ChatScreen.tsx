@@ -41,8 +41,7 @@ import {
   ClickEvent,
   ColorMap
 } from '../../minecraft/chatToJsx'
-import { protocolMap, writeVarInt } from '../../minecraft/utils'
-import { concatPacketData, PacketDataTypes } from '../../minecraft/packet'
+import { makeChatMessagePacket } from '../../minecraft/packets/chat'
 import TextField from '../../components/TextField'
 import Text from '../../components/Text'
 
@@ -254,38 +253,10 @@ const ChatScreen = ({ navigation, route }: Props) => {
     if (msg.startsWith('/') && saveHistory) {
       setCommandHistory(ch => ch.concat([msg]))
     }
-    const is119 =
-      connection.connection.options.protocolVersion >= protocolMap[1.19]
-    const is1191 =
-      connection.connection.options.protocolVersion >= protocolMap['1.19.1']
-    if (!is119) {
-      connection.connection
-        .writePacket(0x03, concatPacketData([msg]))
-        .catch(handleError(addMessage, sendMessageError))
-    } else {
-      const id = msg.startsWith('/')
-        ? is1191
-          ? 0x04
-          : 0x03
-        : is1191
-        ? 0x05
-        : 0x04
-      const timestamp = Buffer.alloc(8)
-      timestamp.writeIntBE(Date.now(), 2, 6) // writeBigInt64BE(BigInt(Date.now()))
-      const salt = connection.connection.msgSalt ?? Buffer.alloc(8)
-      // TODO-1.19: Send signature(s), preview chat, last seen messages and last received message if possible.
-      const data: PacketDataTypes[] = [
-        msg.startsWith('/') ? msg.substring(1) : msg,
-        timestamp,
-        salt,
-        writeVarInt(0),
-        false
-      ]
-      if (is1191) data.push(writeVarInt(0), writeVarInt(0))
-      connection.connection
-        .writePacket(id, concatPacketData(data))
-        .catch(handleError(addMessage, sendMessageError))
-    }
+    const protocolVersion = connection.connection.options.protocolVersion
+    connection.connection
+      .writePacket(...makeChatMessagePacket(msg, protocolVersion))
+      .catch(handleError(addMessage, sendMessageError))
   }
 
   const handleClickEvent = useCallback(

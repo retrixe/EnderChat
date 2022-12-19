@@ -2,8 +2,9 @@ import React from 'react'
 import { Status } from './ChatScreen'
 import { MinecraftChat, parseValidJson } from '../../minecraft/chatToJsx'
 import { ServerConnection } from '../../minecraft/connection'
-import { concatPacketData, Packet } from '../../minecraft/packet'
+import { Packet } from '../../minecraft/packet'
 import { protocolMap, readVarInt, writeVarInt } from '../../minecraft/utils'
+import { makeChatMessagePacket } from '../../minecraft/packets/chat'
 
 export const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
 export const parseMessageError = 'An error occurred when parsing chat.'
@@ -94,13 +95,15 @@ export const packetHandler =
       statusRef.current = 'CONNECTED'
       const joinMessageToSend = joinMessage.substring(0, charLimit).trim()
       if (sendJoinMessage && joinMessageToSend) {
+        const protocolVer = connection.options.protocolVersion
         connection
-          .writePacket(0x03, concatPacketData([joinMessageToSend]))
+          .writePacket(...makeChatMessagePacket(joinMessageToSend, protocolVer))
           .catch(handleError(addMessage, sendMessageError))
       }
       if (sendSpawnCommand) {
+        const protocolVer = connection.options.protocolVersion
         connection
-          .writePacket(0x03, concatPacketData(['/spawn']))
+          .writePacket(...makeChatMessagePacket('/spawn', protocolVer))
           .catch(handleError(addMessage, sendMessageError))
       }
     }
