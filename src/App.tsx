@@ -35,8 +35,8 @@ import AccountScreen from './screens/AccountScreen'
 import SettingScreen from './screens/SettingScreen'
 import globalStyle from './globalStyle'
 
-const Stacks = createNativeStackNavigator()
-const Tabs = createMaterialTopTabNavigator() // createBottomTabNavigator()
+const Stacks = createNativeStackNavigator<RootStackParamList>()
+const Tabs = createMaterialTopTabNavigator<RootStackParamList>() // createBottomTabNavigator()
 
 export interface RootStackParamList {
   [index: string]: any

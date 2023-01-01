@@ -12,7 +12,8 @@ import {
   ActivityIndicator,
   Platform,
   Linking,
-  Clipboard
+  Clipboard,
+  ListRenderItem
 } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
@@ -85,7 +86,7 @@ const ChatMessageList = (props: {
   // If colorMap/clickEventHandler changes, this will change and cause a re-render.
   // If messages changes, FlatList will execute this function for all messages, and
   // ItemRendererMemo will check if props have changed instead of this useCallback.
-  const renderItem = useCallback(
+  const renderItem = useCallback<ListRenderItem<Message>>(
     ({ item }) => (
       <ItemRendererMemo
         item={item}

@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
-import { View, Pressable, StyleSheet, ViewProps } from 'react-native'
+import { View, Pressable, StyleSheet, StyleProp, ViewStyle } from 'react-native'
 
 import Text from '../../components/Text'
 import Dialog, { dialogStyles } from '../../components/Dialog'
 import globalStyle from '../../globalStyle'
 import useDarkMode from '../../context/useDarkMode'
 
-const RadioButton = (props: { style?: ViewProps; selected: boolean }) => {
+const RadioButton = (props: {
+  style?: StyleProp<ViewStyle>
+  selected: boolean
+}) => {
   const darkMode = useDarkMode()
   return (
     <View

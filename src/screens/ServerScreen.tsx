@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import allSettled from 'promise.allsettled'
 
+import { RootStackParamList } from '../App'
 import EditServerDialog from '../components/servers/EditServerDialog'
 import ServerDisplay from '../components/servers/ServerDisplay'
 import globalStyle from '../globalStyle'
@@ -19,12 +20,7 @@ import ServersContext from '../context/serversContext'
 import ConnectionContext from '../context/connectionContext'
 import { parseIp, protocolMap } from '../minecraft/utils'
 
-interface RootStackParamList {
-  [index: string]: any
-  Home: undefined
-  Chat: { serverName: string; version: number }
-}
-type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>
+type Props = NativeStackScreenProps<RootStackParamList, 'Servers'>
 
 const ServerScreen = (props: Props) => {
   const darkMode = useDarkMode()
