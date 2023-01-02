@@ -5,7 +5,7 @@ A React Native app for Android/iOS to chat on Minecraft servers from your phone.
 ## Features (still being worked on)
 
 - Fully open-source with no ads! Easily report issues through GitHub and get a direct response.
-- Supports connecting to Minecraft 1.16.4 through Minecraft 1.19 servers. (Older versions planned.)
+- Supports connecting to Minecraft 1.16.4 through Minecraft 1.19.2 servers. (Older versions planned.)
 - Supports all Minecraft chat features, which sometimes trip up other chat apps.
 - Send join messages and commands on connecting to a server.
 - Health change indicator and respawn on death support.

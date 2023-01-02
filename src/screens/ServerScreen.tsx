@@ -92,10 +92,11 @@ const ServerScreen = (props: Props) => {
 
   const connectToServer = (serverName: string) => {
     let version = protocolMap[servers[serverName].version]
+    const latestVersion = '1.19.1'
     if (version === -1) {
       const ping = pingResponses[servers[serverName].address]
       // Try the latest.
-      if (!ping) version = protocolMap['1.19.1']
+      if (!ping) version = protocolMap[latestVersion]
       else if (typeof ping.version === 'object') {
         version = ping.version.protocol
       } else version = (ping as LegacyPing).protocol
@@ -104,6 +105,15 @@ const ServerScreen = (props: Props) => {
       return setDisconnectReason({
         server: serverName,
         reason: 'EnderChat only supports 1.16.4 and newer (for now).'
+      })
+    } else if (version > protocolMap[latestVersion]) {
+      return setDisconnectReason({
+        server: serverName,
+        reason:
+          '§lThis version of EnderChat does not support the Minecraft version required by this server!\n\n' +
+          '§oPossible solutions:§r' +
+          '\n1. Make sure EnderChat is up to date.' +
+          '\n2. Try editing the server and setting the version manually.'
       })
     }
     props.navigation.push('Chat', { serverName, version }) // getId prevents duplicate navigation.
