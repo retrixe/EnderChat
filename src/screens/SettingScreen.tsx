@@ -83,7 +83,11 @@ const SettingScreen = ({ navigation }: StackProps | TabProps) => {
         <Setting name='Version' value={version} />
         <Setting
           name='Privacy Policy'
-          value='EnderChat does not collect any data. Analytics may be added later.'
+          value='Tap to open the privacy policy in your browser.'
+          onClick={() => {
+            const url = 'https://github.com/retrixe/EnderChat#privacy-policy'
+            Linking.openURL(url).catch(console.error)
+          }}
         />
         <Setting
           name='License'
