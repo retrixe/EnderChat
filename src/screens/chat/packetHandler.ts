@@ -2,12 +2,18 @@ import React from 'react'
 import { Status } from './ChatScreen'
 import { MinecraftChat, parseValidJson } from '../../minecraft/chatToJsx'
 import { ServerConnection } from '../../minecraft/connection'
-import { Packet } from '../../minecraft/packet'
+import {
+  concatPacketData,
+  Packet,
+  PacketDataTypes
+} from '../../minecraft/packet'
 import { protocolMap, readVarInt, writeVarInt } from '../../minecraft/utils'
 import { makeChatMessagePacket } from '../../minecraft/packets/chat'
 
 export const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
 export const parseMessageError = 'An error occurred when parsing chat.'
+export const clientSettingsError =
+  'An error occurred when sending client settings.'
 export const inventoryCloseError =
   'An error occurred when closing an inventory window.'
 export const respawnError =
@@ -108,9 +114,37 @@ export const packetHandler =
     }
 
     const is117 = protocolVersion >= protocolMap[1.17]
+    const is118 = protocolVersion >= protocolMap[1.18]
     const is119 = protocolVersion >= protocolMap[1.19]
     const is1191 = protocolVersion >= protocolMap['1.19.1']
     if (
+      /* Login (play) */
+      (packet.id === 0x24 && !is117) ||
+      (packet.id === 0x26 && is117 && !is119) ||
+      (packet.id === 0x23 && is119 && !is1191) ||
+      (packet.id === 0x25 && is1191)
+    ) {
+      // Send Client Settings packet.
+      const clientSettingsId = is119 ? (is1191 ? 0x08 : 0x07) : 0x05
+      const viewDistance = Buffer.alloc(1)
+      viewDistance.writeInt8(2)
+      const skinParts = Buffer.alloc(1)
+      skinParts.writeUInt8(0b11111111)
+      // TODO: Intl in future? And other setting changes too.
+      const packetData: PacketDataTypes[] = [
+        'en_US',
+        viewDistance,
+        writeVarInt(0),
+        true,
+        skinParts,
+        writeVarInt(1)
+      ]
+      if (is117) packetData.push(!is118)
+      if (is118) packetData.push(true)
+      connection
+        .writePacket(clientSettingsId, concatPacketData(packetData))
+        .catch(handleError(addMessage, clientSettingsError))
+    } else if (
       /* Respawn */
       (packet.id === 0x39 && !is117) ||
       (packet.id === 0x3d && is117 && !is119) ||
