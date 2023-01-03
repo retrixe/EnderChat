@@ -90,28 +90,40 @@ export const packetHandler =
     charLimit: number
   ) =>
   (packet: Packet) => {
+    const { protocolVersion } = connection.options
     if (statusRef.current === 'CONNECTING' && connection.loggedIn) {
       setLoading('')
       statusRef.current = 'CONNECTED'
-      const joinMessageToSend = joinMessage.substring(0, charLimit).trim()
-      if (sendJoinMessage && joinMessageToSend) {
-        const protocolVer = connection.options.protocolVersion
+      const messageToSend = joinMessage.substring(0, charLimit).trim()
+      if (sendJoinMessage && messageToSend) {
         connection
-          .writePacket(...makeChatMessagePacket(joinMessageToSend, protocolVer))
+          .writePacket(...makeChatMessagePacket(messageToSend, protocolVersion))
           .catch(handleError(addMessage, sendMessageError))
       }
       if (sendSpawnCommand) {
-        const protocolVer = connection.options.protocolVersion
         connection
-          .writePacket(...makeChatMessagePacket('/spawn', protocolVer))
+          .writePacket(...makeChatMessagePacket('/spawn', protocolVersion))
           .catch(handleError(addMessage, sendMessageError))
       }
     }
 
-    const is117 = connection.options.protocolVersion >= protocolMap[1.17]
-    const is119 = connection.options.protocolVersion >= protocolMap[1.19]
-    const is1191 = connection.options.protocolVersion >= protocolMap['1.19.1']
+    const is117 = protocolVersion >= protocolMap[1.17]
+    const is119 = protocolVersion >= protocolMap[1.19]
+    const is1191 = protocolVersion >= protocolMap['1.19.1']
     if (
+      /* Respawn */
+      (packet.id === 0x39 && !is117) ||
+      (packet.id === 0x3d && is117 && !is119) ||
+      (packet.id === 0x3b && is119 && !is1191) ||
+      (packet.id === 0x3e && is1191)
+    ) {
+      // Send spawn command when switching worlds.
+      if (sendSpawnCommand) {
+        connection
+          .writePacket(...makeChatMessagePacket('/spawn', protocolVersion))
+          .catch(handleError(addMessage, sendMessageError))
+      }
+    } else if (
       /* Chat Message (clientbound) */
       (packet.id === 0x0e && !is117) ||
       (packet.id === 0x0f && is117 && !is119)
