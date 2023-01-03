@@ -38,6 +38,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
     // Honestly, overwrite the old Microsoft account, but inform the user.
     const alreadyExists = accounts[id] && accounts[id].type === 'microsoft'
     setAccounts({
+      ...accounts,
       [id]: {
         active:
           Object.keys(accounts).length === 0 ||
