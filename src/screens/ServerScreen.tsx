@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react'
 import { View, ScrollView, RefreshControl } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import allSettled from 'promise.allsettled'
 
 import { RootStackParamList } from '../App'
 import EditServerDialog from '../components/servers/EditServerDialog'
@@ -61,7 +60,7 @@ const ServerScreen = (props: Props) => {
           })
       )
     }
-    allSettled(promises).then(
+    Promise.allSettled(promises).then(
       () => setRefreshing(false),
       () => setRefreshing(false)
     )

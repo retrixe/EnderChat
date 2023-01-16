@@ -1,4 +1,4 @@
-import create from 'zustand'
+import { create } from 'zustand'
 import { Certificate } from '../minecraft/api/mojang'
 
 export interface Session {
