@@ -87,86 +87,91 @@ const AddAccountDialog = ({
   }
 
   return (
-    <Dialog visible={open} onRequestClose={cancelAddAccount}>
+    <>
       {microsoftLogin && <MicrosoftLogin close={cancelAddAccount} />}
-      <Text style={styles.modalTitle}>Add Account</Text>
-      <Pressable
-        style={styles.microsoftButton}
-        android_ripple={{ color: '#aaa' }}
-        onPress={() => setMicrosoftLogin(true)}
+      <Dialog
+        visible={open && !microsoftLogin}
+        onRequestClose={cancelAddAccount}
       >
-        <Image source={require('../../assets/microsoft.png')} />
-        <Text style={styles.microsoftButtonText}>Login with Microsoft</Text>
-      </Pressable>
-      <Text style={styles.discontinued}>
-        Note: Mojang Accounts are discontinued. Please migrate to Microsoft on
-        PC to login.
-      </Text>
-      <View style={styles.divider} />
-      <Text style={styles.subheader}>Offline Mode (discouraged)</Text>
-      <TextField
-        red={userRed || invalidNewUser}
-        value={newUser}
-        onChangeText={setNewUser}
-        keyboardType='email-address'
-        placeholder={'Username' + (password !== null ? '/E-mail' : '')}
-      />
-      {/* <Pressable
-        style={styles.auth}
-        onPress={() => setPassword(p => (p === null ? '' : null))}
-      >
-        <Text style={darkMode ? styles.authTextDark : styles.authText}>
-          Offline Mode (discouraged)
+        <Text style={styles.modalTitle}>Add Account</Text>
+        <Pressable
+          style={styles.microsoftButton}
+          android_ripple={{ color: '#aaa' }}
+          onPress={() => setMicrosoftLogin(true)}
+        >
+          <Image source={require('../../assets/microsoft.png')} />
+          <Text style={styles.microsoftButtonText}>Login with Microsoft</Text>
+        </Pressable>
+        <Text style={styles.discontinued}>
+          Note: Mojang Accounts are discontinued. Please migrate to Microsoft on
+          PC to login.
         </Text>
-        <View style={globalStyle.flexSpacer} />
-        <Switch
-          value={password === null}
-          thumbColor='#ffaaaa'
-          ios_backgroundColor='#ffaaaa'
-          trackColor={{ true: '#ff0000', false: '#ffdddd' }}
-          onValueChange={() => setPassword(p => (p === null ? '' : null))}
-        />
-      </Pressable>
-      {typeof password === 'string' && (
+        <View style={styles.divider} />
+        <Text style={styles.subheader}>Offline Mode (discouraged)</Text>
         <TextField
-          red={passRed}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholder='Password'
+          red={userRed || invalidNewUser}
+          value={newUser}
+          onChangeText={setNewUser}
+          keyboardType='email-address'
+          placeholder={'Username' + (password !== null ? '/E-mail' : '')}
         />
-      )} */}
-      {dialogError ? (
-        <Text style={styles.dialogError}>{dialogError}</Text>
-      ) : (
-        false
-      )}
-      <View style={styles.modalButtons}>
-        <View style={globalStyle.flexSpacer} />
-        <Pressable
-          onPress={cancelAddAccount}
-          android_ripple={{ color: '#aaa' }}
-          style={styles.modalButton}
+        {/* <Pressable
+          style={styles.auth}
+          onPress={() => setPassword(p => (p === null ? '' : null))}
         >
-          <Text
-            style={
-              darkMode
-                ? styles.modalButtonCancelDarkText
-                : styles.modalButtonCancelText
-            }
-          >
-            CANCEL
+          <Text style={darkMode ? styles.authTextDark : styles.authText}>
+            Offline Mode (discouraged)
           </Text>
+          <View style={globalStyle.flexSpacer} />
+          <Switch
+            value={password === null}
+            thumbColor='#ffaaaa'
+            ios_backgroundColor='#ffaaaa'
+            trackColor={{ true: '#ff0000', false: '#ffdddd' }}
+            onValueChange={() => setPassword(p => (p === null ? '' : null))}
+          />
         </Pressable>
-        <Pressable
-          onPress={addAccount}
-          android_ripple={{ color: '#aaa' }}
-          style={styles.modalButton}
-        >
-          <Text style={styles.modalButtonText}>ADD</Text>
-        </Pressable>
-      </View>
-    </Dialog>
+        {typeof password === 'string' && (
+          <TextField
+            red={passRed}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholder='Password'
+          />
+        )} */}
+        {dialogError ? (
+          <Text style={styles.dialogError}>{dialogError}</Text>
+        ) : (
+          false
+        )}
+        <View style={styles.modalButtons}>
+          <View style={globalStyle.flexSpacer} />
+          <Pressable
+            onPress={cancelAddAccount}
+            android_ripple={{ color: '#aaa' }}
+            style={styles.modalButton}
+          >
+            <Text
+              style={
+                darkMode
+                  ? styles.modalButtonCancelDarkText
+                  : styles.modalButtonCancelText
+              }
+            >
+              CANCEL
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={addAccount}
+            android_ripple={{ color: '#aaa' }}
+            style={styles.modalButton}
+          >
+            <Text style={styles.modalButtonText}>ADD</Text>
+          </Pressable>
+        </View>
+      </Dialog>
+    </>
   )
 }
 

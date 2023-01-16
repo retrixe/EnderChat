@@ -1,6 +1,10 @@
 # EnderChat
 
+[![Discord server for EnderChat and other projects](https://dcbadge.vercel.app/api/server/MFSJa9TpPS)](https://discord.gg/MFSJa9TpPS)
+
 A React Native app for Android/iOS to chat on Minecraft servers from your phone.
+
+Disclaimer: This app is NOT an official Minecraft product. It is not associated with Mojang in any way.
 
 ## Features (still being worked on)
 
@@ -9,6 +13,7 @@ A React Native app for Android/iOS to chat on Minecraft servers from your phone.
 - Supports all Minecraft chat features, which sometimes trip up other chat apps.
 - Send join messages and commands on connecting to a server.
 - Health change indicator and respawn on death support.
+- Tested to be performant and efficient on old phones.
 - [Many other features planned!](https://github.com/retrixe/EnderChat/issues)
 
 ## Installation

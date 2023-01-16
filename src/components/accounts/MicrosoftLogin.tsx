@@ -1,5 +1,12 @@
 import React, { useContext, useRef, useState } from 'react'
-import { StyleSheet, Pressable, Modal, Platform } from 'react-native'
+import {
+  StyleSheet,
+  Modal,
+  Platform,
+  PlatformAndroidStatic,
+  KeyboardAvoidingView,
+  View
+} from 'react-native'
 import { WebView, WebViewNavigation } from 'react-native-webview'
 
 import useDarkMode from '../../context/useDarkMode'
@@ -59,6 +66,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
   const handleNavigationStateChange = async (
     newNavState: WebViewNavigation
   ) => {
+    // LOW-TODO: Parse errors.
     if (!webview.current || !newNavState.url) return
     if (
       Platform.OS === 'android' &&
@@ -131,9 +139,25 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
       statusBarTranslucent
       onRequestClose={onRequestClose}
     >
-      <Pressable style={styles.modalView} onPress={onRequestClose}>
-        {/* Pressable opt-out. */}
-        <Pressable style={styles.webViewContainer}>
+      <KeyboardAvoidingView
+        enabled
+        behavior='padding'
+        style={styles.modalView}
+        // https://stackoverflow.com/a/60254214
+        onStartShouldSetResponder={event => {
+          const { constants } = Platform as PlatformAndroidStatic
+          return (
+            event.nativeEvent.touches.length === 1 &&
+            // FIXME: Don't handle touch events for Google Pixel devices.
+            constants.Manufacturer !== 'Google' &&
+            constants.Brand !== 'google'
+          )
+        }}
+        onResponderRelease={event => {
+          if (event.target === event.currentTarget) onRequestClose()
+        }}
+      >
+        <View style={styles.webViewContainer}>
           <WebView
             incognito
             ref={webview}
@@ -142,20 +166,21 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
             onNavigationStateChange={ev => {
               handleNavigationStateChange(ev).catch(console.error)
             }}
-            androidLayerType={
-              Platform.OS === 'android' && Platform.Version > 30
-                ? 'software' // FIXME: Really choppy. Seems to only happen on Google Pixel?
-                : 'hardware'
-            }
           />
-        </Pressable>
-      </Pressable>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
 
 const styles = StyleSheet.create({
-  modalView: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  modalView: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)'
+  },
   webViewContainer: { height: '80%', width: '80%' }
 })
 
