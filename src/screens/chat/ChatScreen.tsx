@@ -12,10 +12,10 @@ import {
   ActivityIndicator,
   Platform,
   Linking,
-  Clipboard,
   ListRenderItem
 } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
+import Clipboard from '@react-native-clipboard/clipboard'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 
 import {

@@ -83,7 +83,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
         setHtml('<h1>Loading...</h1>')
         webview.current.reload()
         const suffix = newNavState.url.substring(redirectUrlPrefix.length)
-        const authCode = suffix.substr(0, suffix.indexOf('&'))
+        const authCode = suffix.substring(0, suffix.indexOf('&'))
         const [msAccessToken, msRefreshToken] = await getMSAuthToken(
           authCode,
           config.clientId,
