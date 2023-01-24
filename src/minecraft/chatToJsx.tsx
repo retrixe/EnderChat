@@ -58,7 +58,7 @@ export interface BaseChat {
   underlined?: boolean
   strikethrough?: boolean
   extra?: MinecraftChat[]
-  insertion?: string
+  insertion?: string // LOW-TODO: Support this.
   clickEvent?: ClickEvent
   hoverEvent?: HoverEvent
 }
@@ -144,13 +144,50 @@ const parseColorCodes = (arg: string | PlainTextChat): PlainTextChat[] => {
   return components
 }
 
-const trimLines = (s: string) =>
-  s.includes('\n')
-    ? s
-        .split('\n')
-        .map(k => k.trim())
-        .join('\n')
-    : s.trimLeft() // LOW-TODO: This is problematic, temporary workaround until this can be refined.
+const trimComponentsByLine = (chat: PlainTextChat[]): PlainTextChat[] => {
+  if (chat.length < 1) return chat
+  const trimmed = []
+  // Trim lines.
+  let trimNextComponent = true
+  for (const component of chat) {
+    if (component.text) {
+      if (trimNextComponent) {
+        trimNextComponent = false
+        component.text = component.text.trimStart()
+      }
+      const lines = component.text.split('\n')
+      if (lines.length > 1) {
+        const newComponent = { ...component }
+        // Trim the end of the current line, trim the start of the next line.
+        for (let line = 0; line < lines.length - 1; line++) {
+          lines[line] = lines[line].trimEnd()
+          if (line + 1 < lines.length) {
+            lines[line + 1] = lines[line + 1].trimStart()
+          }
+        }
+        // If the last line is empty, mark the next component for trimming.
+        if (lines[lines.length - 1].length === 0) trimNextComponent = true
+        // If the first line is empty, go back and trim the previous component.
+        if (lines[0].length === 0 && trimmed.length > 0) {
+          const previousComponent = trimmed[trimmed.length - 1]
+          if (previousComponent.text) {
+            previousComponent.text = previousComponent.text.trimEnd()
+          }
+        }
+        newComponent.text = lines.join('\n')
+        trimmed.push(newComponent)
+      } else {
+        trimmed.push(component)
+      }
+    }
+  }
+  // Trim last component.
+  const lastComponent = trimmed[trimmed.length - 1]
+  if (lastComponent.text) {
+    lastComponent.text = lastComponent.text.trimEnd()
+  }
+  return trimmed
+}
 
 const isTranslatedChat = (chat: MinecraftChat): chat is TranslatedChat =>
   typeof (chat as TranslatedChat).translate === 'string'
@@ -193,6 +230,22 @@ const flattenComponents = (chat: MinecraftChat): PlainTextChat[] => {
   return [...arr, ...flattenedExtra]
 }
 
+// Some stupid implementations do stupid things, like returning booleans as strings.
+const sanitizeComponents = (components: PlainTextChat[]): PlainTextChat[] =>
+  components.map(c => ({
+    ...c,
+    bold: typeof c.bold === 'string' ? c.bold === 'true' : c.bold,
+    italic: typeof c.italic === 'string' ? c.italic === 'true' : c.italic,
+    obfuscated:
+      typeof c.obfuscated === 'string' ? c.obfuscated === 'true' : c.obfuscated,
+    underlined:
+      typeof c.underlined === 'string' ? c.underlined === 'true' : c.underlined,
+    strikethrough:
+      typeof c.strikethrough === 'string'
+        ? c.strikethrough === 'true'
+        : c.strikethrough
+  }))
+
 const parseChatToJsx = (
   chat: MinecraftChat,
   Component: React.ComponentType<TextProps>,
@@ -201,7 +254,8 @@ const parseChatToJsx = (
   componentProps?: {},
   trim = false
 ) => {
-  const flat = flattenComponents(chat)
+  let flat = sanitizeComponents(flattenComponents(chat))
+  if (trim) flat = trimComponentsByLine(flat)
   return (
     <Component {...componentProps}>
       {flat.map((c, i) => {
@@ -226,7 +280,7 @@ const parseChatToJsx = (
             onPress={ce ? () => clickEventHandler(ce) : undefined}
             onLongPress={() => {}}
           >
-            {c.text ? (trim ? trimLines(c.text) : c.text) : ''}
+            {c.text ? c.text : ''}
           </Component>
         )
       })}
