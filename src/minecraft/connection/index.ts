@@ -5,6 +5,7 @@ import initiateJavaScriptConnection from './javascript'
 import initiateNativeConnection, { isNativeConnectionAvailable } from './native'
 
 export interface ConnectionOptions {
+  serverName: string
   host: string
   port: number
   username: string

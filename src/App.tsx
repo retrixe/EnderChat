@@ -18,8 +18,7 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import useAsyncStorage from './storage/useAsyncStorage'
 import useJsonAsyncStorage from './storage/useJsonAsyncStorage'
 import ConnectionContext, {
-  Connection,
-  DisconnectReason as Disconnect
+  DisconnectReason
 } from './context/connectionContext'
 import AccountsContext, { Accounts } from './context/accountsContext'
 import SettingsContext, {
@@ -29,6 +28,7 @@ import SettingsContext, {
 import ServersContext, { Servers } from './context/serversContext'
 import { ColorSchemeContext } from './context/useDarkMode'
 import DisconnectDialog from './components/DisconnectDialog'
+import { ServerConnection } from './minecraft/connection'
 import ChatScreen from './screens/chat/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
 import AccountScreen from './screens/AccountScreen'
@@ -50,8 +50,8 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
   React.useEffect(() => {
     if (connection) {
       navigation.push('Chat', {
-        serverName: connection.serverName,
-        version: connection.connection.options.protocolVersion
+        serverName: connection.options.serverName,
+        version: connection.options.protocolVersion
       })
     }
   }, [connection, navigation])
@@ -93,8 +93,12 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
 }
 
 const App = () => {
-  const [connection, setConnection] = React.useState<Connection | undefined>()
-  const [disconnect, setDisconnect] = React.useState<Disconnect | undefined>()
+  const [connection, setConnection] = React.useState<
+    ServerConnection | undefined
+  >()
+  const [disconnect, setDisconnect] = React.useState<
+    DisconnectReason | undefined
+  >()
 
   const [settings, setSettings] = useJsonAsyncStorage<Settings>(
     '@settings',

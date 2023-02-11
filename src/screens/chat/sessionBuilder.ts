@@ -1,5 +1,5 @@
 import { Accounts } from '../../context/accountsContext'
-import { Connection, DisconnectReason } from '../../context/connectionContext'
+import { DisconnectReason } from '../../context/connectionContext'
 import { Session, Sessions, SetSession } from '../../context/sessionStore'
 import { Servers } from '../../context/serversContext'
 import { Settings } from '../../context/settingsContext'
@@ -12,7 +12,9 @@ import {
 import { getPlayerCertificates } from '../../minecraft/api/mojang'
 import { refresh } from '../../minecraft/api/yggdrasil'
 import { parseValidJson } from '../../minecraft/chatToJsx'
-import initiateConnection from '../../minecraft/connection'
+import initiateConnection, {
+  ServerConnection
+} from '../../minecraft/connection'
 import { parseIp, protocolMap, resolveHostname } from '../../minecraft/utils'
 import config from '../../../config.json'
 
@@ -91,9 +93,9 @@ export const createConnection = async (
   session: Session | undefined,
   settings: Settings,
   accounts: Accounts,
-  setConnection: (conn?: Connection) => void,
+  setConnection: (conn?: ServerConnection) => void,
   closeChatScreen: (reason?: DisconnectReason) => void
-): Promise<Connection | string> => {
+): Promise<ServerConnection | string> => {
   let host: string
   let port: number
   try {
@@ -111,6 +113,7 @@ export const createConnection = async (
 
   try {
     const newConn = await initiateConnection({
+      serverName: server,
       host,
       port,
       username: accounts[activeAccount].username,
@@ -129,7 +132,7 @@ export const createConnection = async (
     }
     newConn.on('close', onCloseOrError)
     newConn.on('error', onCloseOrError)
-    return { serverName: server, connection: newConn }
+    return newConn
   } catch (e) {
     console.error(e)
     return 'Failed to connect to server!'

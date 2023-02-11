@@ -167,7 +167,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
       statusRef.current = 'CLOSED'
       // Gracefully disconnect on unmount, destroy will be called in 20s automatically if needed.
       if (connection) {
-        connection.connection.close()
+        connection.close()
         setConnection(undefined)
       }
     })
@@ -204,10 +204,10 @@ const ChatScreen = ({ navigation, route }: Props) => {
             if (typeof conn === 'string') {
               closeChatScreen({ server: serverName, reason: conn })
             } else {
-              conn.connection.on('connect', () => setLoading('Logging in...'))
+              conn.on('connect', () => setLoading('Logging in...'))
               setConnection(conn)
             }
-          } else if (typeof conn !== 'string') conn.connection.close()
+          } else if (typeof conn !== 'string') conn.close()
         }
       })().catch(err => {
         console.error(err)
@@ -222,13 +222,13 @@ const ChatScreen = ({ navigation, route }: Props) => {
   // Packet handler useEffect.
   useEffect(() => {
     if (!connection) return
-    connection.connection.on(
+    connection.on(
       'packet',
       packetHandler(
         healthRef,
         statusRef,
         setLoading,
-        connection.connection,
+        connection,
         addMessage,
         settings.joinMessage,
         settings.sendJoinMessage,
@@ -238,7 +238,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
       )
     )
     return () => {
-      connection.connection.removeAllListeners('packet')
+      connection.removeAllListeners('packet')
     }
   }, [
     charLimit,
@@ -254,8 +254,8 @@ const ChatScreen = ({ navigation, route }: Props) => {
     if (msg.startsWith('/') && saveHistory) {
       setCommandHistory(ch => ch.concat([msg]))
     }
-    const protocolVersion = connection.connection.options.protocolVersion
-    connection.connection
+    const protocolVersion = connection.options.protocolVersion
+    connection
       .writePacket(...makeChatMessagePacket(msg, protocolVersion))
       .catch(handleError(addMessage, sendMessageError))
   }
