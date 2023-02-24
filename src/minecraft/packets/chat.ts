@@ -9,6 +9,7 @@ export const makeChatMessagePacket = (
 ): [number, Buffer] => {
   const is119 = protocolVersion >= protocolMap[1.19]
   const is1191 = protocolVersion >= protocolMap['1.19.1']
+  const is1193 = protocolVersion >= protocolMap['1.19.3']
   if (!is119) {
     const id = packetIds.SERVERBOUND_CHAT_MESSAGE(protocolVersion)
     return [id ?? 0, concatPacketData([msg])]
@@ -28,6 +29,7 @@ export const makeChatMessagePacket = (
       false
     ]
     if (is1191) data.push(writeVarInt(0), writeVarInt(0))
+    if (is1193) data.push(writeVarInt(0))
     return [id ?? 0, concatPacketData(data)]
   }
 }

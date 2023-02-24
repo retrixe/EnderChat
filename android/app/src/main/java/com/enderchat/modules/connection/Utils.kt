@@ -8,6 +8,7 @@ const val PROTOCOL_VERSION_1164 = 754
 const val PROTOCOL_VERSION_117 = 755
 const val PROTOCOL_VERSION_119 = 759
 const val PROTOCOL_VERSION_1191 = 760
+const val PROTOCOL_VERSION_1193 = 761
 
 fun compressData(bytes: ByteArray): ByteArray {
     ByteArrayOutputStream(bytes.size).use {

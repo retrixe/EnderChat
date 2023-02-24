@@ -194,14 +194,17 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             val is117 = protocolVersion >= PROTOCOL_VERSION_117
             val is119 = protocolVersion >= PROTOCOL_VERSION_119
             val is1191 = protocolVersion >= PROTOCOL_VERSION_1191
+            val is1193 = protocolVersion >= PROTOCOL_VERSION_1193
             val keepAliveClientBoundId =
-                if (is1191) 0x20
+                if (is1193) 0x1f
+                else if (is1191) 0x20
                 else if (is119) 0x1e
                 else if (is117) 0x21
                 else if (is1164) 0x1f
                 else 0x1f
             val keepAliveServerBoundId =
-                if (is1191) 0x12
+                if (is1193) 0x11
+                else if (is1191) 0x12
                 else if (is119) 0x11
                 else if (is117) 0x0f
                 else if (is1164) 0x10

@@ -7,7 +7,7 @@ import events from 'events'
 import { ServerConnection, ConnectionOptions } from '.'
 import { concatPacketData, Packet } from '../packet'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
-import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
+import { readVarInt, writeVarInt, resolveHostname } from '../utils'
 import packetIds from '../packets/ids'
 
 const { ConnectionModule } = NativeModules
@@ -120,7 +120,6 @@ export class NativeServerConnection
             accessToken,
             selectedProfile,
             this,
-            version >= protocolMap['1.19'],
             async (secret: Buffer, response: Buffer) => {
               const eSecret = secret.toString('base64')
               const eResp = response.toString('base64')

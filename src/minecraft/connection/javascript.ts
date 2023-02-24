@@ -18,7 +18,7 @@ import {
 } from '../packet'
 import { ServerConnection, ConnectionOptions } from '.'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
-import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
+import { readVarInt, writeVarInt, resolveHostname } from '../utils'
 import packetIds from '../packets/ids'
 
 export declare interface JavaScriptServerConnection {
@@ -46,7 +46,6 @@ export class JavaScriptServerConnection
   disconnectReason?: string
   aesDecipher?: Decipher
   aesCipher?: Cipher
-  msgSalt?: Buffer
 
   constructor(socket: net.Socket, options: ConnectionOptions) {
     super()
@@ -180,7 +179,6 @@ const initiateJavaScriptConnection = async (opts: ConnectionOptions) => {
                 accessToken,
                 selectedProfile,
                 conn,
-                version >= protocolMap['1.19'],
                 async (secret: Buffer, response: Buffer) => {
                   const AES_ALG = 'aes-128-cfb8'
                   conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)

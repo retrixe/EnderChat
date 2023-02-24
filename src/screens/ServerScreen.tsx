@@ -91,11 +91,10 @@ const ServerScreen = (props: Props) => {
 
   const connectToServer = (serverName: string) => {
     let version = protocolMap[servers[serverName].version]
-    const latestVersion = '1.19.1'
     if (version === -1) {
       const ping = pingResponses[servers[serverName].address]
       // Try the latest.
-      if (!ping) version = protocolMap[latestVersion]
+      if (!ping) version = protocolMap.latest
       else if (typeof ping.version === 'object') {
         version = ping.version.protocol
       } else version = (ping as LegacyPing).protocol
@@ -105,7 +104,7 @@ const ServerScreen = (props: Props) => {
         server: serverName,
         reason: 'EnderChat only supports 1.16.4 and newer (for now).'
       })
-    } else if (version > protocolMap[latestVersion]) {
+    } else if (version > protocolMap.latest) {
       return setDisconnectReason({
         server: serverName,
         reason:

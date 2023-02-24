@@ -29,7 +29,10 @@ export const parseEncryptionRequestPacket = (packet: Packet) => {
 
 export const getLoginPacket = (opts: ConnectionOptions) => {
   const data: PacketDataTypes[] = [opts.username]
-  if (opts.protocolVersion >= protocolMap[1.19]) {
+  if (
+    opts.protocolVersion >= protocolMap[1.19] &&
+    opts.protocolVersion < protocolMap['1.19.3']
+  ) {
     data.push(false)
     /* TODO: Support chat signing properly.
     data.push(!!opts.certificate)
@@ -49,13 +52,13 @@ export const getLoginPacket = (opts: ConnectionOptions) => {
       data.push(writeVarInt(buf.byteLength))
       data.push(buf)
     } */
-    if (opts.protocolVersion >= protocolMap['1.19.1']) {
-      if (opts.selectedProfile) {
-        const msb = Buffer.from(opts.selectedProfile.substring(0, 16), 'hex')
-        const lsb = Buffer.from(opts.selectedProfile.substring(16), 'hex')
-        data.push(concatPacketData([true, msb, lsb]))
-      } else data.push(concatPacketData([false]))
-    }
+  }
+  if (opts.protocolVersion >= protocolMap['1.19.1']) {
+    if (opts.selectedProfile) {
+      const msb = Buffer.from(opts.selectedProfile.substring(0, 16), 'hex')
+      const lsb = Buffer.from(opts.selectedProfile.substring(16), 'hex')
+      data.push(concatPacketData([true, msb, lsb]))
+    } else data.push(concatPacketData([false]))
   }
   return concatPacketData(data)
 }
@@ -65,7 +68,6 @@ export const handleEncryptionRequest = (
   accessToken: string,
   selectedProfile: string,
   connection: ServerConnection,
-  is119: boolean,
   callback: (secret: Buffer, response: Buffer) => Promise<void>
 ) => {
   // https://wiki.vg/Protocol_Encryption
@@ -100,9 +102,10 @@ export const handleEncryptionRequest = (
       writeVarInt(encryptedVerifyToken.byteLength),
       encryptedVerifyToken
     ]
-    if (is119) {
+    const { protocolVersion } = connection.options
+    if (protocolVersion >= protocolMap['1.19']) {
       connection.msgSalt = await getRandomBytes(8)
-      response.splice(2, 0, true)
+      if (protocolVersion < protocolMap['1.19.3']) response.splice(2, 0, true)
     }
     // This callback will send the response and enable the ciphers.
     await callback(secret, concatPacketData(response))
