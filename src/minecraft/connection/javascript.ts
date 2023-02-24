@@ -19,6 +19,7 @@ import {
 import { ServerConnection, ConnectionOptions } from '.'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
 import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
+import packetIds from '../packets/ids'
 
 export declare interface JavaScriptServerConnection {
   on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
@@ -137,10 +138,7 @@ const initiateJavaScriptConnection = async (opts: ConnectionOptions) => {
                 ? Buffer.alloc(0) // Avoid errors shortening.
                 : conn.bufferedData.slice(packet.packetLength)
             // Internally handle login packets.
-            const is1164 = conn.options.protocolVersion >= protocolMap['1.16.4']
-            const is117 = conn.options.protocolVersion >= protocolMap[1.17]
-            const is119 = conn.options.protocolVersion >= protocolMap[1.19]
-            const is1191 = conn.options.protocolVersion >= protocolMap['1.19.1']
+            const { protocolVersion: version } = conn.options
             if (packet.id === 0x03 && !conn.loggedIn /* Set Compression */) {
               const [threshold] = readVarInt(packet.data)
               conn.compressionThreshold = threshold
@@ -148,23 +146,17 @@ const initiateJavaScriptConnection = async (opts: ConnectionOptions) => {
             } else if (packet.id === 0x02 && !conn.loggedIn) {
               conn.loggedIn = true // Login Success
             } else if (
-              // Keep Alive (clientbound)
-              (packet.id === 0x1f && is1164 && !is117) ||
-              (packet.id === 0x21 && is117 && !is119) ||
-              (packet.id === 0x1e && is119 && !is1191) ||
-              (packet.id === 0x20 && is1191)
+              packet.id === packetIds.CLIENTBOUND_KEEP_ALIVE(version)
             ) {
-              const id = is1191 ? 0x12 : is119 ? 0x11 : is117 ? 0x0f : 0x10
+              const id = packetIds.SERVERBOUND_KEEP_ALIVE(version)
               conn
-                .writePacket(id, packet.data)
+                .writePacket(id ?? 0, packet.data)
                 .catch(err => conn.emit('error', err))
             } else if (
               // Disconnect (login) or Disconnect (play)
               (packet.id === 0x00 && !conn.loggedIn) ||
-              (packet.id === 0x19 && conn.loggedIn && is1164 && !is117) ||
-              (packet.id === 0x1a && conn.loggedIn && is117 && !is119) ||
-              (packet.id === 0x17 && conn.loggedIn && is119 && !is1191) ||
-              (packet.id === 0x19 && conn.loggedIn && is1191)
+              (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
+                conn.loggedIn)
             ) {
               const [chatLength, chatVarIntLength] = readVarInt(packet.data)
               conn.disconnectReason = packet.data
@@ -188,7 +180,7 @@ const initiateJavaScriptConnection = async (opts: ConnectionOptions) => {
                 accessToken,
                 selectedProfile,
                 conn,
-                is119,
+                version >= protocolMap['1.19'],
                 async (secret: Buffer, response: Buffer) => {
                   const AES_ALG = 'aes-128-cfb8'
                   conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)

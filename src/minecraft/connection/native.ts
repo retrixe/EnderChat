@@ -8,6 +8,7 @@ import { ServerConnection, ConnectionOptions } from '.'
 import { concatPacketData, Packet } from '../packet'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
 import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
+import packetIds from '../packets/ids'
 
 const { ConnectionModule } = NativeModules
 
@@ -85,10 +86,7 @@ export class NativeServerConnection
         )
 
         // Internally handle login packets. We aren't handling these in native to share code.
-        const is1164 = options.protocolVersion >= protocolMap['1.16.4']
-        const is117 = options.protocolVersion >= protocolMap[1.17]
-        const is119 = options.protocolVersion >= protocolMap[1.19]
-        const is1191 = options.protocolVersion >= protocolMap['1.19.1']
+        const { protocolVersion: version } = options
         // Set Compression and Keep Alive are handled in native for now.
         // When modifying this code, apply the same changes to the JavaScript back-end.
         if (packet.id === 0x02 && !this.loggedIn /* Login Success */) {
@@ -96,10 +94,8 @@ export class NativeServerConnection
         } else if (
           // Disconnect (login) or Disconnect (play)
           (packet.id === 0x00 && !this.loggedIn) ||
-          (packet.id === 0x19 && this.loggedIn && is1164 && !is117) ||
-          (packet.id === 0x1a && this.loggedIn && is117 && !is119) ||
-          (packet.id === 0x17 && this.loggedIn && is119 && !is1191) ||
-          (packet.id === 0x19 && this.loggedIn && is1191)
+          (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
+            this.loggedIn)
         ) {
           const [chatLength, chatVarIntLength] = readVarInt(packet.data)
           this.disconnectReason = packet.data
@@ -124,7 +120,7 @@ export class NativeServerConnection
             accessToken,
             selectedProfile,
             this,
-            is119,
+            version >= protocolMap['1.19'],
             async (secret: Buffer, response: Buffer) => {
               const eSecret = secret.toString('base64')
               const eResp = response.toString('base64')
@@ -176,7 +172,12 @@ const initiateNativeConnection = async (opts: ConnectionOptions) => {
     loginPacket: getLoginPacket(opts).toString('base64'),
     ...opts,
     host,
-    port
+    port,
+    packetFilter: Object.keys(packetIds)
+      .filter(name => name.startsWith('CLIENTBOUND'))
+      .map(name =>
+        packetIds[name as keyof typeof packetIds](opts.protocolVersion)
+      )
   })
   return new NativeServerConnection(id, opts)
 }

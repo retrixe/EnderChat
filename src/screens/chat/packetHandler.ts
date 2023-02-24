@@ -9,6 +9,7 @@ import {
 } from '../../minecraft/packet'
 import { protocolMap, readVarInt, writeVarInt } from '../../minecraft/utils'
 import { makeChatMessagePacket } from '../../minecraft/packets/chat'
+import packetIds from '../../minecraft/packets/ids'
 
 export const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
 export const parseMessageError = 'An error occurred when parsing chat.'
@@ -96,36 +97,30 @@ export const packetHandler =
     charLimit: number
   ) =>
   (packet: Packet) => {
-    const { protocolVersion } = connection.options
+    const { protocolVersion: version } = connection.options
     if (statusRef.current === 'CONNECTING' && connection.loggedIn) {
       setLoading('')
       statusRef.current = 'CONNECTED'
       const messageToSend = joinMessage.substring(0, charLimit).trim()
       if (sendJoinMessage && messageToSend) {
         connection
-          .writePacket(...makeChatMessagePacket(messageToSend, protocolVersion))
+          .writePacket(...makeChatMessagePacket(messageToSend, version))
           .catch(handleError(addMessage, sendMessageError))
       }
       if (sendSpawnCommand) {
         connection
-          .writePacket(...makeChatMessagePacket('/spawn', protocolVersion))
+          .writePacket(...makeChatMessagePacket('/spawn', version))
           .catch(handleError(addMessage, sendMessageError))
       }
     }
 
-    const is117 = protocolVersion >= protocolMap[1.17]
-    const is118 = protocolVersion >= protocolMap[1.18]
-    const is119 = protocolVersion >= protocolMap[1.19]
-    const is1191 = protocolVersion >= protocolMap['1.19.1']
-    if (
-      /* Login (play) */
-      (packet.id === 0x24 && !is117) ||
-      (packet.id === 0x26 && is117 && !is119) ||
-      (packet.id === 0x23 && is119 && !is1191) ||
-      (packet.id === 0x25 && is1191)
-    ) {
+    const is117 = version >= protocolMap[1.17]
+    const is118 = version >= protocolMap[1.18]
+    const is1191 = version >= protocolMap['1.19.1']
+    if (packet.id === packetIds.CLIENTBOUND_LOGIN_PLAY(version)) {
       // Send Client Settings packet.
-      const clientSettingsId = is119 ? (is1191 ? 0x08 : 0x07) : 0x05
+      const clientSettingsId =
+        packetIds.SERVERBOUND_CLIENT_SETTINGS(version) ?? 0
       const viewDistance = Buffer.alloc(1)
       viewDistance.writeInt8(2)
       const skinParts = Buffer.alloc(1)
@@ -144,35 +139,21 @@ export const packetHandler =
       connection
         .writePacket(clientSettingsId, concatPacketData(packetData))
         .catch(handleError(addMessage, clientSettingsError))
-    } else if (
-      /* Respawn */
-      (packet.id === 0x39 && !is117) ||
-      (packet.id === 0x3d && is117 && !is119) ||
-      (packet.id === 0x3b && is119 && !is1191) ||
-      (packet.id === 0x3e && is1191)
-    ) {
+    } else if (packet.id === packetIds.CLIENTBOUND_RESPAWN(version)) {
       // Send spawn command when switching worlds.
       if (sendSpawnCommand) {
         connection
-          .writePacket(...makeChatMessagePacket('/spawn', protocolVersion))
+          .writePacket(...makeChatMessagePacket('/spawn', version))
           .catch(handleError(addMessage, sendMessageError))
       }
+    } else if (packet.id === packetIds.CLIENTBOUND_CHAT_MESSAGE(version)) {
+      handleSystemMessage(packet, addMessage, handleError, is1191)
     } else if (
-      /* Chat Message (clientbound) */
-      (packet.id === 0x0e && !is117) ||
-      (packet.id === 0x0f && is117 && !is119)
+      packet.id === packetIds.CLIENTBOUND_SYSTEM_CHAT_MESSAGE(version)
     ) {
       handleSystemMessage(packet, addMessage, handleError, is1191)
     } else if (
-      /* System Chat Message (clientbound) */
-      (packet.id === 0x5f && is119 && !is1191) ||
-      (packet.id === 0x62 && is1191)
-    ) {
-      handleSystemMessage(packet, addMessage, handleError, is1191)
-    } else if (
-      /* Player Chat Message (clientbound) */
-      (packet.id === 0x30 && is119 && !is1191) ||
-      (packet.id === 0x33 && is1191)
+      packet.id === packetIds.CLIENTBOUND_PLAYER_CHAT_MESSAGE(version)
     ) {
       try {
         const { type, displayName, signedChat, unsignedChat } =
@@ -190,25 +171,16 @@ export const packetHandler =
       } catch (e) {
         handleError(addMessage, parseMessageError)(e)
       }
-    } else if (
-      /* Open Window */
-      (packet.id === 0x2e && !is119) ||
-      (packet.id === 0x2b && is119 && !is1191) ||
-      (packet.id === 0x2d && is119)
-    ) {
+    } else if (packet.id === packetIds.CLIENTBOUND_OPEN_WINDOW(version)) {
       // Just close the window.
       const [windowId] = readVarInt(packet.data)
       const buf = Buffer.alloc(1)
       buf.writeUInt8(windowId)
       connection // Close Window (serverbound)
-        .writePacket(is1191 ? 0x0c : is119 ? 0x0b : is117 ? 0x09 : 0x0a, buf)
+        .writePacket(packetIds.SERVERBOUND_CLOSE_WINDOW(version) ?? 0, buf)
         .catch(handleError(addMessage, inventoryCloseError))
     } else if (
-      /* Death Combat Event */
-      (packet.id === 0x31 && !is117) ||
-      (packet.id === 0x35 && is117 && !is119) ||
-      (packet.id === 0x33 && is119 && !is1191) ||
-      (packet.id === 0x36 && is1191)
+      packet.id === packetIds.CLIENTBOUND_DEATH_COMBAT_EVENT(version)
     ) {
       let data = packet.data
       if (!is117) {
@@ -231,15 +203,11 @@ export const packetHandler =
       // Automatically respawn.
       // LOW-TODO: Should this be manual, or a dialog, like MC?
       addMessage(deathRespawnMessage)
+      const clientStatusId = packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0
       connection // Client Status
-        .writePacket(is1191 ? 0x07 : is119 ? 0x06 : 0x04, writeVarInt(0))
+        .writePacket(clientStatusId, writeVarInt(0))
         .catch(handleError(addMessage, respawnError))
-    } else if (
-      /* Update Health */
-      (packet.id === 0x49 && !is117) ||
-      (packet.id === 0x52 && is117 && !is1191) ||
-      (packet.id === 0x55 && is1191)
-    ) {
+    } else if (packet.id === packetIds.CLIENTBOUND_UPDATE_HEALTH(version)) {
       const newHealth = packet.data.readFloatBE(0)
       if (healthRef.current != null && healthRef.current > newHealth) {
         const info = healthMessage
