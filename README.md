@@ -22,9 +22,7 @@ Disclaimer: This app is NOT an official Minecraft product. It is not associated 
 
 ### Android
 
-APKs are available to download for each EnderChat release [here.](https://github.com/retrixe/EnderChat/releases)
-
-Publishing to the Google Play Store is eventually planned for the betas and final release. ***While the license allows redistribution, I request people not to abuse this privilege and publish EnderChat to the Play Store without my permission.***
+[EnderChat is available to download from the Play Store!](https://play.google.com/store/apps/details?id=com.enderchat) Alternatively, APKs are available to download for each EnderChat release [here.](https://github.com/retrixe/EnderChat/releases)
 
 ### iOS
 
