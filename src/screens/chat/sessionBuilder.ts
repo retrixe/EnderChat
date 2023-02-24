@@ -54,6 +54,7 @@ export const getSession = async (
         const accessToken = await authenticateWithXsts(xstsToken, xuh)
         session = { accessToken }
         setAccounts({
+          ...accounts,
           [activeAccount]: {
             ...account,
             accessToken,
@@ -70,6 +71,7 @@ export const getSession = async (
         )
         session = { accessToken }
         setAccounts({
+          ...accounts,
           [activeAccount]: { ...account, accessToken, clientToken }
         })
       }
