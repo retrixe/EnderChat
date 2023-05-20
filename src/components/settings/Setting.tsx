@@ -26,11 +26,15 @@ const Setting = <T extends string | boolean>({
   const [modalContent, setModalContent] = useState(
     typeof value === 'string' ? value : ''
   )
+  // This is used for toggles because the upper value is not updated immediately, resulting in judder.
+  const [toggleValue, setToggleValue] = useState(value)
+
   const Wrapper = setValue || onClick ? Pressable : React.Fragment
   const wrapperPress = () => {
     if (onClick) onClick()
     else if (typeof value === 'boolean' && setValue) {
-      setValue(!value as T)
+      setValue(!toggleValue as T)
+      setToggleValue(!toggleValue as T)
     } else if (typeof value === 'string' && setValue && !modalOpen) {
       setModalOpen(true)
       setModalContent(value)
@@ -66,10 +70,10 @@ const Setting = <T extends string | boolean>({
             {value || 'N/A'}
           </Text>
         )}
-        {typeof value === 'boolean' && (
+        {typeof toggleValue === 'boolean' && (
           <>
             <View style={globalStyle.flexSpacer} />
-            <Switch value={value} onValueChange={wrapperPress} />
+            <Switch value={toggleValue} onValueChange={wrapperPress} />
           </>
         )}
       </View>
