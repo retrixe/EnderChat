@@ -90,6 +90,14 @@ const SettingScreen = ({ navigation }: StackProps | TabProps) => {
           }}
         />
         <Setting
+          name='Sponsor my work, buy me a coffee!'
+          value='Tap to open my GitHub Sponsor page.'
+          onClick={() => {
+            const url = 'https://github.com/sponsors/retrixe'
+            Linking.openURL(url).catch(console.error)
+          }}
+        />
+        <Setting
           name='License'
           value='Mozilla Public License 2.0'
           onClick={() => {
