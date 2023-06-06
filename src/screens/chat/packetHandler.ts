@@ -13,6 +13,7 @@ import packetIds from '../../minecraft/packets/ids'
 
 export const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
 export const parseMessageError = 'An error occurred when parsing chat.'
+export const unknownError = 'An unknown error occurred.'
 export const clientSettingsError =
   'An error occurred when sending client settings.'
 export const inventoryCloseError =
@@ -216,5 +217,9 @@ export const packetHandler =
         addMessage(info)
       } // LOW-TODO: Long-term it would be better to have a UI.
       healthRef.current = newHealth
+    } else if (packet.id === packetIds.CLIENTBOUND_PING(version)) {
+      connection // Pong (play)
+        .writePacket(packetIds.SERVERBOUND_PONG(version) ?? 0, packet.data)
+        .catch(handleError(addMessage, unknownError))
     }
   }

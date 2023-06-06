@@ -89,6 +89,13 @@ const packetIds = {
     [protocolMap['1.19.1'], 0x62],
     [protocolMap['1.19'], 0x5f]
   ]),
+  CLIENTBOUND_PING: generateIdFunction([
+    [protocolMap['1.19.4'], 0x32],
+    [protocolMap['1.19.3'], 0x2e],
+    [protocolMap['1.19.1'], 0x2f],
+    [protocolMap['1.19'], 0x2d],
+    [protocolMap['1.17'], 0x30]
+  ]),
 
   // Serverbound (play)
   SERVERBOUND_KEEP_ALIVE: generateIdFunction([
@@ -126,6 +133,13 @@ const packetIds = {
     [protocolMap['1.19.1'], 0x04],
     [protocolMap['1.19'], 0x03],
     [protocolMap['1.16.4'], null]
+  ]),
+  SERVERBOUND_PONG: generateIdFunction([
+    [protocolMap['1.19.4'], 0x20],
+    [protocolMap['1.19.3'], 0x1f],
+    [protocolMap['1.19.1'], 0x20],
+    [protocolMap['1.19'], 0x1f],
+    [protocolMap['1.17'], 0x1d]
   ])
 }
 
