@@ -79,8 +79,8 @@ android {
         applicationId "com.enderchat"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.0-alpha.5"
+        versionCode 1005
+        versionName "1.0.0-alpha.6"
     }
 
     signingConfigs {
