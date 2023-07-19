@@ -63,7 +63,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
         // eslint-disable-next-line react/no-unstable-nested-components
         tabBarIcon: ({ focused, color }) => {
           let Component = Ionicons
-          let iconName = focused ? 'ios-list-circle' : 'ios-list'
+          let iconName = focused ? 'list-circle' : 'list'
           switch (route.name) {
             case 'Servers':
               break
