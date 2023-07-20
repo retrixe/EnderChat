@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ViewStyle } from 'react-native'
+import { View, type ViewStyle } from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
 const ElevatedView = (
@@ -16,7 +16,7 @@ const ElevatedView = (
         elevation: 2,
         overflow: 'hidden'
       },
-      props.style || {}
+      props.style ?? {}
     )}
   />
 )

@@ -10,7 +10,7 @@ import {
 
 import Text from '../Text'
 import ElevatedView from '../ElevatedView'
-import { LegacyPing, Ping } from '../../minecraft/pingServer'
+import { type LegacyPing, type Ping } from '../../minecraft/pingServer'
 import {
   ChatToJsx,
   lightColorMap,

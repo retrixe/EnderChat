@@ -11,7 +11,7 @@ const useMemoisedValue = <T>(value: T) => {
 
 // This function requires JSON compatible objects to be passed.
 // This does not support deep merge, do not use it for nested objects.
-const useJsonAsyncStorage = <T extends {}>(
+const useJsonAsyncStorage = <T>(
   name: string,
   defaultValue: T,
   ignoreUnknownKeys = false

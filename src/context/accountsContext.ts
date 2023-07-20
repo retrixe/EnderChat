@@ -11,9 +11,7 @@ export interface Account {
   type?: 'microsoft' | 'mojang'
 }
 
-export interface Accounts {
-  [uuid: string]: Account
-}
+export type Accounts = Record<string, Account>
 
 export interface AccountsContext {
   accounts: Accounts

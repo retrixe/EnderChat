@@ -11,24 +11,24 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import {
   createNativeStackNavigator,
-  NativeStackNavigationProp
+  type NativeStackNavigationProp
 } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 
 import useAsyncStorage from './storage/useAsyncStorage'
 import useJsonAsyncStorage from './storage/useJsonAsyncStorage'
 import ConnectionContext, {
-  DisconnectReason
+  type DisconnectReason
 } from './context/connectionContext'
-import AccountsContext, { Accounts } from './context/accountsContext'
+import AccountsContext, { type Accounts } from './context/accountsContext'
 import SettingsContext, {
   defaultSettings,
-  Settings
+  type Settings
 } from './context/settingsContext'
-import ServersContext, { Servers } from './context/serversContext'
+import ServersContext, { type Servers } from './context/serversContext'
 import { ColorSchemeContext } from './context/useDarkMode'
 import DisconnectDialog from './components/DisconnectDialog'
-import { ServerConnection } from './minecraft/connection'
+import { type ServerConnection } from './minecraft/connection'
 import ChatScreen from './screens/chat/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
 import AccountScreen from './screens/AccountScreen'
@@ -116,8 +116,7 @@ const App = () => {
 
   const colorScheme = useColorScheme()
   const systemDefault = colorScheme === null ? true : colorScheme === 'dark'
-  const darkMode =
-    settings.darkMode === null ? systemDefault : settings.darkMode
+  const darkMode = settings.darkMode ?? systemDefault
   // Change navigation bar colour on dark mode.
   // LOW-TODO: Doesn't work correctly in modals.
   useEffect(() => {

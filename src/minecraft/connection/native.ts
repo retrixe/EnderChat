@@ -4,8 +4,8 @@ import {
   NativeModules
 } from 'react-native'
 import events from 'events'
-import { ServerConnection, ConnectionOptions } from '.'
-import { concatPacketData, Packet } from '../packet'
+import { type ServerConnection, type ConnectionOptions } from '.'
+import { concatPacketData, type Packet } from '../packet'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
 import { readVarInt, writeVarInt, resolveHostname } from '../utils'
 import packetIds from '../packets/ids'
@@ -33,7 +33,7 @@ export declare interface NativeServerConnection {
     ((event: 'packet', listener: (packet: Packet) => void) => this) &
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
-    ((event: string, listener: Function) => this)
+    ((event: string, listener: Function) => this) // eslint-disable-line @typescript-eslint/ban-types
 }
 
 /* eslint-disable @typescript-eslint/brace-style */

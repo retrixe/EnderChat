@@ -3,11 +3,11 @@ import { StyleSheet, View, Pressable } from 'react-native'
 import { Picker } from '@react-native-picker/picker'
 
 import globalStyle from '../../globalStyle'
-import { Servers } from '../../context/serversContext'
+import { type Servers } from '../../context/serversContext'
 import Dialog, { dialogStyles } from '../Dialog'
 import Text from '../Text'
 import TextField from '../TextField'
-import { protocolMap } from '../../minecraft/utils'
+import { type protocolMap } from '../../minecraft/utils'
 
 const EditServerDialog = ({
   servers,

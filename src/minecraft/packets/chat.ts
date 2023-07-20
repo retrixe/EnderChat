@@ -1,4 +1,4 @@
-import { concatPacketData, PacketDataTypes } from '../packet'
+import { concatPacketData, type PacketDataTypes } from '../packet'
 import { protocolMap, writeVarInt } from '../utils'
 import packetIds from './ids'
 

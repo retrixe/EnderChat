@@ -1,7 +1,7 @@
 import { createHash, publicEncrypt } from 'react-native-crypto'
-import { ConnectionOptions, ServerConnection } from '.'
+import { type ConnectionOptions, type ServerConnection } from '.'
 import { joinMinecraftSession } from '../api/mojang'
-import { concatPacketData, Packet, PacketDataTypes } from '../packet'
+import { concatPacketData, type Packet, type PacketDataTypes } from '../packet'
 import {
   getRandomBytes,
   mcHexDigest,

@@ -12,11 +12,11 @@ import {
   ActivityIndicator,
   Platform,
   Linking,
-  ListRenderItem
+  type ListRenderItem
 } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import Clipboard from '@react-native-clipboard/clipboard'
-import { NativeStackScreenProps } from '@react-navigation/native-stack'
+import { type NativeStackScreenProps } from '@react-navigation/native-stack'
 
 import {
   packetHandler,
@@ -24,7 +24,7 @@ import {
   sendMessageError
 } from './packetHandler'
 import { getSession, createConnection } from './sessionBuilder'
-import { RootStackParamList } from '../../App'
+import { type RootStackParamList } from '../../App'
 import globalStyle from '../../globalStyle'
 import useDarkMode from '../../context/useDarkMode'
 import AccountsContext from '../../context/accountsContext'
@@ -32,15 +32,15 @@ import ServersContext from '../../context/serversContext'
 import useSessionStore from '../../context/sessionStore'
 import SettingsContext from '../../context/settingsContext'
 import ConnectionContext, {
-  DisconnectReason
+  type DisconnectReason
 } from '../../context/connectionContext'
 import {
   ChatToJsx,
   mojangColorMap,
   lightColorMap,
-  MinecraftChat,
-  ClickEvent,
-  ColorMap
+  type MinecraftChat,
+  type ClickEvent,
+  type ColorMap
 } from '../../minecraft/chatToJsx'
 import { makeChatMessagePacket } from '../../minecraft/packets/chat'
 import TextField from '../../components/TextField'

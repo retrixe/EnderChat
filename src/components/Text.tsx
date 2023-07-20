@@ -1,5 +1,10 @@
 import React from 'react'
-import { Text as RNText, TextProps, StyleSheet, Platform } from 'react-native'
+import {
+  Text as RNText,
+  type TextProps,
+  StyleSheet,
+  Platform
+} from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
 const Text = (props: React.PropsWithChildren<TextProps>) => (

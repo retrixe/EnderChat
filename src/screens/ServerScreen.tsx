@@ -1,17 +1,17 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { View, ScrollView, RefreshControl } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { NativeStackScreenProps } from '@react-navigation/native-stack'
+import { type NativeStackScreenProps } from '@react-navigation/native-stack'
 
-import { RootStackParamList } from '../App'
+import { type RootStackParamList } from '../App'
 import EditServerDialog from '../components/servers/EditServerDialog'
 import ServerDisplay from '../components/servers/ServerDisplay'
 import globalStyle from '../globalStyle'
 import {
-  LegacyPing,
+  type LegacyPing,
   legacyPing,
   modernPing,
-  Ping
+  type Ping
 } from '../minecraft/pingServer'
 import Text from '../components/Text'
 import useDarkMode from '../context/useDarkMode'
@@ -30,10 +30,10 @@ const ServerScreen = (props: Props) => {
   const [editServerDialogOpen, setEditServerDialogOpen] = useState<
     string | boolean
   >(false)
-  const [pingResponses, setPingResponses] = useState<{
+  const [pingResponses, setPingResponses] = useState<
     // false - no route, null - unknown err, undefined - pinging
-    [ip: string]: LegacyPing | Ping | false | null | undefined
-  }>({})
+    Record<string, LegacyPing | Ping | false | null | undefined>
+  >({})
 
   useEffect(() => {
     if (Object.keys(pingResponses).length > 0) {

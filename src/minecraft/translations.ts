@@ -1,5 +1,5 @@
 // LOW-TODO: Missing translations, extra translations and lack of text styling.
-const translations: { [translation: string]: string } = {
+const translations: Record<string, string> = {
   'multiplayerWarning.header': 'Caution: Third-Party Online Play',
   'multiplayerWarning.message':
     'Caution: Online play is offered by third-party servers that are not owned, operated, or supervised by Mojang Studios or Microsoft. During online play, you may be exposed to unmoderated chat messages or other types of user-generated content that may not be suitable for everyone.',

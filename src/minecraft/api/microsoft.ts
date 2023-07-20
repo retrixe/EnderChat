@@ -171,7 +171,7 @@ export const getGameProfile = async (
   return res
 }
 
-export const XstsErrorCodes: { [error: string]: string } = {
+export const XstsErrorCodes: Record<string, string> = {
   2148916235:
     'The account is from a country where Xbox Live is not available/banned.',
   2148916238:

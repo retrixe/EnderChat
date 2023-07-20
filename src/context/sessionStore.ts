@@ -1,14 +1,12 @@
 import { create } from 'zustand'
-import { Certificate } from '../minecraft/api/mojang'
+import { type Certificate } from '../minecraft/api/mojang'
 
 export interface Session {
   certificate?: Certificate
   accessToken: string
 }
 
-export interface Sessions {
-  [uuid: string]: Session
-}
+export type Sessions = Record<string, Session>
 
 export type SetSession = (uuid: string, session: Session) => void
 

@@ -1,9 +1,9 @@
 import React from 'react'
-import { TextInput, StyleSheet, TextInputProps } from 'react-native'
+import { TextInput, StyleSheet, type TextInputProps } from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
 const TextField = (props: TextInputProps & { red?: boolean }) => {
-  const style = props.style && props.style.valueOf()
+  const style = props.style?.valueOf()
   const darkMode = useDarkMode()
   return (
     <TextInput

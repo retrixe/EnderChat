@@ -28,18 +28,12 @@ module.exports = {
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
     // Make TypeScript ESLint less strict.
+    '@typescript-eslint/no-confusing-void-expression': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'off',
     '@typescript-eslint/restrict-plus-operands': 'off',
     '@typescript-eslint/no-dynamic-delete': 'off',
-    // TODO: Remove these down the line.
-    '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/no-var-requires': 'off',
-    '@typescript-eslint/prefer-optional-chain': 'off',
-    '@typescript-eslint/consistent-type-imports': 'off',
-    '@typescript-eslint/prefer-nullish-coalescing': 'off',
-    '@typescript-eslint/no-confusing-void-expression': 'off',
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    '@typescript-eslint/consistent-indexed-object-style': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off', // TODO: Enable later.
     // Adjust to Prettier's presence. (Maybe we should do away with it later.)
     '@typescript-eslint/space-before-function-paren': 'off',
     '@typescript-eslint/member-delimiter-style': 'off',

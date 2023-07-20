@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleProp, TextProps, TextStyle } from 'react-native'
+import { type StyleProp, type TextProps, type TextStyle } from 'react-native'
 import translations from './translations'
 
 export const mojangColorMap: ColorMap = {
@@ -197,7 +197,7 @@ const translateChat = (chat: TranslatedChat): PlainTextChat => {
   const translation = translations[translate]
     ?.split('%s')
     ?.flatMap((text, index) => {
-      let insert = tw && tw[index]
+      let insert = tw?.[index]
       if (!insert) return { text }
       else if (typeof insert === 'string') insert = { text: insert }
       else if (isTranslatedChat(insert)) insert = translateChat(insert)
@@ -251,7 +251,7 @@ const parseChatToJsx = (
   Component: React.ComponentType<TextProps>,
   colorMap: ColorMap,
   clickEventHandler: (clickEvent: ClickEvent) => void = () => {},
-  componentProps?: {},
+  componentProps?: Record<string, unknown>,
   trim = false
 ) => {
   let flat = sanitizeComponents(flattenComponents(chat))
@@ -262,13 +262,13 @@ const parseChatToJsx = (
         const style: StyleProp<TextStyle> = {}
         if (c.bold) style.fontWeight = 'bold'
         if (c.italic) style.fontStyle = 'italic'
-        if (c.obfuscated) c.text = (c.text || '').replace(/./g, '▒')
+        if (c.obfuscated) c.text = (c.text ?? '').replace(/./g, '▒')
         if (c.underlined && c.strikethrough) {
           style.textDecorationLine = 'underline line-through'
         } else if (c.underlined) style.textDecorationLine = 'underline'
         else if (c.strikethrough) style.textDecorationLine = 'line-through'
 
-        if (c.color && c.color.startsWith('#')) style.color = c.color
+        if (c.color?.startsWith('#')) style.color = c.color
         else if (c.color && colorMap[c.color]) style.color = colorMap[c.color]
 
         const ce = c.clickEvent
@@ -293,7 +293,7 @@ export const ChatToJsx = (props: {
   chat?: MinecraftChat
   component: React.ComponentType<TextProps>
   colorMap: ColorMap
-  componentProps?: {}
+  componentProps?: Record<string, unknown>
   clickEventHandler?: (clickEvent: ClickEvent) => void
   trim?: boolean
 }) =>

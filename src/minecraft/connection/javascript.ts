@@ -3,20 +3,20 @@ import Semaphore from 'semaphore-async-await'
 import net from 'react-native-tcp'
 import events from 'events'
 import {
-  Cipher,
+  type Cipher,
   createCipheriv,
   createDecipheriv,
-  Decipher
+  type Decipher
 } from 'react-native-crypto'
 import {
   concatPacketData,
   makeBaseCompressedPacket,
   makeBasePacket,
-  Packet,
+  type Packet,
   parseCompressedPacket,
   parsePacket
 } from '../packet'
-import { ServerConnection, ConnectionOptions } from '.'
+import { type ServerConnection, type ConnectionOptions } from '.'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
 import { readVarInt, writeVarInt, resolveHostname } from '../utils'
 import packetIds from '../packets/ids'
@@ -26,7 +26,7 @@ export declare interface JavaScriptServerConnection {
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'data', listener: (data: Buffer) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
-    ((event: string, listener: Function) => this)
+    ((event: string, listener: Function) => this) // eslint-disable-line @typescript-eslint/ban-types
 }
 
 /* eslint-disable @typescript-eslint/brace-style */

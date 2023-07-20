@@ -11,7 +11,7 @@ const useAsyncStorage = (
 
   useEffect(() => {
     AsyncStorage.getItem(name)
-      .then(res => setState(res || defaultValue))
+      .then(res => setState(res ?? defaultValue))
       .catch(err => console.error(err))
   }, [name, defaultValue])
 

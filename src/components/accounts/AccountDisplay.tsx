@@ -1,6 +1,6 @@
 import React from 'react'
 import { Image, Pressable, StyleSheet, View } from 'react-native'
-import { Account } from '../../context/accountsContext'
+import { type Account } from '../../context/accountsContext'
 import ElevatedView from '../ElevatedView'
 import Text from '../Text'
 

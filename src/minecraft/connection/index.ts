@@ -1,6 +1,6 @@
-import events from 'events'
-import { Packet } from '../packet'
-import { Certificate } from '../api/mojang'
+import type events from 'events'
+import { type Packet } from '../packet'
+import { type Certificate } from '../api/mojang'
 import initiateJavaScriptConnection from './javascript'
 import initiateNativeConnection, { isNativeConnectionAvailable } from './native'
 
@@ -34,7 +34,7 @@ export interface ServerConnection extends events.EventEmitter {
     ((event: 'packet', listener: (packet: Packet) => void) => this) &
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
-    ((event: string, listener: Function) => this)
+    ((event: string, listener: Function) => this) // eslint-disable-line @typescript-eslint/ban-types
 }
 
 const initiateConnection = async (opts: ConnectionOptions) => {

@@ -8,8 +8,13 @@ import {
   readVarInt,
   writeVarInt
 } from './utils'
-import { makeBasePacket, concatPacketData, parsePacket, Packet } from './packet'
-import { parseValidJson, PlainTextChat } from './chatToJsx'
+import {
+  makeBasePacket,
+  concatPacketData,
+  parsePacket,
+  type Packet
+} from './packet'
+import { parseValidJson, type PlainTextChat } from './chatToJsx'
 
 export interface LegacyPing {
   ff: number

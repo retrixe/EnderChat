@@ -1,14 +1,12 @@
 import React from 'react'
-import { protocolMap } from '../minecraft/utils'
+import { type protocolMap } from '../minecraft/utils'
 
 export interface Server {
   version: keyof typeof protocolMap
   address: string
 }
 
-export interface Servers {
-  [name: string]: Server
-}
+export type Servers = Record<string, Server>
 
 export interface ServersContext {
   servers: Servers

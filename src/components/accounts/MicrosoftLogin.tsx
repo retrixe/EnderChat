@@ -1,7 +1,7 @@
 import React, { useContext, useRef, useState } from 'react'
 import { StyleSheet, Modal, Platform, View } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { WebView, WebViewNavigation } from 'react-native-webview'
+import { WebView, type WebViewNavigation } from 'react-native-webview'
 
 import useDarkMode from '../../context/useDarkMode'
 import UsersContext from '../../context/accountsContext'

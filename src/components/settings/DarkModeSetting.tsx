@@ -1,5 +1,11 @@
 import React, { useState } from 'react'
-import { View, Pressable, StyleSheet, StyleProp, ViewStyle } from 'react-native'
+import {
+  View,
+  Pressable,
+  StyleSheet,
+  type StyleProp,
+  type ViewStyle
+} from 'react-native'
 
 import Text from '../../components/Text'
 import Dialog, { dialogStyles } from '../../components/Dialog'

@@ -1,8 +1,12 @@
-import { Accounts } from '../../context/accountsContext'
-import { DisconnectReason } from '../../context/connectionContext'
-import { Session, Sessions, SetSession } from '../../context/sessionStore'
-import { Servers } from '../../context/serversContext'
-import { Settings } from '../../context/settingsContext'
+import { type Accounts } from '../../context/accountsContext'
+import { type DisconnectReason } from '../../context/connectionContext'
+import {
+  type Session,
+  type Sessions,
+  type SetSession
+} from '../../context/sessionStore'
+import { type Servers } from '../../context/serversContext'
+import { type Settings } from '../../context/settingsContext'
 import {
   authenticateWithXsts,
   getXboxLiveTokenAndUserHash,
@@ -13,7 +17,7 @@ import { getPlayerCertificates } from '../../minecraft/api/mojang'
 import { refresh } from '../../minecraft/api/yggdrasil'
 import { parseValidJson } from '../../minecraft/chatToJsx'
 import initiateConnection, {
-  ServerConnection
+  type ServerConnection
 } from '../../minecraft/connection'
 import { parseIp, protocolMap, resolveHostname } from '../../minecraft/utils'
 import config from '../../../config.json'
@@ -45,7 +49,7 @@ export const getSession = async (
       if (!session && accounts[activeAccount].type === 'microsoft') {
         setLoading('Reloading your Microsoft Account...')
         const [msAccessToken, msRefreshToken] = await refreshMSAuthToken(
-          accounts[activeAccount].microsoftRefreshToken || '',
+          accounts[activeAccount].microsoftRefreshToken ?? '',
           config.clientId,
           config.scope
         )
@@ -65,8 +69,8 @@ export const getSession = async (
       } else if (!session && accounts[activeAccount].type === 'mojang') {
         setLoading('Reloading your Mojang Account...')
         const { accessToken, clientToken } = await refresh(
-          accounts[activeAccount].accessToken || '',
-          accounts[activeAccount].clientToken || '',
+          accounts[activeAccount].accessToken ?? '',
+          accounts[activeAccount].clientToken ?? '',
           false
         )
         session = { accessToken }

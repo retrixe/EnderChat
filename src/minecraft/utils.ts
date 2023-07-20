@@ -48,7 +48,7 @@ export const toggleEndian = (buffer: Buffer, bytes: number = buffer.length) => {
 
 export const parseIp = (ipAddress: string): [string, number] => {
   const splitAddr = ipAddress.split(':')
-  const portStr = splitAddr.pop() || ''
+  const portStr = splitAddr.pop() ?? ''
   let port = +portStr
   if (isNaN(+portStr)) {
     splitAddr.push(portStr)
@@ -72,7 +72,7 @@ export const resolveHostname = async (
   else if (!req.ok) throw new Error('Failed to make DNS query!')
   const res = await req.json()
   const srvRecords = res.Answer?.filter((r: any) => r.type === 33 && r.data)
-  if (srvRecords && srvRecords.length) {
+  if (srvRecords?.length) {
     // FIXME: Support SRV priority/weight, maybe?
     const record = srvRecords.map((r: { data: string }) => r.data.split(' '))[0]
     return [record[3], +record[2]]

@@ -2,7 +2,7 @@ import React from 'react'
 import {
   Modal,
   Pressable,
-  ViewStyle,
+  type ViewStyle,
   StyleSheet,
   KeyboardAvoidingView
 } from 'react-native'

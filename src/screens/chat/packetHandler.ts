@@ -1,11 +1,11 @@
-import React from 'react'
-import { Status } from './ChatScreen'
-import { MinecraftChat, parseValidJson } from '../../minecraft/chatToJsx'
-import { ServerConnection } from '../../minecraft/connection'
+import type React from 'react'
+import { type Status } from './ChatScreen'
+import { type MinecraftChat, parseValidJson } from '../../minecraft/chatToJsx'
+import { type ServerConnection } from '../../minecraft/connection'
 import {
   concatPacketData,
-  Packet,
-  PacketDataTypes
+  type Packet,
+  type PacketDataTypes
 } from '../../minecraft/packet'
 import { protocolMap, readVarInt, writeVarInt } from '../../minecraft/utils'
 import { makeChatMessagePacket } from '../../minecraft/packets/chat'

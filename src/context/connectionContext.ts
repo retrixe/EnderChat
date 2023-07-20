@@ -1,6 +1,6 @@
 import React from 'react'
-import { MinecraftChat } from '../minecraft/chatToJsx'
-import { ServerConnection } from '../minecraft/connection'
+import { type MinecraftChat } from '../minecraft/chatToJsx'
+import { type ServerConnection } from '../minecraft/connection'
 
 export interface DisconnectReason {
   server: string
