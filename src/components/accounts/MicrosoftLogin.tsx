@@ -1,12 +1,6 @@
 import React, { useContext, useRef, useState } from 'react'
-import {
-  StyleSheet,
-  Modal,
-  Platform,
-  PlatformAndroidStatic,
-  KeyboardAvoidingView,
-  View
-} from 'react-native'
+import { StyleSheet, Modal, Platform, View } from 'react-native'
+import Ionicons from 'react-native-vector-icons/Ionicons'
 import { WebView, WebViewNavigation } from 'react-native-webview'
 
 import useDarkMode from '../../context/useDarkMode'
@@ -131,44 +125,36 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
   const uri = loginUrl
     .replace('{CLIENT_ID}', config.clientId)
     .replace('{SCOPE}', encodeURIComponent(config.scope))
+  // Turns out WebView modals are broken on more than Pixel, so we have a full-screen view now.
   return (
     <Modal
       animationType='fade'
       transparent
       visible
-      statusBarTranslucent
+      statusBarTranslucent={false}
       onRequestClose={onRequestClose}
     >
-      <KeyboardAvoidingView
-        enabled
-        behavior='padding'
-        style={styles.modalView}
-        // https://stackoverflow.com/a/60254214
-        onStartShouldSetResponder={event => {
-          const { constants } = Platform as PlatformAndroidStatic
-          return (
-            event.nativeEvent.touches.length === 1 &&
-            // FIXME: Don't handle touch events for Google Pixel devices.
-            constants.Manufacturer !== 'Google' &&
-            constants.Brand !== 'google'
-          )
-        }}
-        onResponderRelease={event => {
-          if (event.target === event.currentTarget) onRequestClose()
-        }}
-      >
-        <View style={styles.webViewContainer}>
-          <WebView
-            incognito
-            ref={webview}
-            originWhitelist={['*']}
-            source={html ? { html } : { uri }}
-            onNavigationStateChange={ev => {
-              handleNavigationStateChange(ev).catch(console.error)
-            }}
-          />
+      <View style={styles.modalView}>
+        <View
+          style={[
+            darkMode ? styles.modalTopBarDarkBg : styles.modalTopBarLightBg,
+            styles.modalTopBar
+          ]}
+        >
+          <Ionicons.Button name='close' onPress={onRequestClose}>
+            Close
+          </Ionicons.Button>
         </View>
-      </KeyboardAvoidingView>
+        <WebView
+          incognito
+          ref={webview}
+          originWhitelist={['*']}
+          source={html ? { html } : { uri }}
+          onNavigationStateChange={ev => {
+            handleNavigationStateChange(ev).catch(console.error)
+          }}
+        />
+      </View>
     </Modal>
   )
 }
@@ -176,12 +162,12 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
 const styles = StyleSheet.create({
   modalView: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)'
+    width: '100%'
   },
-  webViewContainer: { height: '80%', width: '80%' }
+  modalTopBarLightBg: { backgroundColor: '#ffffff' },
+  modalTopBarDarkBg: { backgroundColor: '#242424' },
+  modalTopBar: { padding: 8, flexDirection: 'row' }
 })
 
 export default MicrosoftLogin
