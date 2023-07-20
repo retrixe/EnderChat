@@ -371,7 +371,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#242424'
   },
   textArea: { padding: 8, backgroundColor: '#fff', flexDirection: 'row' },
-  textField: { marginTop: 0, flex: 1, marginRight: 8, borderRadius: 32 }
+  textField: {
+    marginTop: 0,
+    flex: 1,
+    marginRight: 8,
+    paddingLeft: 12,
+    paddingRight: 12,
+    borderRadius: 32
+  }
 })
 
 export default ChatScreen
