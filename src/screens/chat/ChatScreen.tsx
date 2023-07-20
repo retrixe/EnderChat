@@ -331,6 +331,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
           />
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
             <TextField
+              placeholder='Message'
               value={message}
               maxLength={charLimit}
               onChangeText={setMessage}
@@ -342,7 +343,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
               autoCorrect={!settings.disableAutoCorrect}
             />
             <Ionicons.Button
-              name='ios-send-sharp'
+              name='send-sharp'
               onPress={() => sendMessage(message.trim(), true)}
               iconStyle={styles.sendButtonIcon}
               borderRadius={32}
