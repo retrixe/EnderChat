@@ -59,7 +59,7 @@ const ItemRenderer = (props: {
   item: Message
   colorMap: ColorMap
   clickEventHandler: (event: ClickEvent) => void
-}) => (
+}): JSX.Element => (
   <View style={styles.androidScaleInvert}>
     <ChatToJsx
       chat={props.item.text}
@@ -82,7 +82,7 @@ const ChatMessageList = (props: {
   messages: Message[]
   colorMap: ColorMap
   clickEventHandler: (ce: ClickEvent) => void
-}) => {
+}): JSX.Element => {
   // If colorMap/clickEventHandler changes, this will change and cause a re-render.
   // If messages changes, FlatList will execute this function for all messages, and
   // ItemRendererMemo will check if props have changed instead of this useCallback.
@@ -115,7 +115,7 @@ const handleError =
   }
 
 // TODO: Ability to copy text.
-const ChatScreen = ({ navigation, route }: Props) => {
+const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
   const darkMode = useDarkMode()
   const { settings } = useContext(SettingsContext)
   const { servers } = useContext(ServersContext)
@@ -138,9 +138,9 @@ const ChatScreen = ({ navigation, route }: Props) => {
   const { version, serverName } = route.params
   const charLimit = version >= 306 /* 16w38a */ ? 256 : 100
 
-  const addMessage = (text: MinecraftChat) =>
+  const addMessage = (text: MinecraftChat): number =>
     messagesBufferRef.current.unshift({ key: idRef.current++, text })
-  const closeChatScreen = (reason?: DisconnectReason) => {
+  const closeChatScreen = (reason?: DisconnectReason): void => {
     if (statusRef.current !== 'CLOSED') {
       if (navigation.canGoBack()) navigation.goBack()
       if (reason) setDisconnectReason(reason)
@@ -248,7 +248,7 @@ const ChatScreen = ({ navigation, route }: Props) => {
     settings.sendSpawnCommand
   ])
 
-  const sendMessage = (msg: string, saveHistory: boolean) => {
+  const sendMessage = (msg: string, saveHistory: boolean): void => {
     if (!connection || !msg) return
     setMessage('')
     if (msg.startsWith('/') && saveHistory) {

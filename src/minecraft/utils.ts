@@ -21,7 +21,7 @@ export const protocolMap = {
   auto: -1
 }
 
-export const padBufferToLength = (buffer: Buffer, length: number) =>
+export const padBufferToLength = (buffer: Buffer, length: number): Buffer =>
   length <= buffer.byteLength
     ? buffer
     : Buffer.concat([
@@ -29,7 +29,10 @@ export const padBufferToLength = (buffer: Buffer, length: number) =>
         buffer
       ])
 
-export const toggleEndian = (buffer: Buffer, bytes: number = buffer.length) => {
+export const toggleEndian = (
+  buffer: Buffer,
+  bytes: number = buffer.length
+): Buffer => {
   const output = Buffer.alloc(buffer.length)
   if (buffer.length % bytes !== 0) {
     throw new Error(
@@ -79,7 +82,7 @@ export const resolveHostname = async (
   } else return [hostname, port]
 }
 
-export const getRandomBytes = async (size: number) =>
+export const getRandomBytes = async (size: number): Promise<Buffer> =>
   await new Promise<Buffer>((resolve, reject) => {
     randomBytes(size, (err, buf) => {
       if (err) reject(err)
@@ -88,7 +91,7 @@ export const getRandomBytes = async (size: number) =>
   })
 
 // Credits for following 2 functions: https://gist.github.com/andrewrk/4425843
-export function mcHexDigest(hash: Buffer) {
+export function mcHexDigest(hash: Buffer): string {
   // check for negative hashes
   const negative = hash.readInt8(0) < 0
   if (negative) performTwosCompliment(hash)
@@ -99,7 +102,7 @@ export function mcHexDigest(hash: Buffer) {
   return digest
 }
 
-function performTwosCompliment(buffer: Buffer) {
+function performTwosCompliment(buffer: Buffer): void {
   let carry = true
   let newByte, value
   for (let i = buffer.length - 1; i >= 0; --i) {

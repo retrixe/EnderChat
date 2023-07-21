@@ -65,7 +65,7 @@ const handleSystemMessage = (
   addMessage: (text: MinecraftChat) => void,
   handleError: HandleError,
   is1191: boolean
-) => {
+): void => {
   try {
     const [chatLength, chatVarIntLength] = readVarInt(packet.data)
     const chatJson = packet.data

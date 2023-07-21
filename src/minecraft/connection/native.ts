@@ -12,7 +12,7 @@ import packetIds from '../packets/ids'
 
 const { ConnectionModule } = NativeModules
 
-export const isNativeConnectionAvailable = () =>
+export const isNativeConnectionAvailable = (): boolean =>
   !!ConnectionModule?.openConnection
 
 interface NativeEvent {
@@ -148,7 +148,7 @@ export class NativeServerConnection
     return ConnectionModule.writePacket(this.id, packetId, toWrite)
   }
 
-  internalClose(closeConnection: boolean) {
+  internalClose(closeConnection: boolean): void {
     if (this.closed) return
     this.closed = true
     if (closeConnection) ConnectionModule.closeConnection(this.id)
@@ -160,12 +160,14 @@ export class NativeServerConnection
     this.emit('close')
   }
 
-  close() {
+  close(): void {
     this.internalClose(true)
   }
 }
 
-const initiateNativeConnection = async (opts: ConnectionOptions) => {
+const initiateNativeConnection = async (
+  opts: ConnectionOptions
+): Promise<NativeServerConnection> => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   const id = await ConnectionModule.openConnection({
     loginPacket: getLoginPacket(opts).toString('base64'),

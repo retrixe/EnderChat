@@ -16,7 +16,7 @@ const AddAccountDialog = ({
 }: {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
-}) => {
+}): JSX.Element => {
   const darkMode = useDarkMode()
   const { accounts, setAccounts } = useContext(UsersContext)
 
@@ -32,7 +32,7 @@ const AddAccountDialog = ({
     !/^[A-Za-z0-9_]{3,16}$/.test(newUser) &&
     (password === null ? true : !/^[^\s@]+@[^\s@]+$/.test(newUser))
 
-  const cancelAddAccount = () => {
+  const cancelAddAccount = (): void => {
     setMicrosoftLogin(false)
     setOpen(false)
     setUserRed(false)
@@ -41,7 +41,7 @@ const AddAccountDialog = ({
     setPassword(null) // setPassword('')
     setDialogError('')
   }
-  const addAccount = () => {
+  const addAccount = (): void => {
     const accountExists =
       !!accounts[newUser] ||
       !!Object.keys(accounts).find(id => accounts[id].email === newUser)

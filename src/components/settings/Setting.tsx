@@ -20,7 +20,7 @@ const Setting = <T extends string | boolean>({
   setValue?: (newValue: T) => void
   multiline?: boolean
   maxLength?: number
-}) => {
+}): JSX.Element => {
   const da = useDarkMode()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState(
@@ -30,7 +30,7 @@ const Setting = <T extends string | boolean>({
   const [toggleValue, setToggleValue] = useState(value)
 
   const Wrapper = setValue ?? onClick ? Pressable : React.Fragment
-  const wrapperPress = () => {
+  const wrapperPress = (): void => {
     if (onClick) onClick()
     else if (typeof value === 'boolean' && setValue) {
       setValue(!toggleValue as T)

@@ -15,7 +15,7 @@ import useDarkMode from '../../context/useDarkMode'
 const RadioButton = (props: {
   style?: StyleProp<ViewStyle>
   selected: boolean
-}) => {
+}): JSX.Element => {
   const darkMode = useDarkMode()
   return (
     <View
@@ -58,7 +58,10 @@ interface DarkModeSettingProps {
   setValue: (newValue: boolean | null) => void
 }
 
-const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps) => {
+const DarkModeSetting = ({
+  value,
+  setValue
+}: DarkModeSettingProps): JSX.Element => {
   const [modalOpen, setModalOpen] = useState(false)
   const ripple = { color: '#aaa' }
   const dark = useDarkMode()

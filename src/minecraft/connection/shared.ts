@@ -10,7 +10,9 @@ import {
   writeVarInt
 } from '../utils'
 
-export const parseEncryptionRequestPacket = (packet: Packet) => {
+export const parseEncryptionRequestPacket = (
+  packet: Packet
+): [Buffer, Buffer, Buffer] => {
   // ASCII encoding of the server id string
   let data = packet.data
   const [sidLen, sidLenLen] = readVarInt(data)
@@ -27,7 +29,7 @@ export const parseEncryptionRequestPacket = (packet: Packet) => {
   return [serverId, publicKey, verifyToken]
 }
 
-export const getLoginPacket = (opts: ConnectionOptions) => {
+export const getLoginPacket = (opts: ConnectionOptions): Buffer => {
   const data: PacketDataTypes[] = [opts.username]
   if (
     opts.protocolVersion >= protocolMap[1.19] &&
@@ -69,7 +71,7 @@ export const handleEncryptionRequest = (
   selectedProfile: string,
   connection: ServerConnection,
   callback: (secret: Buffer, response: Buffer) => Promise<void>
-) => {
+): void => {
   // https://wiki.vg/Protocol_Encryption
   const [serverId, publicKey, verifyToken] =
     parseEncryptionRequestPacket(packet)

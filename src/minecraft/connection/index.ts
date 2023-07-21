@@ -37,7 +37,9 @@ export interface ServerConnection extends events.EventEmitter {
     ((event: string, listener: Function) => this) // eslint-disable-line @typescript-eslint/ban-types
 }
 
-const initiateConnection = async (opts: ConnectionOptions) => {
+const initiateConnection = async (
+  opts: ConnectionOptions
+): Promise<ServerConnection> => {
   if (isNativeConnectionAvailable()) {
     return await initiateNativeConnection(opts)
   }

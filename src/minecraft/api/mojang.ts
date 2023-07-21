@@ -19,14 +19,16 @@ export const joinMinecraftSession = async (
   accessToken: string,
   selectedProfile: string,
   serverId: string
-) =>
+): Promise<Response> =>
   await fetch(joinMinecraftSessionUrl, {
     body: JSON.stringify({ accessToken, selectedProfile, serverId }),
     headers: { 'content-type': 'application/json' },
     method: 'POST'
   })
 
-export const getPlayerCertificates = async (accessToken: string) =>
+export const getPlayerCertificates = async (
+  accessToken: string
+): Promise<Certificate> =>
   await fetch(getPlayerCertificatesUrl, {
     headers: { Authorization: 'Bearer ' + accessToken },
     method: 'POST'

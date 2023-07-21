@@ -27,7 +27,7 @@ const EditServerDialog = ({
   deleteServer: (server: string) => void
   editServerDialogOpen: string | boolean
   setEditServerDialogOpen: (server: string | boolean) => void
-}) => {
+}): JSX.Element => {
   const [ipAddr, setIpAddr] = useState('')
   const [ipAddrRed, setIpAddrRed] = useState(false)
   const [newServerName, setNewServerName] = useState('')
@@ -54,15 +54,15 @@ const EditServerDialog = ({
     }
   }, [editServerDialogOpen, server])
 
-  const closeDialog = () => setEditServerDialogOpen(false)
+  const closeDialog = (): void => setEditServerDialogOpen(false)
 
-  const handleDeleteServer = () => {
+  const handleDeleteServer = (): void => {
     if (typeof editServerDialogOpen !== 'string') return
     deleteServer(editServerDialogOpen)
     closeDialog()
   }
 
-  const handleEditServer = () => {
+  const handleEditServer = (): void => {
     const edit = typeof editServerDialogOpen === 'string'
     if (
       !newServerName ||

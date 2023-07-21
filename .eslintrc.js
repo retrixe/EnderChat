@@ -33,7 +33,6 @@ module.exports = {
     '@typescript-eslint/restrict-plus-operands': 'off',
     '@typescript-eslint/no-dynamic-delete': 'off',
     '@typescript-eslint/no-var-requires': 'off',
-    '@typescript-eslint/explicit-function-return-type': 'off', // TODO: Enable later.
     // Adjust to Prettier's presence. (Maybe we should do away with it later.)
     '@typescript-eslint/space-before-function-paren': 'off',
     '@typescript-eslint/member-delimiter-style': 'off',

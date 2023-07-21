@@ -11,7 +11,7 @@ import {
 import Dialog, { dialogStyles } from './Dialog'
 import Text from './Text'
 
-const DisconnectDialog = () => {
+const DisconnectDialog = (): JSX.Element => {
   const darkMode = useDarkMode()
   const { disconnectReason, setDisconnectReason } =
     useContext(ConnectionContext)

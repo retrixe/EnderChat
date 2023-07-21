@@ -39,7 +39,10 @@ export interface Ping {
   description: string | PlainTextChat
 }
 
-export const legacyPing = async (opts: { host: string; port: number }) => {
+export const legacyPing = async (opts: {
+  host: string
+  port: number
+}): Promise<LegacyPing> => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<LegacyPing>((resolve, reject) => {
     const socket = net.createConnection({ host, port })
@@ -98,7 +101,10 @@ export const legacyPing = async (opts: { host: string; port: number }) => {
   })
 }
 
-export const modernPing = async (opts: { host: string; port: number }) => {
+export const modernPing = async (opts: {
+  host: string
+  port: number
+}): Promise<Ping> => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<Ping>((resolve, reject) => {
     const socket = net.createConnection({ host, port })

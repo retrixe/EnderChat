@@ -67,7 +67,7 @@ export class JavaScriptServerConnection
   }
 
   onlyOneCloseCall = false
-  close() {
+  close(): void {
     if (this.onlyOneCloseCall) return
     else this.onlyOneCloseCall = true
 
@@ -81,7 +81,9 @@ export class JavaScriptServerConnection
   }
 }
 
-const initiateJavaScriptConnection = async (opts: ConnectionOptions) => {
+const initiateJavaScriptConnection = async (
+  opts: ConnectionOptions
+): Promise<JavaScriptServerConnection> => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   const socket = net.createConnection({ host, port })
   const conn = new JavaScriptServerConnection(socket, opts)

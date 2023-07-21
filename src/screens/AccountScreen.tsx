@@ -13,14 +13,14 @@ import { invalidate } from '../minecraft/api/yggdrasil'
 
 // LOW-TODO: Reload to update account info for online mode using /refresh.
 // Also, to reload all the skin images?
-const AccountScreen = () => {
+const AccountScreen = (): JSX.Element => {
   const darkMode = useDarkMode()
   const { accounts, setAccounts } = useContext(UsersContext)
 
   const [addAccountDialogOpen, setAddAccountDialogOpen] = useState(false)
   const [deleteAccount, setDeleteAccount] = useState('')
 
-  const setActiveAccount = (uuid: string) => {
+  const setActiveAccount = (uuid: string): void => {
     const newAccounts = accounts
     for (const key in newAccounts) {
       if (newAccounts[key].active) {

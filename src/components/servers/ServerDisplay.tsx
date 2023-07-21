@@ -29,7 +29,7 @@ const ServerDisplay = ({
   darkMode: boolean
   connectToServer: (server: string) => void
   openEditServerDialog: (server: string) => void
-}) => (
+}): JSX.Element => (
   <ElevatedView style={styles.serverView}>
     <Pressable
       onPress={() => connectToServer(server)}

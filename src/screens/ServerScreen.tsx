@@ -21,7 +21,7 @@ import { parseIp, protocolMap } from '../minecraft/utils'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Servers'>
 
-const ServerScreen = (props: Props) => {
+const ServerScreen = (props: Props): JSX.Element => {
   const darkMode = useDarkMode()
   const { servers, setServers } = useContext(ServersContext)
   const { setDisconnectReason } = useContext(ConnectionContext)
@@ -66,7 +66,7 @@ const ServerScreen = (props: Props) => {
     )
   }, [servers, pingResponses])
 
-  const openEditServerDialog = (server: string) => {
+  const openEditServerDialog = (server: string): void => {
     setEditServerDialogOpen(server)
   }
 
@@ -74,7 +74,7 @@ const ServerScreen = (props: Props) => {
     serverName: string,
     version: keyof typeof protocolMap,
     address: string
-  ) => {
+  ): void => {
     const edit = typeof editServerDialogOpen === 'string'
     const newServers = { ...servers }
     if (edit) delete newServers[editServerDialogOpen]
@@ -83,13 +83,13 @@ const ServerScreen = (props: Props) => {
     setPingResponses({})
   }
 
-  const deleteServer = (server: string) => {
+  const deleteServer = (server: string): void => {
     const newServers = { ...servers }
     delete newServers[server]
     setServers(newServers)
   }
 
-  const connectToServer = (serverName: string) => {
+  const connectToServer = (serverName: string): void => {
     let version = protocolMap[servers[serverName].version]
     if (version === -1) {
       const ping = pingResponses[servers[serverName].address]

@@ -2,7 +2,7 @@ import { Buffer } from 'buffer'
 import { compressData, decompressData } from './compression'
 import { toggleEndian, encodeString, readVarInt, writeVarInt } from './utils'
 
-export const makeBasePacket = (packetId: number, data: Buffer) => {
+export const makeBasePacket = (packetId: number, data: Buffer): Buffer => {
   const finalData = Buffer.concat([writeVarInt(packetId), data])
   const finalDataLength = writeVarInt(finalData.byteLength)
   // VarInt Length(Packet ID + Data) + VarInt Packet ID + Byte Array Data
@@ -13,7 +13,7 @@ export const makeBaseCompressedPacket = async (
   threshold: number,
   packetId: number,
   data: Buffer
-) => {
+): Promise<Buffer> => {
   // VarInt Packet Length | Length of Data Length + compressed length of (Packet ID + Data)
   // VarInt Data Length   | Length of uncompressed (Packet ID + Data) or 0
   // VarInt Packet ID     | zlib compressed packet ID (see the sections below)
@@ -30,7 +30,7 @@ export const makeBaseCompressedPacket = async (
 
 export type PacketDataTypes = string | boolean | number | Buffer
 
-export const concatPacketData = (data: PacketDataTypes[]) =>
+export const concatPacketData = (data: PacketDataTypes[]): Buffer =>
   Buffer.concat(
     data.map(field => {
       if (typeof field === 'string') return encodeString(field)

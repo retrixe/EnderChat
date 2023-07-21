@@ -91,7 +91,7 @@ export interface HoverEvent {
   value: MinecraftChat
 }
 
-const hasColorCodes = (s: string) => /§[0-9a-fk-orx]/.test(s)
+const hasColorCodes = (s: string): boolean => /§[0-9a-fk-orx]/.test(s)
 // const stripColorCodes = (s: string) => s.replace(/§[0-9a-fk-orx]/g, '').trim()
 const parseColorCodes = (arg: string | PlainTextChat): PlainTextChat[] => {
   let s: string
@@ -253,7 +253,7 @@ const parseChatToJsx = (
   clickEventHandler: (clickEvent: ClickEvent) => void = () => {},
   componentProps?: Record<string, unknown>,
   trim = false
-) => {
+): JSX.Element => {
   let flat = sanitizeComponents(flattenComponents(chat))
   if (trim) flat = trimComponentsByLine(flat)
   return (
@@ -296,7 +296,7 @@ export const ChatToJsx = (props: {
   componentProps?: Record<string, unknown>
   clickEventHandler?: (clickEvent: ClickEvent) => void
   trim?: boolean
-}) =>
+}): JSX.Element =>
   parseChatToJsx(
     props.chat ?? { text: '' },
     props.component,
@@ -306,7 +306,7 @@ export const ChatToJsx = (props: {
     props.trim
   )
 
-export const parseValidJson = (text: string) => {
+export const parseValidJson = (text: string): any => {
   try {
     return JSON.parse(text)
   } catch (e) {

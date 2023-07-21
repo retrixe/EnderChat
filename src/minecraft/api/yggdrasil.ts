@@ -51,7 +51,10 @@ export const refresh = async (
   return await request.json()
 }
 
-export const validate = async (accessToken: string, clientToken?: string) => {
+export const validate = async (
+  accessToken: string,
+  clientToken?: string
+): Promise<void> => {
   const request = await fetch('https://authserver.mojang.com/validate', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -64,7 +67,10 @@ export const validate = async (accessToken: string, clientToken?: string) => {
   }
 }
 
-export const signout = async (username: string, password: string) => {
+export const signout = async (
+  username: string,
+  password: string
+): Promise<void> => {
   const request = await fetch('https://authserver.mojang.com/signout', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -75,7 +81,10 @@ export const signout = async (username: string, password: string) => {
   }
 }
 
-export const invalidate = async (accessToken: string, clientToken: string) => {
+export const invalidate = async (
+  accessToken: string,
+  clientToken: string
+): Promise<void> => {
   const request = await fetch('https://authserver.mojang.com/invalidate', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

@@ -43,9 +43,9 @@ export interface RootStackParamList {
   Home: undefined
   Chat: { serverName: string; version: number }
 }
-type HomeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
+type HomeProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
-const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
+const HomeScreen = ({ navigation }: { navigation: HomeProp }): JSX.Element => {
   const { connection } = React.useContext(ConnectionContext)
   React.useEffect(() => {
     if (connection) {
@@ -92,7 +92,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeNavigationProp }) => {
   )
 }
 
-const App = () => {
+const App = (): JSX.Element => {
   const [connection, setConnection] = React.useState<
     ServerConnection | undefined
   >()
@@ -109,9 +109,9 @@ const App = () => {
   const [serversStore, setServersStore] = useAsyncStorage('@servers', '{}')
   const accounts: Accounts = JSON.parse(accountsStore)
   const servers: Servers = JSON.parse(serversStore)
-  const setAccounts = (newAccounts: Accounts) =>
+  const setAccounts = (newAccounts: Accounts): void =>
     setAccountsStore(JSON.stringify(newAccounts))
-  const setServers = (newServers: Servers) =>
+  const setServers = (newServers: Servers): void =>
     setServersStore(JSON.stringify(newServers))
 
   const colorScheme = useColorScheme()

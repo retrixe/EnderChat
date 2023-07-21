@@ -17,7 +17,7 @@ import {
 } from '../../minecraft/api/microsoft'
 import config from '../../../config.json'
 
-const MicrosoftLogin = ({ close }: { close: () => void }) => {
+const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
   const darkMode = useDarkMode()
   const style = darkMode
     ? '<style>body{font-size:48px;padding:16px;background-color:#242424;color:#ffffff;}</style>'
@@ -27,7 +27,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
   const webview = useRef<WebView>(null)
   const [loading, setLoading] = useState(false)
   const [html, setRawHtml] = useState('')
-  const setHtml = (newHtml: string) => setRawHtml(style + newHtml)
+  const setHtml = (newHtml: string): void => setRawHtml(style + newHtml)
 
   const addAccount = (
     id: string,
@@ -54,12 +54,12 @@ const MicrosoftLogin = ({ close }: { close: () => void }) => {
     return alreadyExists
   }
 
-  const onRequestClose = () => {
+  const onRequestClose = (): void => {
     if (!loading) close()
   }
   const handleNavigationStateChange = async (
     newNavState: WebViewNavigation
-  ) => {
+  ): Promise<void> => {
     // LOW-TODO: Parse errors.
     if (!webview.current || !newNavState.url) return
     if (

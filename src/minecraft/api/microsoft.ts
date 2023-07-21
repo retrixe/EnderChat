@@ -115,7 +115,9 @@ export const authenticateWithXsts = async (
   return res.access_token
 }
 
-export const checkGameOwnership = async (accessToken: string) => {
+export const checkGameOwnership = async (
+  accessToken: string
+): Promise<boolean> => {
   const req = await fetch(mcStoreUrl, {
     headers: {
       Accept: 'application/json',
@@ -125,7 +127,7 @@ export const checkGameOwnership = async (accessToken: string) => {
   if (!req.ok) throw new Error('Failed to check if user owns Minecraft game!')
   const res = await req.json()
   const items = res.items as Array<{ name: string }>
-  return (
+  return !!(
     items?.length >= 2 &&
     items.find(item => item.name === 'game_minecraft') &&
     items.find(item => item.name === 'product_minecraft')

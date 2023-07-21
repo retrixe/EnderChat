@@ -24,13 +24,13 @@ const TextFieldDialog = ({
   closeModal: () => void
   initialState: string
   setFinalState: (state: string) => void
-}) => {
+}): JSX.Element => {
   const [modalContent, setModalContent] = useState(initialState)
-  const closeModalAndSaveState = () => {
+  const closeModalAndSaveState = (): void => {
     setFinalState(modalContent)
     closeModal()
   }
-  const closeModalAndReset = () => {
+  const closeModalAndReset = (): void => {
     setModalContent(initialState)
     closeModal()
   }

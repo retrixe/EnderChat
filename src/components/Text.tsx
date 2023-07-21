@@ -7,7 +7,7 @@ import {
 } from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
-const Text = (props: React.PropsWithChildren<TextProps>) => (
+const Text = (props: React.PropsWithChildren<TextProps>): JSX.Element => (
   <RNText
     {...props}
     style={[

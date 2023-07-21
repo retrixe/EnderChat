@@ -128,7 +128,7 @@ export const createConnection = async (
       accessToken: session?.accessToken,
       certificate: settings.enableChatSigning ? session?.certificate : undefined
     })
-    const onCloseOrError = () => {
+    const onCloseOrError = (): void => {
       closeChatScreen(
         newConn.disconnectReason
           ? { server, reason: parseValidJson(newConn.disconnectReason) }

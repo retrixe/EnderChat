@@ -4,7 +4,7 @@ import useDarkMode from '../context/useDarkMode'
 
 const ElevatedView = (
   props: React.PropsWithChildren<{ style?: ViewStyle }>
-) => (
+): JSX.Element => (
   <View
     {...props}
     style={Object.assign(
