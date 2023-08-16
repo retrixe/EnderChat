@@ -60,14 +60,12 @@ const ItemRenderer = (props: {
   colorMap: ColorMap
   clickEventHandler: (event: ClickEvent) => void
 }): JSX.Element => (
-  <View style={styles.androidScaleInvert}>
-    <ChatToJsx
-      chat={props.item.text}
-      component={Text}
-      colorMap={props.colorMap}
-      clickEventHandler={props.clickEventHandler}
-    />
-  </View>
+  <ChatToJsx
+    chat={props.item.text}
+    component={Text}
+    colorMap={props.colorMap}
+    clickEventHandler={props.clickEventHandler}
+  />
 )
 
 const ItemRendererMemo = React.memo(
@@ -98,9 +96,9 @@ const ChatMessageList = (props: {
   )
   return (
     <FlatList
-      inverted={Platform.OS !== 'android'}
+      inverted
       data={props.messages}
-      style={[styles.androidScaleInvert, styles.chatArea]}
+      style={styles.chatArea}
       contentContainerStyle={styles.chatAreaScrollView}
       renderItem={renderItem}
     />
@@ -360,7 +358,6 @@ const styles = StyleSheet.create({
   backButton: { marginRight: 8 },
   backButtonIcon: { marginRight: 0 },
   sendButtonIcon: { marginRight: 0, marginLeft: 4 },
-  androidScaleInvert: { scaleY: Platform.OS === 'android' ? -1 : undefined },
   chatArea: { padding: 8, flex: 1 },
   chatAreaScrollView: { paddingBottom: 16 },
   loadingScreen: { flex: 1, alignItems: 'center', justifyContent: 'center' },
