@@ -33,7 +33,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
     private var compressionEnabled = false
     private var aesDecipher: Cipher? = null
     private var aesCipher: Cipher? = null
-    private var loggedIn = false
+    private var state = ConnectionState.LOGIN
 
     override fun getName() = "ConnectionModule"
 
@@ -47,7 +47,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         compressionEnabled = false
         aesDecipher = null
         aesCipher = null
-        loggedIn = false
+        state = ConnectionState.LOGIN
     }
 
     private fun directlyWritePacket(id: Int, data: ByteArray): Boolean {
@@ -253,12 +253,12 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         // No write lock since writePacket isn't called during login sequence (usually).
                         if (packet.id.value == keepAliveClientBoundId) {
                             directlyWritePacket(keepAliveServerBoundId, packet.data)
-                        } else if (packet.id.value == setCompressionId && !loggedIn) {
+                        } else if (packet.id.value == setCompressionId && state == ConnectionState.LOGIN) {
                             val threshold = VarInt.read(packet.data)?.value ?: 0
                             compressionThreshold = threshold
                             compressionEnabled = threshold >= 0
-                        } else if (packet.id.value == loginSuccessId && !loggedIn) {
-                            loggedIn = true
+                        } else if (packet.id.value == loginSuccessId && state == ConnectionState.LOGIN) {
+                            state = ConnectionState.PLAY
                         }
 
                         // Forward the packet to JavaScript.

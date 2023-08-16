@@ -16,7 +16,11 @@ import {
   parseCompressedPacket,
   parsePacket
 } from '../packet'
-import { type ServerConnection, type ConnectionOptions } from '.'
+import {
+  type ServerConnection,
+  type ConnectionOptions,
+  ConnectionState
+} from '.'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
 import { readVarInt, writeVarInt, resolveHostname } from '../utils'
 import packetIds from '../packets/ids'
@@ -38,7 +42,7 @@ export class JavaScriptServerConnection
   bufferedData: Buffer = Buffer.from([])
   compressionThreshold = -1
   compressionEnabled = false
-  loggedIn = false
+  state = ConnectionState.LOGIN
   closed = false
   socket: net.Socket
   options: ConnectionOptions
@@ -140,12 +144,18 @@ const initiateJavaScriptConnection = async (
                 : conn.bufferedData.slice(packet.packetLength)
             // Internally handle login packets.
             const { protocolVersion: version } = conn.options
-            if (packet.id === 0x03 && !conn.loggedIn /* Set Compression */) {
+            if (
+              packet.id === 0x03 &&
+              conn.state === ConnectionState.LOGIN /* Set Compression */
+            ) {
               const [threshold] = readVarInt(packet.data)
               conn.compressionThreshold = threshold
               conn.compressionEnabled = threshold >= 0
-            } else if (packet.id === 0x02 && !conn.loggedIn) {
-              conn.loggedIn = true // Login Success
+            } else if (
+              packet.id === 0x02 &&
+              conn.state === ConnectionState.LOGIN /* Login Success */
+            ) {
+              conn.state = ConnectionState.PLAY
             } else if (
               packet.id === packetIds.CLIENTBOUND_KEEP_ALIVE(version)
             ) {
@@ -155,20 +165,26 @@ const initiateJavaScriptConnection = async (
                 .catch(err => conn.emit('error', err))
             } else if (
               // Disconnect (login) or Disconnect (play)
-              (packet.id === 0x00 && !conn.loggedIn) ||
+              (packet.id === 0x00 && conn.state === ConnectionState.LOGIN) ||
               (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
-                conn.loggedIn)
+                conn.state === ConnectionState.PLAY)
             ) {
               const [chatLength, chatVarIntLength] = readVarInt(packet.data)
               conn.disconnectReason = packet.data
                 .slice(chatVarIntLength, chatVarIntLength + chatLength)
                 .toString('utf8')
-            } else if (packet.id === 0x04 && !conn.loggedIn) {
+            } else if (
+              packet.id === 0x04 &&
+              conn.state === ConnectionState.LOGIN
+            ) {
               /* Login Plugin Request */
               const [msgId] = readVarInt(packet.data)
               const rs = concatPacketData([writeVarInt(msgId), false])
               conn.writePacket(0x02, rs).catch(err => conn.emit('error', err))
-            } else if (packet.id === 0x01 && !conn.loggedIn) {
+            } else if (
+              packet.id === 0x01 &&
+              conn.state === ConnectionState.LOGIN
+            ) {
               /* Encryption Request */
               if (!accessToken || !selectedProfile) {
                 conn.disconnectReason =

@@ -4,7 +4,11 @@ import {
   NativeModules
 } from 'react-native'
 import events from 'events'
-import { type ServerConnection, type ConnectionOptions } from '.'
+import {
+  type ServerConnection,
+  type ConnectionOptions,
+  ConnectionState
+} from '.'
 import { concatPacketData, type Packet } from '../packet'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
 import { readVarInt, writeVarInt, resolveHostname } from '../utils'
@@ -43,7 +47,7 @@ export class NativeServerConnection
 {
   /* eslint-enable @typescript-eslint/brace-style */
   eventEmitter = new NativeEventEmitter(ConnectionModule)
-  loggedIn = false
+  state = ConnectionState.LOGIN
   closed = false
   id: string
   options: ConnectionOptions
@@ -89,24 +93,27 @@ export class NativeServerConnection
         const { protocolVersion: version } = options
         // Set Compression and Keep Alive are handled in native for now.
         // When modifying this code, apply the same changes to the JavaScript back-end.
-        if (packet.id === 0x02 && !this.loggedIn /* Login Success */) {
-          this.loggedIn = true
+        if (
+          packet.id === 0x02 &&
+          this.state === ConnectionState.LOGIN /* Login Success */
+        ) {
+          this.state = ConnectionState.PLAY
         } else if (
           // Disconnect (login) or Disconnect (play)
-          (packet.id === 0x00 && !this.loggedIn) ||
+          (packet.id === 0x00 && this.state === ConnectionState.LOGIN) ||
           (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
-            this.loggedIn)
+            this.state === ConnectionState.PLAY)
         ) {
           const [chatLength, chatVarIntLength] = readVarInt(packet.data)
           this.disconnectReason = packet.data
             .slice(chatVarIntLength, chatVarIntLength + chatLength)
             .toString('utf8')
-        } else if (packet.id === 0x04 && !this.loggedIn) {
+        } else if (packet.id === 0x04 && this.state === ConnectionState.LOGIN) {
           /* Login Plugin Request */
           const [msgId] = readVarInt(packet.data)
           const rs = concatPacketData([writeVarInt(msgId), false])
           this.writePacket(0x02, rs).catch(err => this.emit('error', err))
-        } else if (packet.id === 0x01 && !this.loggedIn) {
+        } else if (packet.id === 0x01 && this.state === ConnectionState.LOGIN) {
           /* Encryption Request */
           const { accessToken, selectedProfile } = options
           if (!accessToken || !selectedProfile) {

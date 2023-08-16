@@ -15,9 +15,15 @@ export interface ConnectionOptions {
   certificate?: Certificate
 }
 
+export enum ConnectionState {
+  LOGIN,
+  CONFIGURATION,
+  PLAY
+}
+
 export interface ServerConnection extends events.EventEmitter {
   options: ConnectionOptions
-  loggedIn: boolean
+  state: ConnectionState
   closed: boolean
   msgSalt?: Buffer
   disconnectReason?: string

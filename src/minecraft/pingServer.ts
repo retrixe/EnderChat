@@ -88,7 +88,7 @@ export const legacyPing = async (opts: {
           len: data.readUInt16BE(1),
           protocol: +parts[1],
           version: parts[2],
-          ping: time / 2,
+          ping: time,
           motd: parts[3],
           online: +parts[4],
           maxPlayers: +parts[5]
@@ -155,7 +155,7 @@ export const modernPing = async (opts: {
         const response = parseValidJson(json)
 
         resolve({
-          ping: (timeReceived - timeSent) / 2,
+          ping: timeReceived - timeSent,
           version: response.version,
           players: response.players,
           favicon: response.favicon,

@@ -1,7 +1,10 @@
 import type React from 'react'
 import { type Status } from './ChatScreen'
 import { type MinecraftChat, parseValidJson } from '../../minecraft/chatToJsx'
-import { type ServerConnection } from '../../minecraft/connection'
+import {
+  ConnectionState,
+  type ServerConnection
+} from '../../minecraft/connection'
 import {
   concatPacketData,
   type Packet,
@@ -99,7 +102,10 @@ export const packetHandler =
   ) =>
   (packet: Packet) => {
     const { protocolVersion: version } = connection.options
-    if (statusRef.current === 'CONNECTING' && connection.loggedIn) {
+    if (
+      statusRef.current === 'CONNECTING' &&
+      connection.state === ConnectionState.LOGIN
+    ) {
       setLoading('')
       statusRef.current = 'CONNECTED'
       const messageToSend = joinMessage.substring(0, charLimit).trim()
