@@ -15,8 +15,8 @@ import {
 } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 
-import useAsyncStorage from './storage/useAsyncStorage'
-import useJsonAsyncStorage from './storage/useJsonAsyncStorage'
+import useAsyncStorage from './utilities/storage/useAsyncStorage'
+import useJsonAsyncStorage from './utilities/storage/useJsonAsyncStorage'
 import ConnectionContext, {
   type DisconnectReason
 } from './context/connectionContext'
@@ -29,7 +29,7 @@ import ServersContext, { type Servers } from './context/serversContext'
 import { ColorSchemeContext } from './context/useDarkMode'
 import DisconnectDialog from './components/DisconnectDialog'
 import { type ServerConnection } from './minecraft/connection'
-import ChatScreen from './screens/chat/ChatScreen'
+import ChatScreen from './screens/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
 import AccountScreen from './screens/AccountScreen'
 import SettingScreen from './screens/SettingScreen'

@@ -6,13 +6,11 @@ import React, {
   useState
 } from 'react'
 import {
-  FlatList,
   StyleSheet,
   View,
   ActivityIndicator,
   Platform,
-  Linking,
-  type ListRenderItem
+  Linking
 } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import Clipboard from '@react-native-clipboard/clipboard'
@@ -22,89 +20,37 @@ import {
   packetHandler,
   enderChatPrefix,
   sendMessageError
-} from './packetHandler'
-import { getSession, createConnection } from './sessionBuilder'
-import { type RootStackParamList } from '../../App'
-import globalStyle from '../../globalStyle'
-import useDarkMode from '../../context/useDarkMode'
-import AccountsContext from '../../context/accountsContext'
-import ServersContext from '../../context/serversContext'
-import useSessionStore from '../../context/sessionStore'
-import SettingsContext from '../../context/settingsContext'
+} from '../utilities/connection/packetHandler'
+import {
+  getSession,
+  createConnection
+} from '../utilities/connection/connectionBuilder'
+import { type RootStackParamList } from '../App'
+import globalStyle from '../globalStyle'
+import useDarkMode from '../context/useDarkMode'
+import AccountsContext from '../context/accountsContext'
+import ServersContext from '../context/serversContext'
+import useSessionStore from '../context/sessionStore'
+import SettingsContext from '../context/settingsContext'
 import ConnectionContext, {
   type DisconnectReason
-} from '../../context/connectionContext'
+} from '../context/connectionContext'
 import {
-  ChatToJsx,
   mojangColorMap,
   lightColorMap,
   type MinecraftChat,
-  type ClickEvent,
-  type ColorMap
-} from '../../minecraft/chatToJsx'
-import { makeChatMessagePacket } from '../../minecraft/packets/chat'
-import TextField from '../../components/TextField'
-import Text from '../../components/Text'
+  type ClickEvent
+} from '../minecraft/chatToJsx'
+import { makeChatMessagePacket } from '../minecraft/packets/chat'
+import TextField from '../components/TextField'
+import Text from '../components/Text'
+import ChatMessageList, {
+  type Message
+} from '../components/chat/ChatMessageList'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>
 
-export type Status = 'OPENING' | 'CONNECTING' | 'CONNECTED' | 'CLOSED'
-
-interface Message {
-  key: number
-  text: MinecraftChat
-}
-
-const ItemRenderer = (props: {
-  item: Message
-  colorMap: ColorMap
-  clickEventHandler: (event: ClickEvent) => void
-}): JSX.Element => (
-  <ChatToJsx
-    chat={props.item.text}
-    component={Text}
-    colorMap={props.colorMap}
-    clickEventHandler={props.clickEventHandler}
-  />
-)
-
-const ItemRendererMemo = React.memo(
-  ItemRenderer,
-  (prev, next) =>
-    prev.item.key === next.item.key &&
-    prev.colorMap === next.colorMap &&
-    prev.clickEventHandler === next.clickEventHandler
-)
-
-const ChatMessageList = (props: {
-  messages: Message[]
-  colorMap: ColorMap
-  clickEventHandler: (ce: ClickEvent) => void
-}): JSX.Element => {
-  // If colorMap/clickEventHandler changes, this will change and cause a re-render.
-  // If messages changes, FlatList will execute this function for all messages, and
-  // ItemRendererMemo will check if props have changed instead of this useCallback.
-  const renderItem = useCallback<ListRenderItem<Message>>(
-    ({ item }) => (
-      <ItemRendererMemo
-        item={item}
-        colorMap={props.colorMap}
-        clickEventHandler={props.clickEventHandler}
-      />
-    ),
-    [props.colorMap, props.clickEventHandler]
-  )
-  return (
-    <FlatList
-      inverted
-      data={props.messages}
-      style={styles.chatArea}
-      contentContainerStyle={styles.chatAreaScrollView}
-      renderItem={renderItem}
-    />
-  )
-}
-
+export type Status = 'CONNECTING' | 'CONNECTED' | 'CLOSED'
 const handleError =
   (addMessage: (text: MinecraftChat) => void, translated: string) =>
   (error: unknown) => {
@@ -130,7 +76,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
 
   const messagesBufferRef = useRef<Message[]>([])
   const healthRef = useRef<number | null>(null)
-  const statusRef = useRef<Status>(connection ? 'CONNECTING' : 'OPENING')
+  const statusRef = useRef<Status>(connection ? 'CONNECTED' : 'CONNECTING')
   const idRef = useRef(0)
 
   const { version, serverName } = route.params
@@ -173,8 +119,8 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
 
   // Create connection useEffect.
   useEffect(() => {
-    if (statusRef.current === 'OPENING') {
-      statusRef.current = 'CONNECTING'
+    if (statusRef.current === 'CONNECTING') {
+      statusRef.current = 'CONNECTED'
       ;(async () => {
         const session = await getSession(
           version,
@@ -198,7 +144,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
             setConnection,
             closeChatScreen
           )
-          if ((statusRef.current as 'CLOSED' | 'CONNECTING') !== 'CLOSED') {
+          if ((statusRef.current as Status) !== 'CLOSED') {
             if (typeof conn === 'string') {
               closeChatScreen({ server: serverName, reason: conn })
             } else {
@@ -224,7 +170,6 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
       'packet',
       packetHandler(
         healthRef,
-        statusRef,
         setLoading,
         connection,
         addMessage,
@@ -358,8 +303,6 @@ const styles = StyleSheet.create({
   backButton: { marginRight: 8 },
   backButtonIcon: { marginRight: 0 },
   sendButtonIcon: { marginRight: 0, marginLeft: 4 },
-  chatArea: { padding: 8, flex: 1 },
-  chatAreaScrollView: { paddingBottom: 16 },
   loadingScreen: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingScreenText: { paddingTop: 24, fontSize: 20 },
   textAreaDark: {
