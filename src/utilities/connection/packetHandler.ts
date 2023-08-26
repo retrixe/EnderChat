@@ -210,7 +210,14 @@ export const packetHandler =
         .catch(handleError(addMessage, respawnError))
     } else if (packet.id === packetIds.CLIENTBOUND_UPDATE_HEALTH(version)) {
       const newHealth = packet.data.readFloatBE(0)
-      if (healthRef.current != null && healthRef.current > newHealth) {
+      // If you connect to a server when dead, you simply see your health as zero.
+      if (healthRef.current === null && newHealth <= 0) {
+        addMessage(deathRespawnMessage)
+        const clientStatusId = packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0
+        connection // Client Status
+          .writePacket(clientStatusId, writeVarInt(0))
+          .catch(handleError(addMessage, respawnError))
+      } else if (healthRef.current !== null && newHealth < healthRef.current) {
         const info = healthMessage
           .replace('%prev', healthRef.current.toString())
           .replace('%new', newHealth.toString())
