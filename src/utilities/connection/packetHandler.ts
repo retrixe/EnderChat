@@ -189,18 +189,17 @@ export const packetHandler =
         if (action !== 2) return
         data = data.slice(actionLen)
       }
-      data = data.slice(readVarInt(data)[1] + 4) // Remove Player/Entity ID
+      data = data.slice(readVarInt(data)[1]) // Remove Player ID
+      if (version <= protocolMap['1.19.4']) data = data.slice(4) // Remove Killer ID
       const [chatLen, chatViLength] = readVarInt(data)
       const deathMessage = parseValidJson(
         data.slice(chatViLength, chatViLength + chatLen).toString('utf8')
       )
       if (
         (typeof deathMessage === 'string' && deathMessage.trim()) ||
-        deathMessage?.text ||
-        deathMessage?.extra?.length > 0
-      ) {
+        Object.keys(deathMessage).length !== 0
+      )
         addMessage(deathMessage)
-      }
       // Automatically respawn.
       // LOW-TODO: Should this be manual, or a dialog, like MC?
       addMessage(deathRespawnMessage)
