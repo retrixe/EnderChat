@@ -40,12 +40,10 @@ export declare interface NativeServerConnection {
     ((event: string, listener: Function) => this) // eslint-disable-line @typescript-eslint/ban-types
 }
 
-/* eslint-disable @typescript-eslint/brace-style */
 export class NativeServerConnection
   extends events.EventEmitter
   implements ServerConnection
 {
-  /* eslint-enable @typescript-eslint/brace-style */
   eventEmitter = new NativeEventEmitter(ConnectionModule)
   state = ConnectionState.LOGIN
   closed = false

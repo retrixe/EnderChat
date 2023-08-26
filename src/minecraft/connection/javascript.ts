@@ -33,12 +33,10 @@ export declare interface JavaScriptServerConnection {
     ((event: string, listener: Function) => this) // eslint-disable-line @typescript-eslint/ban-types
 }
 
-/* eslint-disable @typescript-eslint/brace-style */
 export class JavaScriptServerConnection
   extends events.EventEmitter
   implements ServerConnection
 {
-  /* eslint-enable @typescript-eslint/brace-style */
   bufferedData: Buffer = Buffer.from([])
   compressionThreshold = -1
   compressionEnabled = false
