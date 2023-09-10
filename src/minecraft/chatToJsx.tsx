@@ -1,6 +1,8 @@
 import React from 'react'
 import { type StyleProp, type TextProps, type TextStyle } from 'react-native'
-import translations from './translations'
+import translationsJson from './translations.json'
+
+const translations: Record<string, string> = translationsJson
 
 export const mojangColorMap: ColorMap = {
   black: '#000000',
