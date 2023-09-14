@@ -218,8 +218,8 @@ export const packetHandler =
           .catch(handleError(addMessage, respawnError))
       } else if (healthRef.current !== null && newHealth < healthRef.current) {
         const info = healthMessage
-          .replace('%prev', healthRef.current.toString())
-          .replace('%new', newHealth.toString())
+          .replace('%prev', Math.ceil(healthRef.current).toString())
+          .replace('%new', Math.ceil(newHealth).toString())
         addMessage(info)
       } // LOW-TODO: Long-term it would be better to have a UI.
       healthRef.current = newHealth
