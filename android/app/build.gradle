@@ -115,10 +115,6 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
-    // TODO: react-native-vector-icons is causing issues, so this is disabled for now
-    lintOptions {
-        checkReleaseBuilds false
-    }
 }
 
 dependencies {
