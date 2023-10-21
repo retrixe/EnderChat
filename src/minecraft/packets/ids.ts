@@ -9,7 +9,9 @@ const generateIdFunction =
   }
 
 const packetIds = {
+  // ===================
   // Clientbound (login)
+  // ===================
   CLIENTBOUND_SET_COMPRESSION: generateIdFunction([
     [protocolMap['1.16.4'], 0x03]
   ]),
@@ -26,10 +28,30 @@ const packetIds = {
     [protocolMap['1.16.4'], 0x00]
   ]),
 
+  // ===========================
+  // Clientbound (configuration)
+  // ===========================
+  CLIENTBOUND_DISCONNECT_CONFIGURATION: generateIdFunction([
+    [protocolMap['1.20.2'], 0x01]
+  ]),
+  CLIENTBOUND_FINISH_CONFIGURATION: generateIdFunction([
+    [protocolMap['1.20.2'], 0x02]
+  ]),
+  CLIENTBOUND_KEEP_ALIVE_CONFIGURATION: generateIdFunction([
+    [protocolMap['1.20.2'], 0x03]
+  ]),
+
+  // ===========================
+  // Serverbound (configuration)
+  // ===========================
+  SERVERBOUND_KEEP_ALIVE_CONFIGURATION: generateIdFunction([
+    [protocolMap['1.20.2'], 0x03]
+  ]),
+
   // ==================
   // Clientbound (play)
   // ==================
-  CLIENTBOUND_KEEP_ALIVE: generateIdFunction([
+  CLIENTBOUND_KEEP_ALIVE_PLAY: generateIdFunction([
     [protocolMap['1.19.4'], 0x23],
     [protocolMap['1.19.3'], 0x1f],
     [protocolMap['1.19.1'], 0x20],
@@ -110,11 +132,14 @@ const packetIds = {
     [protocolMap['1.19'], 0x2d],
     [protocolMap['1.17'], 0x30]
   ]),
+  CLIENTBOUND_START_CONFIGURATION: generateIdFunction([
+    [protocolMap['1.20.2'], 0x65]
+  ]),
 
   // ==================
   // Serverbound (play)
   // ==================
-  SERVERBOUND_KEEP_ALIVE: generateIdFunction([
+  SERVERBOUND_KEEP_ALIVE_PLAY: generateIdFunction([
     [protocolMap['1.19.4'], 0x12],
     [protocolMap['1.19.3'], 0x11],
     [protocolMap['1.19.1'], 0x12],
@@ -163,6 +188,9 @@ const packetIds = {
     [protocolMap['1.19.1'], 0x20],
     [protocolMap['1.19'], 0x1f],
     [protocolMap['1.17'], 0x1d]
+  ]),
+  SERVERBOUND_CONFIGURATION_ACKNOWLEDGED: generateIdFunction([
+    [protocolMap['1.20.2'], 0x0b]
   ])
 }
 

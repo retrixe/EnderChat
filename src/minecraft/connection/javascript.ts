@@ -22,7 +22,7 @@ import {
   ConnectionState
 } from '.'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
-import { readVarInt, writeVarInt, resolveHostname } from '../utils'
+import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
 import packetIds from '../packets/ids'
 
 export declare interface JavaScriptServerConnection {
@@ -153,17 +153,52 @@ const initiateJavaScriptConnection = async (
               packet.id === 0x02 &&
               conn.state === ConnectionState.LOGIN /* Login Success */
             ) {
+              if (version >= protocolMap['1.20.2']) {
+                conn
+                  .writePacket(0x03 /* Login Acknowledged */, Buffer.from([]))
+                  .catch(err => conn.emit('error', err))
+                conn.state = ConnectionState.CONFIGURATION
+              } else conn.state = ConnectionState.PLAY
+            } else if (
+              packet.id ===
+                packetIds.CLIENTBOUND_FINISH_CONFIGURATION(version) &&
+              conn.state === ConnectionState.CONFIGURATION
+            ) {
+              conn
+                .writePacket(0x02 /* Finish Configuration */, Buffer.from([]))
+                .catch(err => conn.emit('error', err))
               conn.state = ConnectionState.PLAY
             } else if (
-              packet.id === packetIds.CLIENTBOUND_KEEP_ALIVE(version)
+              packet.id ===
+                packetIds.CLIENTBOUND_START_CONFIGURATION(version) &&
+              conn.state === ConnectionState.PLAY
             ) {
-              const id = packetIds.SERVERBOUND_KEEP_ALIVE(version)
+              const ackPacketId =
+                packetIds.SERVERBOUND_CONFIGURATION_ACKNOWLEDGED(version)
+              conn
+                .writePacket(ackPacketId ?? 0, Buffer.from([]))
+                .catch(err => conn.emit('error', err))
+              conn.state = ConnectionState.CONFIGURATION
+            } else if (
+              (packet.id === packetIds.CLIENTBOUND_KEEP_ALIVE_PLAY(version) &&
+                conn.state === ConnectionState.PLAY) ||
+              (packet.id ===
+                packetIds.CLIENTBOUND_KEEP_ALIVE_CONFIGURATION(version) &&
+                conn.state === ConnectionState.CONFIGURATION)
+            ) {
+              const id =
+                conn.state === ConnectionState.PLAY
+                  ? packetIds.SERVERBOUND_KEEP_ALIVE_PLAY(version)
+                  : packetIds.SERVERBOUND_KEEP_ALIVE_CONFIGURATION(version)
               conn
                 .writePacket(id ?? 0, packet.data)
                 .catch(err => conn.emit('error', err))
             } else if (
-              // Disconnect (login) or Disconnect (play)
+              // Disconnect (login), Disconnect (configuration) or Disconnect (play)
               (packet.id === 0x00 && conn.state === ConnectionState.LOGIN) ||
+              (packet.id ===
+                packetIds.CLIENTBOUND_DISCONNECT_CONFIGURATION(version) &&
+                conn.state === ConnectionState.CONFIGURATION) ||
               (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
                 conn.state === ConnectionState.PLAY)
             ) {

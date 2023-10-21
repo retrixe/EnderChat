@@ -11,7 +11,7 @@ import {
 } from '.'
 import { concatPacketData, type Packet } from '../packet'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
-import { readVarInt, writeVarInt, resolveHostname } from '../utils'
+import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
 import packetIds from '../packets/ids'
 
 const { ConnectionModule } = NativeModules
@@ -92,13 +92,29 @@ export class NativeServerConnection
         // Set Compression and Keep Alive are handled in native for now.
         // When modifying this code, apply the same changes to the JavaScript back-end.
         if (
-          packet.id === 0x02 &&
-          this.state === ConnectionState.LOGIN /* Login Success */
+          packet.id === 0x02 /* Login Success */ &&
+          this.state === ConnectionState.LOGIN
         ) {
-          this.state = ConnectionState.PLAY
+          this.state =
+            version >= protocolMap['1.20.2']
+              ? ConnectionState.CONFIGURATION // Ack sent by native code
+              : ConnectionState.PLAY
         } else if (
-          // Disconnect (login) or Disconnect (play)
+          packet.id === packetIds.CLIENTBOUND_FINISH_CONFIGURATION(version) &&
+          this.state === ConnectionState.CONFIGURATION
+        ) {
+          this.state = ConnectionState.PLAY // Ack sent by native code
+        } else if (
+          packet.id === packetIds.CLIENTBOUND_START_CONFIGURATION(version) &&
+          this.state === ConnectionState.PLAY
+        ) {
+          this.state = ConnectionState.CONFIGURATION // Ack sent by native code
+        } else if (
+          // Disconnect (login), Disconnect (configuration) or Disconnect (play)
           (packet.id === 0x00 && this.state === ConnectionState.LOGIN) ||
+          (packet.id ===
+            packetIds.CLIENTBOUND_DISCONNECT_CONFIGURATION(version) &&
+            this.state === ConnectionState.CONFIGURATION) ||
           (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
             this.state === ConnectionState.PLAY)
         ) {
