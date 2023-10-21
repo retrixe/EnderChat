@@ -76,7 +76,7 @@ export const resolveHostname = async (
   const res = await req.json()
   const srvRecords = res.Answer?.filter((r: any) => r.type === 33 && r.data)
   if (srvRecords?.length) {
-    // FIXME: Support SRV priority/weight, maybe?
+    // TODO: Support SRV priority/weight, maybe?
     const record = srvRecords.map((r: { data: string }) => r.data.split(' '))[0]
     return [record[3], +record[2]]
   } else return [hostname, port]

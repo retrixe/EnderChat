@@ -189,6 +189,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 return@launch
             }
 
+            // TODO: Refactor this into something nicer a la id.ts in TypeScript...
             // Calculate the necessary packet IDs.
             val is1164 = protocolVersion >= PROTOCOL_VERSION_1164
             val is117 = protocolVersion >= PROTOCOL_VERSION_117
@@ -196,24 +197,41 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             val is1191 = protocolVersion >= PROTOCOL_VERSION_1191
             val is1193 = protocolVersion >= PROTOCOL_VERSION_1193
             val is1194 = protocolVersion >= PROTOCOL_VERSION_1194
-            val keepAliveClientBoundId =
-                if (is1194) 0x23
+            val is1202 = protocolVersion >= PROTOCOL_VERSION_1202
+            // Login state packet IDs
+            val loginSuccessId = 0x02
+            val loginAcknowledgedId = 0x03
+            val setCompressionId = 0x03
+            // Configuration state packet IDs
+            val configurationKeepAliveClientBoundId = 0x03
+            val configurationKeepAliveServerBoundId = 0x03
+            val finishConfigurationClientBoundId = 0x02
+            val finishConfigurationServerBoundId = 0x02
+            // Play state packet IDs
+            val startConfigurationClientBoundId =
+                if (is1202) 0x65
+                else -1
+            val configurationAcknowledgedServerBoundId =
+                if (is1202) 0x0b
+                else -1
+            val playKeepAliveClientBoundId =
+                if (is1202) 0x24
+                else if (is1194) 0x23
                 else if (is1193) 0x1f
                 else if (is1191) 0x20
                 else if (is119) 0x1e
                 else if (is117) 0x21
                 else if (is1164) 0x1f
-                else 0x1f
-            val keepAliveServerBoundId =
-                if (is1194) 0x12
+                else -1
+            val playKeepAliveServerBoundId =
+                if (is1202) 0x14
+                else if (is1194) 0x12
                 else if (is1193) 0x11
                 else if (is1191) 0x12
                 else if (is119) 0x11
                 else if (is117) 0x0f
                 else if (is1164) 0x10
-                else 0x10
-            val loginSuccessId = 0x02
-            val setCompressionId = 0x03
+                else -1
 
             // Re-use the current thread, start reading from the socket.
             val buffer = ByteArrayOutputStream()
@@ -249,16 +267,32 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         buffer.reset() // We know packet.totalLength exists for read/readCompressed.
                         buffer.write(bytes, packet.totalLength!!, bytes.size - packet.totalLength)
 
-                        // We can handle Keep Alive, Login Success and Set Compression.
-                        // No write lock since writePacket isn't called during login sequence (usually).
-                        if (packet.id.value == keepAliveClientBoundId) {
-                            directlyWritePacket(keepAliveServerBoundId, packet.data)
+                        // We handle Keep Alive (both play and configuration), Login Success, Set Compression
+                        // and Start/Finish Configuration state changes.
+                        // FIXME: I feel this is incorrect logic and writePacket should also have a write lock?
+                        // No write lock since writePacket isn't called during login/config sequence (usually).
+                        if (packet.id.value == playKeepAliveClientBoundId && state == ConnectionState.PLAY) {
+                            directlyWritePacket(playKeepAliveServerBoundId, packet.data)
+                        } else if (packet.id.value == configurationKeepAliveClientBoundId &&
+                            state == ConnectionState.CONFIGURATION) {
+                            directlyWritePacket(configurationKeepAliveServerBoundId, packet.data)
                         } else if (packet.id.value == setCompressionId && state == ConnectionState.LOGIN) {
                             val threshold = VarInt.read(packet.data)?.value ?: 0
                             compressionThreshold = threshold
                             compressionEnabled = threshold >= 0
                         } else if (packet.id.value == loginSuccessId && state == ConnectionState.LOGIN) {
+                            state = if (is1202) {
+                                directlyWritePacket(loginAcknowledgedId, ByteArray(0))
+                                ConnectionState.CONFIGURATION
+                            } else ConnectionState.PLAY
+                        } else if (packet.id.value == finishConfigurationClientBoundId &&
+                            state == ConnectionState.CONFIGURATION) {
                             state = ConnectionState.PLAY
+                            directlyWritePacket(finishConfigurationServerBoundId, ByteArray(0))
+                        } else if (packet.id.value == startConfigurationClientBoundId &&
+                            state == ConnectionState.PLAY) {
+                            state = ConnectionState.CONFIGURATION
+                            directlyWritePacket(configurationAcknowledgedServerBoundId, ByteArray(0))
                         }
 
                         // Forward the packet to JavaScript.

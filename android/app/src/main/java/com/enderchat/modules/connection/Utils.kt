@@ -6,6 +6,7 @@ import java.util.zip.Inflater
 
 enum class ConnectionState {
     LOGIN,
+    CONFIGURATION,
     PLAY
 }
 
@@ -15,6 +16,7 @@ const val PROTOCOL_VERSION_119 = 759
 const val PROTOCOL_VERSION_1191 = 760
 const val PROTOCOL_VERSION_1193 = 761
 const val PROTOCOL_VERSION_1194 = 762
+const val PROTOCOL_VERSION_1202 = 764
 
 fun compressData(bytes: ByteArray): ByteArray {
     ByteArrayOutputStream(bytes.size).use {
