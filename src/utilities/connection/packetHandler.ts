@@ -88,6 +88,7 @@ const handleSystemMessage = (
 
 export const packetHandler =
   (
+    performedInitialActionsRef: React.MutableRefObject<boolean>,
     healthRef: React.MutableRefObject<number | null>,
     setLoading: React.Dispatch<React.SetStateAction<string>>,
     connection: ServerConnection,
@@ -100,132 +101,157 @@ export const packetHandler =
   ) =>
   (packet: Packet) => {
     const { protocolVersion: version } = connection.options
-    if (connection.state === ConnectionState.LOGIN) {
-      setLoading('')
-      const messageToSend = joinMessage.substring(0, charLimit).trim()
-      if (sendJoinMessage && messageToSend) {
-        connection
-          .writePacket(...makeChatMessagePacket(messageToSend, version))
-          .catch(handleError(addMessage, sendMessageError))
-      }
-      if (sendSpawnCommand) {
-        connection
-          .writePacket(...makeChatMessagePacket('/spawn', version))
-          .catch(handleError(addMessage, sendMessageError))
-      }
-    }
-
     const is117 = version >= protocolMap[1.17]
     const is118 = version >= protocolMap[1.18]
     const is1191 = version >= protocolMap['1.19.1']
-    if (packet.id === packetIds.CLIENTBOUND_LOGIN_PLAY(version)) {
-      // Send Client Settings packet.
-      const clientSettingsId =
-        packetIds.SERVERBOUND_CLIENT_SETTINGS(version) ?? 0
-      const viewDistance = Buffer.alloc(1)
-      viewDistance.writeInt8(2)
-      const skinParts = Buffer.alloc(1)
-      skinParts.writeUInt8(0b11111111)
-      // TODO: Intl in future? And other setting changes too.
-      const packetData: PacketDataTypes[] = [
-        'en_US',
-        viewDistance,
-        writeVarInt(0),
-        true,
-        skinParts,
-        writeVarInt(1)
-      ]
-      if (is117) packetData.push(!is118)
-      if (is118) packetData.push(true)
-      connection
-        .writePacket(clientSettingsId, concatPacketData(packetData))
-        .catch(handleError(addMessage, clientSettingsError))
-    } else if (packet.id === packetIds.CLIENTBOUND_RESPAWN(version)) {
-      // Send spawn command when switching worlds.
-      if (sendSpawnCommand) {
-        connection
-          .writePacket(...makeChatMessagePacket('/spawn', version))
-          .catch(handleError(addMessage, sendMessageError))
-      }
-    } else if (packet.id === packetIds.CLIENTBOUND_CHAT_MESSAGE(version)) {
-      handleSystemMessage(packet, addMessage, handleError, is1191)
-    } else if (
-      packet.id === packetIds.CLIENTBOUND_SYSTEM_CHAT_MESSAGE(version)
-    ) {
-      handleSystemMessage(packet, addMessage, handleError, is1191)
-    } else if (
-      packet.id === packetIds.CLIENTBOUND_PLAYER_CHAT_MESSAGE(version)
-    ) {
-      try {
-        const { type, displayName, signedChat, unsignedChat } =
-          parsePlayerChatMessage(packet.data)
-        // TODO-1.19: Support sender team name
-        if (type === 0 || type === 1) {
-          addMessage({
-            translate: 'chat.type.text',
-            with: [
-              parseValidJson(displayName),
-              parseValidJson(unsignedChat ?? signedChat)
-            ]
-          })
-        }
-      } catch (e) {
-        handleError(addMessage, parseMessageError)(e)
-      }
-    } else if (packet.id === packetIds.CLIENTBOUND_OPEN_WINDOW(version)) {
-      // Just close the window.
-      const [windowId] = readVarInt(packet.data)
-      const buf = Buffer.alloc(1)
-      buf.writeUInt8(windowId)
-      connection // Close Window (serverbound)
-        .writePacket(packetIds.SERVERBOUND_CLOSE_WINDOW(version) ?? 0, buf)
-        .catch(handleError(addMessage, inventoryCloseError))
-    } else if (
-      packet.id === packetIds.CLIENTBOUND_DEATH_COMBAT_EVENT(version)
-    ) {
-      let data = packet.data
-      if (!is117) {
-        const [action, actionLen] = readVarInt(data)
-        if (action !== 2) return
-        data = data.slice(actionLen)
-      }
-      data = data.slice(readVarInt(data)[1]) // Remove Player ID
-      if (version <= protocolMap['1.19.4']) data = data.slice(4) // Remove Killer ID
-      const [chatLen, chatViLength] = readVarInt(data)
-      const deathMessage = parseValidJson(
-        data.slice(chatViLength, chatViLength + chatLen).toString('utf8')
-      )
+
+    // FIXME: 1.20.2 also has a second Client Information in configuration state.
+    if (connection.state === ConnectionState.PLAY) {
       if (
-        (typeof deathMessage === 'string' && deathMessage.trim()) ||
-        Object.keys(deathMessage).length !== 0
-      )
-        addMessage(deathMessage)
-      // Automatically respawn.
-      // LOW-TODO: Should this be manual, or a dialog, like MC?
-      addMessage(deathRespawnMessage)
-      const clientStatusId = packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0
-      connection // Client Status
-        .writePacket(clientStatusId, writeVarInt(0))
-        .catch(handleError(addMessage, respawnError))
-    } else if (packet.id === packetIds.CLIENTBOUND_UPDATE_HEALTH(version)) {
-      const newHealth = packet.data.readFloatBE(0)
-      // If you connect to a server when dead, you simply see your health as zero.
-      if (healthRef.current === null && newHealth <= 0) {
+        packet.id === packetIds.CLIENTBOUND_LOGIN_SUCCESS(version) ||
+        packet.id === packetIds.CLIENTBOUND_FINISH_CONFIGURATION(version)
+      ) {
+        setLoading('')
+      } else if (packet.id === packetIds.CLIENTBOUND_LOGIN_PLAY(version)) {
+        // Send Client Settings packet.
+        const clientSettingsId =
+          packetIds.SERVERBOUND_CLIENT_SETTINGS(version) ?? 0
+        const viewDistance = Buffer.alloc(1)
+        viewDistance.writeInt8(2)
+        const skinParts = Buffer.alloc(1)
+        skinParts.writeUInt8(0b11111111)
+        // TODO: Intl in future? And other setting changes too.
+        const packetData: PacketDataTypes[] = [
+          'en_US',
+          viewDistance,
+          writeVarInt(0),
+          true,
+          skinParts,
+          writeVarInt(1)
+        ]
+        if (is117) packetData.push(!is118)
+        if (is118) packetData.push(true)
+        connection
+          .writePacket(clientSettingsId, concatPacketData(packetData))
+          .catch(handleError(addMessage, clientSettingsError))
+        if (!performedInitialActionsRef.current) {
+          performedInitialActionsRef.current = true // Proxies send this packet multiple times.
+          // Send spawn command.
+          if (sendSpawnCommand) {
+            connection
+              .writePacket(...makeChatMessagePacket('/spawn', version))
+              .catch(handleError(addMessage, sendMessageError))
+          }
+          // Send join message.
+          const messageToSend = joinMessage.substring(0, charLimit).trim()
+          if (sendJoinMessage && messageToSend) {
+            connection
+              .writePacket(...makeChatMessagePacket(messageToSend, version))
+              .catch(handleError(addMessage, sendMessageError))
+          }
+        }
+      } else if (packet.id === packetIds.CLIENTBOUND_RESPAWN(version)) {
+        // Send spawn command when switching worlds.
+        // FIXME: This packet is not recv when switching worlds on Velocity...
+        // Perhaps we track dimension ID or something and equate the two or something?
+        if (sendSpawnCommand) {
+          connection
+            .writePacket(...makeChatMessagePacket('/spawn', version))
+            .catch(handleError(addMessage, sendMessageError))
+        }
+      } else if (packet.id === packetIds.CLIENTBOUND_CHAT_MESSAGE(version)) {
+        handleSystemMessage(packet, addMessage, handleError, is1191)
+      } else if (
+        packet.id === packetIds.CLIENTBOUND_SYSTEM_CHAT_MESSAGE(version)
+      ) {
+        handleSystemMessage(packet, addMessage, handleError, is1191)
+      } else if (
+        packet.id === packetIds.CLIENTBOUND_PLAYER_CHAT_MESSAGE(version)
+      ) {
+        try {
+          const { type, displayName, signedChat, unsignedChat } =
+            parsePlayerChatMessage(packet.data)
+          // TODO-1.19: Support sender team name
+          if (type === 0 || type === 1) {
+            addMessage({
+              translate: 'chat.type.text',
+              with: [
+                parseValidJson(displayName),
+                parseValidJson(unsignedChat ?? signedChat)
+              ]
+            })
+          }
+        } catch (e) {
+          handleError(addMessage, parseMessageError)(e)
+        }
+      } else if (packet.id === packetIds.CLIENTBOUND_OPEN_WINDOW(version)) {
+        // Just close the window.
+        const [windowId] = readVarInt(packet.data)
+        const buf = Buffer.alloc(1)
+        buf.writeUInt8(windowId)
+        connection // Close Window (serverbound)
+          .writePacket(packetIds.SERVERBOUND_CLOSE_WINDOW(version) ?? 0, buf)
+          .catch(handleError(addMessage, inventoryCloseError))
+      } else if (
+        packet.id === packetIds.CLIENTBOUND_DEATH_COMBAT_EVENT(version)
+      ) {
+        let data = packet.data
+        if (!is117) {
+          const [action, actionLen] = readVarInt(data)
+          if (action !== 2) return
+          data = data.slice(actionLen)
+        }
+        data = data.slice(readVarInt(data)[1]) // Remove Player ID
+        if (version <= protocolMap['1.19.4']) data = data.slice(4) // Remove Killer ID
+        const [chatLen, chatViLength] = readVarInt(data)
+        const deathMessage = parseValidJson(
+          data.slice(chatViLength, chatViLength + chatLen).toString('utf8')
+        )
+        if (
+          (typeof deathMessage === 'string' && deathMessage.trim()) ||
+          Object.keys(deathMessage).length !== 0
+        )
+          addMessage(deathMessage)
+        // Automatically respawn.
+        // LOW-TODO: Should this be manual, or a dialog, like MC?
         addMessage(deathRespawnMessage)
         const clientStatusId = packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0
         connection // Client Status
           .writePacket(clientStatusId, writeVarInt(0))
           .catch(handleError(addMessage, respawnError))
-      } else if (healthRef.current !== null && newHealth < healthRef.current) {
-        const info = healthMessage
-          .replace('%prev', Math.ceil(healthRef.current).toString())
-          .replace('%new', Math.ceil(newHealth).toString())
-        addMessage(info)
-      } // LOW-TODO: Long-term it would be better to have a UI.
-      healthRef.current = newHealth
-    } else if (packet.id === packetIds.CLIENTBOUND_PING(version)) {
-      connection // Pong (play)
-        .writePacket(packetIds.SERVERBOUND_PONG(version) ?? 0, packet.data)
-        .catch(handleError(addMessage, unknownError))
+      } else if (packet.id === packetIds.CLIENTBOUND_UPDATE_HEALTH(version)) {
+        const health = packet.data.readFloatBE(0)
+        // If you connect to a server when dead, you simply see your health as zero.
+        if (healthRef.current === null && health <= 0) {
+          addMessage(deathRespawnMessage)
+          const clientStatusId = packetIds.SERVERBOUND_CLIENT_STATUS(version)
+          connection // Client Status
+            .writePacket(clientStatusId ?? 0, writeVarInt(0))
+            .catch(handleError(addMessage, respawnError))
+        } else if (healthRef.current !== null && health < healthRef.current) {
+          const info = healthMessage
+            .replace('%prev', Math.ceil(healthRef.current).toString())
+            .replace('%new', Math.ceil(health).toString())
+          addMessage(info)
+        } // LOW-TODO: Long-term it would be better to have a UI.
+        healthRef.current = health
+      } else if (packet.id === packetIds.CLIENTBOUND_PING_PLAY(version)) {
+        const responseId = packetIds.SERVERBOUND_PONG_PLAY(version)
+        connection // Pong (play)
+          .writePacket(responseId ?? 0, packet.data)
+          .catch(handleError(addMessage, unknownError))
+      }
+    } else if (connection.state === ConnectionState.CONFIGURATION) {
+      if (packet.id === packetIds.CLIENTBOUND_PING_CONFIGURATION(version)) {
+        const responseId = packetIds.SERVERBOUND_PONG_CONFIGURATION(version)
+        connection // Pong (play)
+          .writePacket(responseId ?? 0, packet.data)
+          .catch(handleError(addMessage, unknownError))
+      } else if (
+        // Just keep `Logging In...`: packet.id === packetIds.CLIENTBOUND_LOGIN_SUCCESS(version)
+        packet.id === packetIds.CLIENTBOUND_START_CONFIGURATION(version)
+      ) {
+        setLoading('Reconfiguring...')
+      }
     }
   }

@@ -189,7 +189,6 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 return@launch
             }
 
-            // TODO: Refactor this into something nicer a la id.ts in TypeScript...
             // Calculate the necessary packet IDs.
             val is1164 = protocolVersion >= PROTOCOL_VERSION_1164
             val is117 = protocolVersion >= PROTOCOL_VERSION_117

@@ -40,6 +40,9 @@ const packetIds = {
   CLIENTBOUND_KEEP_ALIVE_CONFIGURATION: generateIdFunction([
     [protocolMap['1.20.2'], 0x03]
   ]),
+  CLIENTBOUND_PING_CONFIGURATION: generateIdFunction([
+    [protocolMap['1.20.2'], 0x04]
+  ]),
 
   // ===========================
   // Serverbound (configuration)
@@ -47,11 +50,15 @@ const packetIds = {
   SERVERBOUND_KEEP_ALIVE_CONFIGURATION: generateIdFunction([
     [protocolMap['1.20.2'], 0x03]
   ]),
+  SERVERBOUND_PONG_CONFIGURATION: generateIdFunction([
+    [protocolMap['1.20.2'], 0x04]
+  ]),
 
   // ==================
   // Clientbound (play)
   // ==================
   CLIENTBOUND_KEEP_ALIVE_PLAY: generateIdFunction([
+    [protocolMap['1.20.2'], 0x24],
     [protocolMap['1.19.4'], 0x23],
     [protocolMap['1.19.3'], 0x1f],
     [protocolMap['1.19.1'], 0x20],
@@ -60,6 +67,7 @@ const packetIds = {
     [protocolMap['1.16.4'], 0x1f]
   ]),
   CLIENTBOUND_DISCONNECT_PLAY: generateIdFunction([
+    [protocolMap['1.20.2'], 0x1b],
     [protocolMap['1.19.4'], 0x1a],
     [protocolMap['1.19.3'], 0x17],
     [protocolMap['1.19.1'], 0x19],
@@ -68,6 +76,7 @@ const packetIds = {
     [protocolMap['1.16.4'], 0x19]
   ]),
   CLIENTBOUND_LOGIN_PLAY: generateIdFunction([
+    [protocolMap['1.20.2'], 0x29],
     [protocolMap['1.19.4'], 0x28],
     [protocolMap['1.19.3'], 0x24],
     [protocolMap['1.19.1'], 0x25],
@@ -76,6 +85,7 @@ const packetIds = {
     [protocolMap['1.16.4'], 0x24]
   ]),
   CLIENTBOUND_RESPAWN: generateIdFunction([
+    [protocolMap['1.20.2'], 0x43],
     [protocolMap['1.19.4'], 0x41],
     [protocolMap['1.19.3'], 0x3d],
     [protocolMap['1.19.1'], 0x3e],
@@ -85,6 +95,7 @@ const packetIds = {
   ]),
   // AKA Set Health
   CLIENTBOUND_UPDATE_HEALTH: generateIdFunction([
+    [protocolMap['1.20.2'], 0x59],
     [protocolMap['1.19.4'], 0x57],
     [protocolMap['1.19.3'], 0x53],
     [protocolMap['1.19.1'], 0x55],
@@ -93,6 +104,7 @@ const packetIds = {
   ]),
   // AKA Combat Death
   CLIENTBOUND_DEATH_COMBAT_EVENT: generateIdFunction([
+    [protocolMap['1.20.2'], 0x3a],
     [protocolMap['1.19.4'], 0x38],
     [protocolMap['1.19.3'], 0x34],
     [protocolMap['1.19.1'], 0x36],
@@ -102,6 +114,7 @@ const packetIds = {
   ]),
   // AKA Open Screen
   CLIENTBOUND_OPEN_WINDOW: generateIdFunction([
+    [protocolMap['1.20.2'], 0x31],
     [protocolMap['1.19.4'], 0x30],
     [protocolMap['1.19.3'], 0x2c],
     [protocolMap['1.19.1'], 0x2d],
@@ -114,18 +127,21 @@ const packetIds = {
     [protocolMap['1.16.4'], 0x0e]
   ]),
   CLIENTBOUND_PLAYER_CHAT_MESSAGE: generateIdFunction([
+    [protocolMap['1.20.2'], 0x37],
     [protocolMap['1.19.4'], 0x35],
     [protocolMap['1.19.3'], 0x31],
     [protocolMap['1.19.1'], 0x33],
     [protocolMap['1.19'], 0x30]
   ]),
   CLIENTBOUND_SYSTEM_CHAT_MESSAGE: generateIdFunction([
+    [protocolMap['1.20.2'], 0x67],
     [protocolMap['1.19.4'], 0x64],
     [protocolMap['1.19.3'], 0x60],
     [protocolMap['1.19.1'], 0x62],
     [protocolMap['1.19'], 0x5f]
   ]),
-  CLIENTBOUND_PING: generateIdFunction([
+  CLIENTBOUND_PING_PLAY: generateIdFunction([
+    [protocolMap['1.20.2'], 0x33],
     [protocolMap['1.19.4'], 0x32],
     [protocolMap['1.19.3'], 0x2e],
     [protocolMap['1.19.1'], 0x2f],
@@ -140,6 +156,7 @@ const packetIds = {
   // Serverbound (play)
   // ==================
   SERVERBOUND_KEEP_ALIVE_PLAY: generateIdFunction([
+    [protocolMap['1.20.2'], 0x14],
     [protocolMap['1.19.4'], 0x12],
     [protocolMap['1.19.3'], 0x11],
     [protocolMap['1.19.1'], 0x12],
@@ -149,6 +166,7 @@ const packetIds = {
   ]),
   // AKA Close Container
   SERVERBOUND_CLOSE_WINDOW: generateIdFunction([
+    [protocolMap['1.20.2'], 0x0e],
     [protocolMap['1.19.4'], 0x0c],
     [protocolMap['1.19.3'], 0x0f],
     [protocolMap['1.19.1'], 0x0c],
@@ -158,6 +176,7 @@ const packetIds = {
   ]),
   // AKA Client Information
   SERVERBOUND_CLIENT_SETTINGS: generateIdFunction([
+    [protocolMap['1.20.2'], 0x09],
     [protocolMap['1.19.4'], 0x08],
     [protocolMap['1.19.3'], 0x07],
     [protocolMap['1.19.1'], 0x08],
@@ -166,6 +185,7 @@ const packetIds = {
   ]),
   // AKA Client Command
   SERVERBOUND_CLIENT_STATUS: generateIdFunction([
+    [protocolMap['1.20.2'], 0x08],
     [protocolMap['1.19.4'], 0x07],
     [protocolMap['1.19.3'], 0x06],
     [protocolMap['1.19.1'], 0x07],
@@ -182,7 +202,8 @@ const packetIds = {
     [protocolMap['1.19'], 0x03],
     [protocolMap['1.16.4'], null]
   ]),
-  SERVERBOUND_PONG: generateIdFunction([
+  SERVERBOUND_PONG_PLAY: generateIdFunction([
+    [protocolMap['1.20.2'], 0x23],
     [protocolMap['1.19.4'], 0x20],
     [protocolMap['1.19.3'], 0x1f],
     [protocolMap['1.19.1'], 0x20],

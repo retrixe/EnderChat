@@ -41,6 +41,7 @@ import {
   type MinecraftChat,
   type ClickEvent
 } from '../minecraft/chatToJsx'
+import { ConnectionState } from '../minecraft/connection'
 import { makeChatMessagePacket } from '../minecraft/packets/chat'
 import TextField from '../components/TextField'
 import Text from '../components/Text'
@@ -74,6 +75,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
   const [loading, setLoading] = useState('Connecting to server...')
   const [message, setMessage] = useState('')
 
+  const performedInitialActionsRef = useRef(false)
   const messagesBufferRef = useRef<Message[]>([])
   const healthRef = useRef<number | null>(null)
   const statusRef = useRef<Status>(connection ? 'CONNECTED' : 'CONNECTING')
@@ -169,6 +171,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
     connection.on(
       'packet',
       packetHandler(
+        performedInitialActionsRef,
         healthRef,
         setLoading,
         connection,
@@ -192,7 +195,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
   ])
 
   const sendMessage = (msg: string, saveHistory: boolean): void => {
-    if (!connection || !msg) return
+    if (!connection || !msg || connection.state !== ConnectionState.PLAY) return
     setMessage('')
     if (msg.startsWith('/') && saveHistory) {
       setCommandHistory(ch => ch.concat([msg]))
