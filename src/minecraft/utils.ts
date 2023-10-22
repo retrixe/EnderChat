@@ -18,7 +18,7 @@ export const protocolMap = {
   '1.20': 763,
   '1.20.1': 763,
   '1.20.2': 764,
-  latest: 763,
+  latest: 764,
   auto: -1
 }
 

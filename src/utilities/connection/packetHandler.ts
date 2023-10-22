@@ -105,7 +105,7 @@ export const packetHandler =
     const is118 = version >= protocolMap[1.18]
     const is1191 = version >= protocolMap['1.19.1']
 
-    // FIXME: 1.20.2 also has a second Client Information in configuration state.
+    // LOW-TODO: 1.20.2 also has a second Client Information in configuration state, do we send it?
     if (connection.state === ConnectionState.PLAY) {
       if (
         packet.id === packetIds.CLIENTBOUND_LOGIN_SUCCESS(version) ||
@@ -120,7 +120,7 @@ export const packetHandler =
         viewDistance.writeInt8(2)
         const skinParts = Buffer.alloc(1)
         skinParts.writeUInt8(0b11111111)
-        // TODO: Intl in future? And other setting changes too.
+        // LOW-TODO: Intl in future? And other setting changes too.
         const packetData: PacketDataTypes[] = [
           'en_US',
           viewDistance,
@@ -152,8 +152,7 @@ export const packetHandler =
         }
       } else if (packet.id === packetIds.CLIENTBOUND_RESPAWN(version)) {
         // Send spawn command when switching worlds.
-        // FIXME: This packet is not recv when switching worlds on Velocity...
-        // Perhaps we track dimension ID or something and equate the two or something?
+        // TODO: Velocity doesn't send this, only Login on switching worlds. Track dimension?
         if (sendSpawnCommand) {
           connection
             .writePacket(...makeChatMessagePacket('/spawn', version))

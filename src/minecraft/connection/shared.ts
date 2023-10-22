@@ -56,11 +56,16 @@ export const getLoginPacket = (opts: ConnectionOptions): Buffer => {
     } */
   }
   if (opts.protocolVersion >= protocolMap['1.19.1']) {
+    if (opts.protocolVersion < protocolMap['1.20.2']) {
+      data.push(concatPacketData([!!opts.selectedProfile]))
+    }
     if (opts.selectedProfile) {
       const msb = Buffer.from(opts.selectedProfile.substring(0, 16), 'hex')
       const lsb = Buffer.from(opts.selectedProfile.substring(16), 'hex')
-      data.push(concatPacketData([true, msb, lsb]))
-    } else data.push(concatPacketData([false]))
+      data.push(concatPacketData([msb, lsb]))
+    } else if (opts.protocolVersion >= protocolMap['1.20.2']) {
+      data.push(concatPacketData([Buffer.alloc(8), Buffer.alloc(8)]))
+    }
   }
   return concatPacketData(data)
 }
