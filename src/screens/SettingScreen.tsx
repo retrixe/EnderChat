@@ -79,13 +79,28 @@ const SettingScreen = ({ navigation }: StackProps | TabProps): JSX.Element => {
           value={settings.disableAutoCorrect}
           setValue={disableAutoCorrect => setSettings({ disableAutoCorrect })}
         />
-        {/* TODO: Text Font, Font Size, Chat Theme, Feedback/Support */}
-        <Setting name='Version' value={version} />
+        {/* TODO: Text Font, Font Size, Chat Theme */}
         <Setting
-          name='Privacy Policy'
-          value='Tap to open the privacy policy in your browser.'
+          name='Version'
+          value={version}
           onClick={() => {
-            const url = 'https://github.com/retrixe/EnderChat#privacy-policy'
+            const url = `https://github.com/retrixe/EnderChat/releases/${version}`
+            Linking.openURL(url).catch(console.error)
+          }}
+        />
+        <Setting
+          name='Feedback/Support'
+          value='Tap to open the GitHub Issues page, or join our Discord!'
+          onClick={() => {
+            const url = 'https://github.com/retrixe/EnderChat/issues'
+            Linking.openURL(url).catch(console.error)
+          }}
+        />
+        <Setting
+          name='Discord Server'
+          value='Tap to open the Discord server invite.'
+          onClick={() => {
+            const url = 'https://discord.gg/MFSJa9TpPS'
             Linking.openURL(url).catch(console.error)
           }}
         />
@@ -102,6 +117,14 @@ const SettingScreen = ({ navigation }: StackProps | TabProps): JSX.Element => {
           value='Mozilla Public License 2.0'
           onClick={() => {
             const url = 'https://www.mozilla.org/en-US/MPL/2.0/'
+            Linking.openURL(url).catch(console.error)
+          }}
+        />
+        <Setting
+          name='Privacy Policy'
+          value='Tap to open the privacy policy in your browser.'
+          onClick={() => {
+            const url = 'https://github.com/retrixe/EnderChat#privacy-policy'
             Linking.openURL(url).catch(console.error)
           }}
         />
