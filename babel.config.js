@@ -4,7 +4,7 @@ module.exports = {
       plugins: ['transform-remove-console']
     }
   },
-  presets: ['module:metro-react-native-babel-preset'],
+  presets: ['module:@react-native/babel-preset'],
   // The following plugin will rewrite imports. Reimplementations of node
   // libraries such as `assert`, `buffer`, etc. will be picked up
   // automatically by the React Native packager.  All other built-in node

@@ -83,9 +83,8 @@ const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
           config.clientId,
           config.scope
         )
-        const [xboxLiveToken, xboxUserHash] = await getXboxLiveTokenAndUserHash(
-          msAccessToken
-        )
+        const [xboxLiveToken, xboxUserHash] =
+          await getXboxLiveTokenAndUserHash(msAccessToken)
         const [xstsToken] = await getXstsTokenAndUserHash(xboxLiveToken)
         const accessToken = await authenticateWithXsts(xstsToken, xboxUserHash)
         const gameProfile = await getGameProfile(accessToken)
