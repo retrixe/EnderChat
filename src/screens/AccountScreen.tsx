@@ -79,8 +79,8 @@ const AccountScreen = (): JSX.Element => {
             accounts[a].active
               ? -1
               : accounts[b].active
-              ? 1
-              : a.localeCompare(b)
+                ? 1
+                : a.localeCompare(b)
           )
           .map(uuid => (
             <AccountDisplay

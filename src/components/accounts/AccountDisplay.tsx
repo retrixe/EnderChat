@@ -38,8 +38,8 @@ const AccountDisplay = ({
           {account.type === 'mojang'
             ? 'Mojang: ' + account.email
             : account.type === 'microsoft'
-            ? 'Microsoft Account'
-            : 'Offline Mode'}
+              ? 'Microsoft Account'
+              : 'Offline Mode'}
         </Text>
         {account.active && <Text style={styles.active}>Active Account</Text>}
       </View>

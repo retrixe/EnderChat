@@ -222,8 +222,8 @@ const flattenComponents = (chat: MinecraftChat): PlainTextChat[] => {
     c.text && hasColorCodes(c.text)
       ? parseColorCodes(c.text).map(e => ({ ...c, ...e }))
       : c.text
-      ? [c]
-      : []
+        ? [c]
+        : []
   if (!extra) return arr
   const flattenedExtra = extra.flatMap(e => {
     if (typeof e === 'string') e = { text: e } // Colour codes will be parsed in the next step.

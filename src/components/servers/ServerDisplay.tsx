@@ -79,8 +79,8 @@ const ServerDisplay = ({
             {ping === null
               ? 'An error occurred when pinging server.'
               : ping === false
-              ? 'No route to host!'
-              : 'Pinging...'}
+                ? 'No route to host!'
+                : 'Pinging...'}
           </Text>
         )}
       </View>
