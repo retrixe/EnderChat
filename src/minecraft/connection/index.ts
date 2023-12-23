@@ -28,11 +28,7 @@ export interface ServerConnection extends events.EventEmitter {
   msgSalt?: Buffer
   disconnectReason?: string
 
-  writePacket: (
-    packetId: number,
-    data: Buffer,
-    cb?: ((err?: Error | undefined) => void) | undefined
-  ) => Promise<boolean>
+  writePacket: (packetId: number, data: Buffer) => Promise<boolean>
 
   close: () => void
 

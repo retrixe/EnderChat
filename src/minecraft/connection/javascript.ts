@@ -55,17 +55,14 @@ export class JavaScriptServerConnection
     this.options = options
   }
 
-  async writePacket(
-    packetId: number,
-    data: Buffer,
-    cb?: ((err?: Error | undefined) => void) | undefined
-  ): Promise<boolean> {
+  async writePacket(packetId: number, data: Buffer): Promise<boolean> {
     const compressionThreshold = this.compressionThreshold
     const packet = this.compressionEnabled
       ? await makeBaseCompressedPacket(compressionThreshold, packetId, data)
       : makeBasePacket(packetId, data)
     const toWrite = this.aesCipher ? this.aesCipher.update(packet) : packet
-    return this.socket.write(toWrite, cb)
+    // Technically, this completes when cb is called, but we don't care.
+    return this.socket.write(toWrite)
   }
 
   onlyOneCloseCall = false
