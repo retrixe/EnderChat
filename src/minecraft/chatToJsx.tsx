@@ -63,6 +63,7 @@ export interface BaseChat {
   insertion?: string // LOW-TODO: Support this.
   clickEvent?: ClickEvent
   hoverEvent?: HoverEvent
+  type?: 'text' | 'translatable' | 'score' | 'keybind' | 'nbt' // LOW-TODO: Support keybind and score
 }
 
 export interface PlainTextChat extends BaseChat {

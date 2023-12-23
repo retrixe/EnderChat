@@ -197,6 +197,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             val is1193 = protocolVersion >= PROTOCOL_VERSION_1193
             val is1194 = protocolVersion >= PROTOCOL_VERSION_1194
             val is1202 = protocolVersion >= PROTOCOL_VERSION_1202
+            val is1203 = protocolVersion >= PROTOCOL_VERSION_1203
             // Login state packet IDs
             val loginSuccessId = 0x02
             val loginAcknowledgedId = 0x03
@@ -208,9 +209,10 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             val finishConfigurationServerBoundId = 0x02
             // Play state packet IDs
             val startConfigurationClientBoundId =
-                if (is1202) 0x65
+                if (is1203) 0x67
+                else if (is1202) 0x65
                 else -1
-            val configurationAcknowledgedServerBoundId =
+            val acknowledgeConfigurationServerBoundId =
                 if (is1202) 0x0b
                 else -1
             val playKeepAliveClientBoundId =
@@ -223,7 +225,8 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 else if (is1164) 0x1f
                 else -1
             val playKeepAliveServerBoundId =
-                if (is1202) 0x14
+                if (is1203) 0x15
+                else if (is1202) 0x14
                 else if (is1194) 0x12
                 else if (is1193) 0x11
                 else if (is1191) 0x12
@@ -291,7 +294,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         } else if (packet.id.value == startConfigurationClientBoundId &&
                             state == ConnectionState.PLAY) {
                             state = ConnectionState.CONFIGURATION
-                            directlyWritePacket(configurationAcknowledgedServerBoundId, ByteArray(0))
+                            directlyWritePacket(acknowledgeConfigurationServerBoundId, ByteArray(0))
                         }
 
                         // Forward the packet to JavaScript.

@@ -171,7 +171,7 @@ const initiateJavaScriptConnection = async (
               conn.state === ConnectionState.PLAY
             ) {
               const ackPacketId =
-                packetIds.SERVERBOUND_CONFIGURATION_ACKNOWLEDGED(version)
+                packetIds.SERVERBOUND_ACKNOWLEDGE_CONFIGURATION(version)
               conn
                 .writePacket(ackPacketId ?? 0, Buffer.from([]))
                 .catch(err => conn.emit('error', err))

@@ -6,7 +6,8 @@ import {
   padBufferToLength,
   resolveHostname,
   readVarInt,
-  writeVarInt
+  writeVarInt,
+  protocolMap
 } from './utils'
 import {
   makeBasePacket,
@@ -116,7 +117,12 @@ export const modernPing = async (opts: {
       // Create data to send in Handshake.
       const portBuf = Buffer.alloc(2)
       portBuf.writeUInt16BE(port)
-      const handshakeData = [writeVarInt(-1), host, portBuf, writeVarInt(1)]
+      const handshakeData = [
+        writeVarInt(protocolMap.latest), // It would be better to use -1, but some servers misbehave
+        host,
+        portBuf,
+        writeVarInt(1)
+      ]
 
       // Initialise Handshake with server.
       socket.write(makeBasePacket(0x00, concatPacketData(handshakeData)), () =>
@@ -146,7 +152,7 @@ export const modernPing = async (opts: {
       try {
         const responsePacket = packets.find(p => p.id === 0x00)
         if (!responsePacket) {
-          return reject(new TypeError('No response packet was sent!'))
+          return reject(new Error('No response packet was sent!'))
         }
         const [jsonLength, varIntLength] = readVarInt(responsePacket.data)
         const json = responsePacket.data
