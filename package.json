@@ -11,7 +11,7 @@
     "test": "jest",
     "lint": "tsc && eslint ."
   },
-  "packageManager": "yarn@4.0.1",
+  "packageManager": "yarn@4.0.2",
   "engines": {
     "node": ">=18"
   },
@@ -28,7 +28,7 @@
     "buffer": "^6.0.3",
     "events": "^3.3.0",
     "react": "18.2.0",
-    "react-native": "0.73.0",
+    "react-native": "0.73.2",
     "react-native-crypto": "^2.2.0",
     "react-native-pager-view": "^6.2.0",
     "react-native-randombytes": "^3.6.1",
@@ -46,10 +46,10 @@
     "@babel/core": "^7.22.9",
     "@babel/preset-env": "^7.22.9",
     "@babel/runtime": "^7.22.6",
-    "@react-native/babel-preset": "^0.73.18",
-    "@react-native/eslint-config": "^0.73.1",
-    "@react-native/metro-config": "^0.73.2",
-    "@react-native/typescript-config": "^0.73.1",
+    "@react-native/babel-preset": "0.73.19",
+    "@react-native/eslint-config": "0.73.2",
+    "@react-native/metro-config": "0.73.3",
+    "@react-native/typescript-config": "0.73.1",
     "@types/jest": "^29.5.3",
     "@types/metro-config": "^0.76.3",
     "@types/node": "^20.4.2",

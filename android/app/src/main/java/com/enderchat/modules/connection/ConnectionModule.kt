@@ -189,15 +189,6 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 return@launch
             }
 
-            // Calculate the necessary packet IDs.
-            val is1164 = protocolVersion >= PROTOCOL_VERSION_1164
-            val is117 = protocolVersion >= PROTOCOL_VERSION_117
-            val is119 = protocolVersion >= PROTOCOL_VERSION_119
-            val is1191 = protocolVersion >= PROTOCOL_VERSION_1191
-            val is1193 = protocolVersion >= PROTOCOL_VERSION_1193
-            val is1194 = protocolVersion >= PROTOCOL_VERSION_1194
-            val is1202 = protocolVersion >= PROTOCOL_VERSION_1202
-            val is1203 = protocolVersion >= PROTOCOL_VERSION_1203
             // Login state packet IDs
             val loginSuccessId = 0x02
             val loginAcknowledgedId = 0x03
@@ -209,30 +200,30 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             val finishConfigurationServerBoundId = 0x02
             // Play state packet IDs
             val startConfigurationClientBoundId =
-                if (is1203) 0x67
-                else if (is1202) 0x65
+                if (protocolVersion >= PROTOCOL_VERSION_1203) 0x67
+                else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x65
                 else -1
             val acknowledgeConfigurationServerBoundId =
-                if (is1202) 0x0b
+                if (protocolVersion >= PROTOCOL_VERSION_1202) 0x0b
                 else -1
             val playKeepAliveClientBoundId =
-                if (is1202) 0x24
-                else if (is1194) 0x23
-                else if (is1193) 0x1f
-                else if (is1191) 0x20
-                else if (is119) 0x1e
-                else if (is117) 0x21
-                else if (is1164) 0x1f
+                if (protocolVersion >= PROTOCOL_VERSION_1202) 0x24
+                else if (protocolVersion >= PROTOCOL_VERSION_1194) 0x23
+                else if (protocolVersion >= PROTOCOL_VERSION_1193) 0x1f
+                else if (protocolVersion >= PROTOCOL_VERSION_1191) 0x20
+                else if (protocolVersion >= PROTOCOL_VERSION_119) 0x1e
+                else if (protocolVersion >= PROTOCOL_VERSION_117) 0x21
+                else if (protocolVersion >= PROTOCOL_VERSION_1164) 0x1f
                 else -1
             val playKeepAliveServerBoundId =
-                if (is1203) 0x15
-                else if (is1202) 0x14
-                else if (is1194) 0x12
-                else if (is1193) 0x11
-                else if (is1191) 0x12
-                else if (is119) 0x11
-                else if (is117) 0x0f
-                else if (is1164) 0x10
+                if (protocolVersion >= PROTOCOL_VERSION_1203) 0x15
+                else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x14
+                else if (protocolVersion >= PROTOCOL_VERSION_1194) 0x12
+                else if (protocolVersion >= PROTOCOL_VERSION_1193) 0x11
+                else if (protocolVersion >= PROTOCOL_VERSION_1191) 0x12
+                else if (protocolVersion >= PROTOCOL_VERSION_119) 0x11
+                else if (protocolVersion >= PROTOCOL_VERSION_117) 0x0f
+                else if (protocolVersion >= PROTOCOL_VERSION_1164) 0x10
                 else -1
 
             // Re-use the current thread, start reading from the socket.
@@ -283,7 +274,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                             compressionThreshold = threshold
                             compressionEnabled = threshold >= 0
                         } else if (packet.id.value == loginSuccessId && state == ConnectionState.LOGIN) {
-                            state = if (is1202) {
+                            state = if (protocolVersion >= PROTOCOL_VERSION_1202) {
                                 directlyWritePacket(loginAcknowledgedId, ByteArray(0))
                                 ConnectionState.CONFIGURATION
                             } else ConnectionState.PLAY
