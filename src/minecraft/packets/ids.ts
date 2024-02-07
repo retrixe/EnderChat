@@ -43,6 +43,10 @@ const packetIds = {
   CLIENTBOUND_PING_CONFIGURATION: generateIdFunction([
     [protocolMap['1.20.2'], 0x04]
   ]),
+  CLIENTBOUND_ADD_RESOURCE_PACK_CONF: generateIdFunction([
+    [protocolMap['1.20.3'], 0x07],
+    [protocolMap['1.20.2'], 0x06]
+  ]),
 
   // ===========================
   // Serverbound (configuration)
@@ -52,6 +56,9 @@ const packetIds = {
   ]),
   SERVERBOUND_PONG_CONFIGURATION: generateIdFunction([
     [protocolMap['1.20.2'], 0x04]
+  ]),
+  SERVERBOUND_RESOURCE_PACK_RESPONSE_CONF: generateIdFunction([
+    [protocolMap['1.20.2'], 0x05]
   ]),
 
   // ==================
@@ -155,6 +162,18 @@ const packetIds = {
     [protocolMap['1.20.3'], 0x67],
     [protocolMap['1.20.2'], 0x65]
   ]),
+  // AKA Resource Pack Send
+  // AKA Resource Pack
+  CLIENTBOUND_ADD_RESOURCE_PACK_PLAY: generateIdFunction([
+    [protocolMap['1.20.3'], 0x44],
+    [protocolMap['1.20.2'], 0x42],
+    [protocolMap['1.19.4'], 0x40],
+    [protocolMap['1.19.3'], 0x3c],
+    [protocolMap['1.19.2'], 0x3d],
+    [protocolMap['1.19'], 0x3a],
+    [protocolMap['1.17'], 0x3c],
+    [protocolMap['1.16.4'], 0x38]
+  ]),
 
   // ==================
   // Serverbound (play)
@@ -218,6 +237,15 @@ const packetIds = {
   ]),
   SERVERBOUND_ACKNOWLEDGE_CONFIGURATION: generateIdFunction([
     [protocolMap['1.20.2'], 0x0b]
+  ]),
+  // AKA Resource Pack Status
+  // AKA Resource Pack
+  SERVERBOUND_RESOURCE_PACK_RESPONSE_PLAY: generateIdFunction([
+    [protocolMap['1.20.3'], 0x43],
+    [protocolMap['1.20.2'], 0x27],
+    [protocolMap['1.19.2'], 0x24],
+    [protocolMap['1.19'], 0x23],
+    [protocolMap['1.16.4'], 0x21]
   ])
 }
 

@@ -86,6 +86,41 @@ const handleSystemMessage = (
   }
 }
 
+const handleResourcePack = async (
+  connection: ServerConnection,
+  packet: Packet,
+  version: number
+): Promise<void> => {
+  const is117 = version >= protocolMap['1.17']
+  const is1203 = version >= protocolMap['1.20.3']
+  let data = packet.data
+  const uuid = is1203 ? data.slice(0, 16) : null
+  if (is1203) data = data.slice(16) // Get UUID on 1.20.3+
+  const [urlLength, urlLengthLength] = readVarInt(data)
+  data = data.slice(urlLength + urlLengthLength) // Remove URL
+  const [hashLength, hashLengthLength] = readVarInt(data)
+  data = data.slice(hashLength + hashLengthLength) // Remove Hash
+  const forced = is117 ? data.readInt8() : 0 // Get Forced on 1.17+
+  // TODO: Support resource packs correctly in future, with Prompt Message on 1.17+
+  // For now, ack if required, else reject.
+  // 1.17: 0 - Successful download, 2 - Failed download, 3 - Accepted, 1 - Rejected
+  const response = writeVarInt(forced ? 3 : 1)
+  const responseId =
+    connection.state === ConnectionState.CONFIGURATION
+      ? packetIds.SERVERBOUND_RESOURCE_PACK_RESPONSE_CONF(version)
+      : packetIds.SERVERBOUND_RESOURCE_PACK_RESPONSE_PLAY(version)
+  await connection.writePacket(
+    responseId ?? 0,
+    uuid ? concatPacketData([uuid, response]) : response
+  )
+  if (forced) {
+    await connection.writePacket(
+      packetIds.SERVERBOUND_RESOURCE_PACK_RESPONSE_CONF(version) ?? 0,
+      uuid ? concatPacketData([uuid, writeVarInt(0)]) : writeVarInt(0)
+    )
+  }
+}
+
 export const packetHandler =
   (
     performedInitialActionsRef: React.MutableRefObject<boolean>,
@@ -239,7 +274,12 @@ export const packetHandler =
         connection // Pong (play)
           .writePacket(responseId ?? 0, packet.data)
           .catch(handleError(addMessage, unknownError))
-      }
+      } else if (
+        packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_PLAY(version)
+      )
+        handleResourcePack(connection, packet, version).catch(
+          handleError(addMessage, unknownError)
+        )
     } else if (connection.state === ConnectionState.CONFIGURATION) {
       if (packet.id === packetIds.CLIENTBOUND_PING_CONFIGURATION(version)) {
         const responseId = packetIds.SERVERBOUND_PONG_CONFIGURATION(version)
@@ -251,6 +291,11 @@ export const packetHandler =
         packet.id === packetIds.CLIENTBOUND_START_CONFIGURATION(version)
       ) {
         setLoading('Reconfiguring...')
-      }
+      } else if (
+        packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_CONF(version)
+      )
+        handleResourcePack(connection, packet, version).catch(
+          handleError(addMessage, unknownError)
+        )
     }
   }
