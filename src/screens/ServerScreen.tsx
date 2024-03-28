@@ -73,12 +73,21 @@ const ServerScreen = (props: Props): JSX.Element => {
   const editServer = (
     serverName: string,
     version: keyof typeof protocolMap,
-    address: string
+    address: string,
+    order?: number
   ): void => {
     const edit = typeof editServerDialogOpen === 'string'
+    const lastOrder = Object.values(servers).reduce(
+      (max, e) => (e.order > max ? e.order : max),
+      0
+    )
+    const newOrder =
+      order ?? // the lengths we will go to avoid conditionals...
+      ((edit || undefined) && servers[editServerDialogOpen as string].order) ??
+      lastOrder + 1
     const newServers = { ...servers }
     if (edit) delete newServers[editServerDialogOpen]
-    newServers[serverName] = { version, address }
+    newServers[serverName.trim()] = { version, address, order: newOrder }
     setServers(newServers)
     setPingResponses({})
   }
@@ -151,16 +160,18 @@ const ServerScreen = (props: Props): JSX.Element => {
         }
       >
         <View style={globalStyle.outerView}>
-          {Object.keys(servers).map(server => (
-            <ServerDisplay
-              key={server}
-              ping={pingResponses[servers[server].address]}
-              server={server}
-              darkMode={darkMode}
-              connectToServer={connectToServer}
-              openEditServerDialog={openEditServerDialog}
-            />
-          ))}
+          {Object.keys(servers)
+            .sort((a, b) => (servers[a].order ?? 0) - (servers[b].order ?? 0))
+            .map(server => (
+              <ServerDisplay
+                key={server}
+                ping={pingResponses[servers[server].address]}
+                server={server}
+                darkMode={darkMode}
+                connectToServer={connectToServer}
+                openEditServerDialog={openEditServerDialog}
+              />
+            ))}
         </View>
       </ScrollView>
     </>

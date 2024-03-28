@@ -4,6 +4,7 @@ import { type protocolMap } from '../minecraft/utils'
 export interface Server {
   version: keyof typeof protocolMap
   address: string
+  order: number
 }
 
 export type Servers = Record<string, Server>
