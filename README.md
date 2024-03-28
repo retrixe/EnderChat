@@ -2,7 +2,7 @@
 
 [![Discord server for EnderChat and other projects](https://dcbadge.vercel.app/api/server/MFSJa9TpPS)](https://discord.gg/MFSJa9TpPS)
 
-A React Native app for Android/iOS to chat on Minecraft servers from your phone.
+An app for Android/iOS to chat on Minecraft servers from your phone.
 
 Disclaimer: This app is NOT an official Minecraft product. It is not associated with Mojang in any way.
 

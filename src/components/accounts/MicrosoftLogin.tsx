@@ -149,7 +149,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
           ref={webview}
           originWhitelist={['*']}
           source={html ? { html } : { uri }}
-          onNavigationStateChange={ev => {
+          onNavigationStateChange={(ev: WebViewNavigation) => {
             handleNavigationStateChange(ev).catch(console.error)
           }}
         />
