@@ -15,7 +15,7 @@ import {
   parsePacket,
   type Packet
 } from './packet'
-import { parseValidJson, type PlainTextChat } from './chatToJsx'
+import { type PlainTextChat } from './chatToJsx'
 
 export interface LegacyPing {
   ff: number
@@ -158,7 +158,7 @@ export const modernPing = async (opts: {
         const json = responsePacket.data
           .slice(varIntLength, varIntLength + jsonLength)
           .toString('utf8')
-        const response = parseValidJson(json)
+        const response = JSON.parse(json)
 
         resolve({
           ping: timeReceived - timeSent,

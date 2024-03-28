@@ -1,6 +1,8 @@
 import React from 'react'
 import { type StyleProp, type TextProps, type TextStyle } from 'react-native'
+// import nbt from 'prismarine-nbt'
 import translationsJson from './translations.json'
+import { protocolMap } from './utils'
 
 const translations: Record<string, string> = translationsJson
 
@@ -309,11 +311,26 @@ export const ChatToJsx = (props: {
     props.trim
   )
 
-export const parseValidJson = (text: string): any => {
+export const parseChat = (
+  chat: string | Buffer,
+  version: number
+): BaseChat | string => {
+  if (typeof chat === 'string') return parseJsonChat(chat)
+  if (version < protocolMap['1.20.3'])
+    return parseJsonChat(chat.toString('utf8'))
   try {
-    return JSON.parse(text)
+    throw new Error('NBT parsing is disabled.')
+    // return nbt.simplify(nbt.parseUncompressed(chat))
   } catch (e) {
-    return text
+    return parseJsonChat(chat.toString('utf8'))
+  }
+}
+
+export const parseJsonChat = (chat: string): MinecraftChat => {
+  try {
+    return JSON.parse(chat)
+  } catch (e) {
+    return chat
   }
 }
 

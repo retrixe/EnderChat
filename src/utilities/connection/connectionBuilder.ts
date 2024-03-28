@@ -15,7 +15,7 @@ import {
 } from '../../minecraft/api/microsoft'
 import { getPlayerCertificates } from '../../minecraft/api/mojang'
 import { refresh } from '../../minecraft/api/yggdrasil'
-import { parseValidJson } from '../../minecraft/chatToJsx'
+import { parseJsonChat } from '../../minecraft/chatToJsx'
 import initiateConnection, {
   type ServerConnection
 } from '../../minecraft/connection'
@@ -131,7 +131,7 @@ export const createConnection = async (
     const onCloseOrError = (): void => {
       closeChatScreen(
         newConn.disconnectReason
-          ? { server, reason: parseValidJson(newConn.disconnectReason) }
+          ? { server, reason: parseJsonChat(newConn.disconnectReason) }
           : undefined
       )
       setConnection(undefined)

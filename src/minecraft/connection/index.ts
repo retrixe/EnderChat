@@ -26,7 +26,7 @@ export interface ServerConnection extends events.EventEmitter {
   state: ConnectionState
   closed: boolean
   msgSalt?: Buffer
-  disconnectReason?: string
+  disconnectReason?: string // FIXME: This is no longer just a string, it may be NBT too...
 
   writePacket: (packetId: number, data: Buffer) => Promise<boolean>
 

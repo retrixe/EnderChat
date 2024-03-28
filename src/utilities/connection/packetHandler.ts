@@ -1,5 +1,10 @@
 import type React from 'react'
-import { type MinecraftChat, parseValidJson } from '../../minecraft/chatToJsx'
+// import nbt from 'prismarine-nbt'
+import {
+  type MinecraftChat,
+  parseChat,
+  parseJsonChat
+} from '../../minecraft/chatToJsx'
 import {
   ConnectionState,
   type ServerConnection
@@ -33,32 +38,61 @@ type HandleError = (
 ) => (error: unknown) => any
 
 interface PlayerChatMessage {
-  signedChat: string
-  unsignedChat?: string
+  signedChat: MinecraftChat
+  unsignedChat?: MinecraftChat
   type: number
-  displayName: string
+  displayName: MinecraftChat
 }
 
-const parsePlayerChatMessage = (data: Buffer): PlayerChatMessage => {
-  const [signedChatLength, signedChatVarIntLength] = readVarInt(data)
-  data = data.slice(signedChatVarIntLength)
-  const signedChat = data.slice(0, signedChatLength).toString('utf8')
-  data = data.slice(signedChatLength)
+const parsePlayerChatMessage = (
+  data: Buffer,
+  version: number
+): PlayerChatMessage => {
+  let signedChat: MinecraftChat
+  if (version < protocolMap['1.20.3']) {
+    const [signedChatLength, signedChatVarIntLength] = readVarInt(data)
+    data = data.slice(signedChatVarIntLength)
+    signedChat = parseJsonChat(data.slice(0, signedChatLength).toString('utf8'))
+    data = data.slice(signedChatLength)
+  } else {
+    signedChat = 'FIXME: NBT Chat'
+    // const signedChatNbt = nbt.parseUncompressed(data)
+    // signedChat = nbt.simplify(signedChatNbt)
+    // data = data.slice(nbt.writeUncompressed(signedChatNbt).length)
+  }
   const hasUnsignedChat = data.readInt8()
   data = data.slice(1)
-  let unsignedChat
-  if (hasUnsignedChat) {
+  let unsignedChat: MinecraftChat | undefined
+  if (hasUnsignedChat && version < protocolMap['1.20.3']) {
     const [unsignedChatLength, unsignedChatVarIntLength] = readVarInt(data)
     data = data.slice(unsignedChatVarIntLength)
-    unsignedChat = data.slice(0, unsignedChatLength).toString('utf8')
+    unsignedChat = parseJsonChat(
+      data.slice(0, unsignedChatLength).toString('utf8')
+    )
     data = data.slice(unsignedChatLength)
+  } else if (hasUnsignedChat) {
+    unsignedChat = undefined // FIXME
+    // const unsignedChatNbt = nbt.parseUncompressed(data)
+    // unsignedChat = nbt.simplify(unsignedChatNbt)
+    // data = data.slice(nbt.writeUncompressed(unsignedChatNbt).length)
   }
   const [type, typeLength] = readVarInt(data)
   data = data.slice(typeLength)
   data = data.slice(16) // Skip sender UUID
-  const [displayNameLength, displayNameVarIntLength] = readVarInt(data)
-  data = data.slice(displayNameVarIntLength)
-  const displayName = data.slice(0, displayNameLength).toString('utf8')
+  let displayName: MinecraftChat
+  if (version < protocolMap['1.20.3']) {
+    const [displayNameLength, displayNameVarIntLength] = readVarInt(data)
+    data = data.slice(displayNameVarIntLength)
+    displayName = parseJsonChat(
+      data.slice(0, displayNameLength).toString('utf8')
+    )
+    data = data.slice(displayNameLength)
+  } else {
+    displayName = 'FIXME: NBT Chat'
+    // const displayNameNbt = nbt.parseUncompressed(data)
+    // displayName = nbt.simplify(displayNameNbt)
+    // data = data.slice(nbt.writeUncompressed(displayNameNbt).length)
+  }
   return { signedChat, unsignedChat, type, displayName }
 }
 
@@ -66,20 +100,30 @@ const handleSystemMessage = (
   packet: Packet,
   addMessage: (text: MinecraftChat) => void,
   handleError: HandleError,
-  is1191: boolean
+  version: number
 ): void => {
   try {
-    const [chatLength, chatVarIntLength] = readVarInt(packet.data)
-    const chatJson = packet.data
-      .slice(chatVarIntLength, chatVarIntLength + chatLength)
-      .toString('utf8')
+    let parsedChat: MinecraftChat
+    let offset
+    if (version < protocolMap['1.20.3']) {
+      const [chatLength, chatViLength] = readVarInt(packet.data)
+      const chat = packet.data.slice(chatViLength, chatViLength + chatLength)
+      parsedChat = parseJsonChat(chat.toString('utf8'))
+      offset = chatViLength + chatLength
+    } else {
+      parsedChat = 'FIXME: NBT Chat'
+      offset = packet.data.length - 1
+      // const chatNbt = nbt.parseUncompressed(packet.data)
+      // parsedChat = nbt.simplify(chatNbt)
+      // offset = nbt.writeUncompressed(chatNbt).length
+    }
     // TODO: Support position 2 (action bar), true (action bar) and sender for disableChat/blocked players.
     // TODO-1.19: 3 say command, 4 msg command, 5 team msg command, 6 emote command, 7 tellraw command, also in Player Chat Message.
-    const position = packet.data.readInt8(chatVarIntLength + chatLength)
-    if (!is1191 && (position === 0 || position === 1)) {
-      addMessage(parseValidJson(chatJson))
-    } else if (is1191 && !position) {
-      addMessage(parseValidJson(chatJson))
+    const position = packet.data.readInt8(offset)
+    if (version < protocolMap['1.19.1'] && (position === 0 || position === 1)) {
+      addMessage(parsedChat)
+    } else if (version >= protocolMap['1.19.1'] && !position) {
+      addMessage(parsedChat)
     }
   } catch (e) {
     handleError(addMessage, parseMessageError)(e)
@@ -138,7 +182,6 @@ export const packetHandler =
     const { protocolVersion: version } = connection.options
     const is117 = version >= protocolMap[1.17]
     const is118 = version >= protocolMap[1.18]
-    const is1191 = version >= protocolMap['1.19.1']
 
     // LOW-TODO: 1.20.2 also has a second Client Information in configuration state, do we send it?
     if (connection.state === ConnectionState.PLAY) {
@@ -194,25 +237,22 @@ export const packetHandler =
             .catch(handleError(addMessage, sendMessageError))
         }
       } else if (packet.id === packetIds.CLIENTBOUND_CHAT_MESSAGE(version)) {
-        handleSystemMessage(packet, addMessage, handleError, is1191)
+        handleSystemMessage(packet, addMessage, handleError, version)
       } else if (
         packet.id === packetIds.CLIENTBOUND_SYSTEM_CHAT_MESSAGE(version)
       ) {
-        handleSystemMessage(packet, addMessage, handleError, is1191)
+        handleSystemMessage(packet, addMessage, handleError, version)
       } else if (
         packet.id === packetIds.CLIENTBOUND_PLAYER_CHAT_MESSAGE(version)
       ) {
         try {
           const { type, displayName, signedChat, unsignedChat } =
-            parsePlayerChatMessage(packet.data)
+            parsePlayerChatMessage(packet.data, version)
           // TODO-1.19: Support sender team name
           if (type === 0 || type === 1) {
             addMessage({
               translate: 'chat.type.text',
-              with: [
-                parseValidJson(displayName),
-                parseValidJson(unsignedChat ?? signedChat)
-              ]
+              with: [displayName, unsignedChat ?? signedChat]
             })
           }
         } catch (e) {
@@ -238,9 +278,8 @@ export const packetHandler =
         data = data.slice(readVarInt(data)[1]) // Remove Player ID
         if (version <= protocolMap['1.19.4']) data = data.slice(4) // Remove Killer ID
         const [chatLen, chatViLength] = readVarInt(data)
-        const deathMessage = parseValidJson(
-          data.slice(chatViLength, chatViLength + chatLen).toString('utf8')
-        )
+        const chat = data.slice(chatViLength, chatViLength + chatLen)
+        const deathMessage = parseChat(chat, version)
         if (
           (typeof deathMessage === 'string' && deathMessage.trim()) ||
           Object.keys(deathMessage).length !== 0

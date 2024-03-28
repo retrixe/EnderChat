@@ -20,7 +20,7 @@ export const protocolMap = {
   '1.20.2': 764,
   '1.20.3': 765,
   '1.20.4': 765,
-  latest: 764,
+  latest: 764, // FIXME: Set to 765 when 1.20.4 is supported.
   auto: -1
 }
 
