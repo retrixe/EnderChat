@@ -320,7 +320,7 @@ export const parseChat = (
     return parseJsonChat(chat.toString('utf8'))
   try {
     throw new Error('NBT parsing is disabled.')
-    // return nbt.simplify(nbt.parseUncompressed(chat))
+    // FIXME: return nbt.simplify(nbt.parseUncompressed(chat))
   } catch (e) {
     return parseJsonChat(chat.toString('utf8'))
   }

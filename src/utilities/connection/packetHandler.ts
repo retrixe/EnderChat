@@ -99,6 +99,7 @@ const parsePlayerChatMessage = (
 const handleSystemMessage = (
   packet: Packet,
   addMessage: (text: MinecraftChat) => void,
+  setActionBar: (text: MinecraftChat) => void,
   handleError: HandleError,
   version: number
 ): void => {
@@ -117,13 +118,16 @@ const handleSystemMessage = (
       // parsedChat = nbt.simplify(chatNbt)
       // offset = nbt.writeUncompressed(chatNbt).length
     }
-    // TODO: Support position 2 (action bar), true (action bar) and sender for disableChat/blocked players.
+    // TODO: Support sender for disableChat/blocked players.
     // TODO-1.19: 3 say command, 4 msg command, 5 team msg command, 6 emote command, 7 tellraw command, also in Player Chat Message.
     const position = packet.data.readInt8(offset)
-    if (version < protocolMap['1.19.1'] && (position === 0 || position === 1)) {
-      addMessage(parsedChat)
-    } else if (version >= protocolMap['1.19.1'] && !position) {
-      addMessage(parsedChat)
+    if (version < protocolMap['1.19.1']) {
+      // FIXME: Support the other ways the action bar can be set.
+      if (position === 0 || position === 1) addMessage(parsedChat)
+      else if (position === 2) setActionBar(parsedChat)
+    } else if (version >= protocolMap['1.19.1']) {
+      if (position) setActionBar(parsedChat)
+      else addMessage(parsedChat)
     }
   } catch (e) {
     handleError(addMessage, parseMessageError)(e)
@@ -236,12 +240,17 @@ export const packetHandler =
             .writePacket(...makeChatMessagePacket('/spawn', version))
             .catch(handleError(addMessage, sendMessageError))
         }
-      } else if (packet.id === packetIds.CLIENTBOUND_CHAT_MESSAGE(version)) {
-        handleSystemMessage(packet, addMessage, handleError, version)
       } else if (
+        packet.id === packetIds.CLIENTBOUND_CHAT_MESSAGE(version) ||
         packet.id === packetIds.CLIENTBOUND_SYSTEM_CHAT_MESSAGE(version)
       ) {
-        handleSystemMessage(packet, addMessage, handleError, version)
+        handleSystemMessage(
+          packet,
+          addMessage,
+          () => {}, // FIXME
+          handleError,
+          version
+        )
       } else if (
         packet.id === packetIds.CLIENTBOUND_PLAYER_CHAT_MESSAGE(version)
       ) {
@@ -258,6 +267,19 @@ export const packetHandler =
         } catch (e) {
           handleError(addMessage, parseMessageError)(e)
         }
+      } else if (
+        packet.id === packetIds.CLIENTBOUND_TITLE(version) ||
+        packet.id === packetIds.CLIENTBOUND_ACTION_BAR(version)
+      ) {
+        let data = packet.data // The version check if title.
+        if (version <= protocolMap['1.16.5']) {
+          const [action, actionLength] = readVarInt(packet.data)
+          if (action === 2) data = data.slice(actionLength)
+          else return
+        }
+        const [chatLen, chatViLength] = readVarInt(data)
+        const chat = data.slice(chatViLength, chatViLength + chatLen)
+        parseChat(chat, version) // FIXME
       } else if (packet.id === packetIds.CLIENTBOUND_OPEN_WINDOW(version)) {
         // Just close the window.
         const [windowId] = readVarInt(packet.data)

@@ -130,6 +130,19 @@ const packetIds = {
     [protocolMap['1.19'], 0x2b],
     [protocolMap['1.16.4'], 0x2e]
   ]),
+  CLIENTBOUND_ACTION_BAR: generateIdFunction([
+    [protocolMap['1.20.3'], 0x4a],
+    [protocolMap['1.20.2'], 0x48],
+    [protocolMap['1.19.4'], 0x46],
+    [protocolMap['1.19.3'], 0x42],
+    [protocolMap['1.19.1'], 0x43],
+    [protocolMap['1.19'], 0x40],
+    [protocolMap['1.17'], 0x41]
+  ]),
+  CLIENTBOUND_TITLE: generateIdFunction([
+    [protocolMap['1.17'], null],
+    [protocolMap['1.16.4'], 0x4f]
+  ]),
   CLIENTBOUND_CHAT_MESSAGE: generateIdFunction([
     [protocolMap['1.19'], null],
     [protocolMap['1.17'], 0x0f],
