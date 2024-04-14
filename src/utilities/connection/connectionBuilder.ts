@@ -18,12 +18,7 @@ import { refresh } from '../../minecraft/api/yggdrasil'
 import initiateConnection, {
   type ServerConnection
 } from '../../minecraft/connection'
-import {
-  parseIp,
-  parseJsonChat,
-  protocolMap,
-  resolveHostname
-} from '../../minecraft/utils'
+import { parseIp, protocolMap, resolveHostname } from '../../minecraft/utils'
 import config from '../../../config.json'
 
 export const getSession = async (
@@ -133,11 +128,8 @@ export const createConnection = async (
       certificate: settings.enableChatSigning ? session?.certificate : undefined
     })
     const onCloseOrError = (): void => {
-      closeChatScreen(
-        newConn.disconnectReason
-          ? { server, reason: parseJsonChat(newConn.disconnectReason) }
-          : undefined
-      )
+      const reason = newConn.disconnectReason
+      closeChatScreen(reason ? { server, reason } : undefined)
       setConnection(undefined)
     }
     newConn.on('close', onCloseOrError)

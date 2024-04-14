@@ -9,9 +9,16 @@ import {
   type ConnectionOptions,
   ConnectionState
 } from '.'
+import { type MinecraftChat } from '../chatToJsx'
 import { concatPacketData, type Packet } from '../packet'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
-import { readVarInt, writeVarInt, resolveHostname, protocolMap } from '../utils'
+import {
+  readVarInt,
+  writeVarInt,
+  resolveHostname,
+  protocolMap,
+  parseChat
+} from '../utils'
 import packetIds from '../packets/ids'
 
 const { ConnectionModule } = NativeModules
@@ -50,7 +57,7 @@ export class NativeServerConnection
   id: string
   options: ConnectionOptions
   disconnectTimer?: NodeJS.Timeout
-  disconnectReason?: string
+  disconnectReason?: MinecraftChat
   msgSalt?: Buffer
 
   constructor(id: string, options: ConnectionOptions) {
@@ -118,10 +125,10 @@ export class NativeServerConnection
           (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
             this.state === ConnectionState.PLAY)
         ) {
-          const [chatLength, chatVarIntLength] = readVarInt(packet.data)
-          this.disconnectReason = packet.data
-            .slice(chatVarIntLength, chatVarIntLength + chatLength)
-            .toString('utf8')
+          this.disconnectReason = parseChat(
+            packet.data, // The Disconnect (login) packet always returns JSON.
+            this.state === ConnectionState.LOGIN ? undefined : version
+          )[0]
         } else if (packet.id === 0x04 && this.state === ConnectionState.LOGIN) {
           /* Login Plugin Request */
           const [msgId] = readVarInt(packet.data)

@@ -3,6 +3,7 @@ import { type Packet } from '../packet'
 import { type Certificate } from '../api/mojang'
 import initiateJavaScriptConnection from './javascript'
 import initiateNativeConnection, { isNativeConnectionAvailable } from './native'
+import { type MinecraftChat } from '../chatToJsx'
 
 export interface ConnectionOptions {
   serverName: string
@@ -26,7 +27,7 @@ export interface ServerConnection extends events.EventEmitter {
   state: ConnectionState
   closed: boolean
   msgSalt?: Buffer
-  disconnectReason?: string // FIXME: This is no longer just a string, it may be NBT too...
+  disconnectReason?: MinecraftChat
 
   writePacket: (packetId: number, data: Buffer) => Promise<boolean>
 
