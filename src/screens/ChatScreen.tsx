@@ -71,12 +71,14 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
 
   // TODO: Show command history.
   const [, setCommandHistory] = useState<string[]>([])
+  const [, setActionBar] = useState<MinecraftChat | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState('Connecting to server...')
   const [message, setMessage] = useState('')
 
   const performedInitialActionsRef = useRef(false)
   const messagesBufferRef = useRef<Message[]>([])
+  const actionBarRef = useRef<NodeJS.Timeout | null>(null)
   const healthRef = useRef<number | null>(null)
   const statusRef = useRef<Status>(connection ? 'CONNECTED' : 'CONNECTING')
   const idRef = useRef(0)
@@ -86,6 +88,16 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
 
   const addMessage = (text: MinecraftChat): number =>
     messagesBufferRef.current.unshift({ key: idRef.current++, text })
+
+  const setActionBarWithTimeout = (text: MinecraftChat): void => {
+    setActionBar(text)
+    if (actionBarRef.current) clearTimeout(actionBarRef.current)
+    actionBarRef.current = setTimeout(() => {
+      setActionBar(null)
+      actionBarRef.current = null
+    }, 3000)
+  }
+
   const closeChatScreen = (reason?: DisconnectReason): void => {
     if (statusRef.current !== 'CLOSED') {
       if (navigation.canGoBack()) navigation.goBack()
@@ -176,6 +188,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
         setLoading,
         connection,
         addMessage,
+        setActionBarWithTimeout,
         settings.joinMessage,
         settings.sendJoinMessage,
         settings.sendSpawnCommand,

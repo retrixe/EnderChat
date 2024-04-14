@@ -1,6 +1,8 @@
 // Other crypto libraries: simple-crypto, sha256, aes-crypto and rsa-native
 import { randomBytes } from 'react-native-randombytes'
 import { Buffer } from 'buffer'
+import NBT from 'mcnbt'
+import { type MinecraftChat } from './chatToJsx'
 
 export const protocolMap = {
   '1.16.4': 754,
@@ -163,4 +165,33 @@ export const writeVarInt = (value: number): Buffer => {
     result = Buffer.concat([result, Buffer.from([temp])])
   } while (value !== 0)
   return result
+}
+
+export const parseChat = (
+  data: string | Buffer,
+  version?: number
+): [MinecraftChat | string, number] => {
+  if (typeof data === 'string') {
+    return [parseJsonChat(data), data.length]
+  } else if (!version || version < protocolMap['1.20.3']) {
+    const [chatLen, chatViLength] = readVarInt(data)
+    const chat = data.slice(chatViLength, chatViLength + chatLen)
+    return [parseJsonChat(chat.toString('utf8')), chatViLength + chatLen]
+  } else {
+    const nbt = new NBT()
+    nbt.loadFromBuffer(
+      data.length >= 2 && data.readInt8(0) === 0x0a // Add anonymous name because lib isn't updated
+        ? Buffer.concat([Buffer.from([0x0a, 0x00, 0x00]), data.slice(1)])
+        : data
+    )
+    return [nbt.toJSON()[''], nbt.calcBufferLength()]
+  }
+}
+
+export const parseJsonChat = (chat: string): MinecraftChat => {
+  try {
+    return JSON.parse(chat)
+  } catch (e) {
+    return chat
+  }
 }

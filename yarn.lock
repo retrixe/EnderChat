@@ -4776,6 +4776,7 @@ __metadata:
     events: "npm:^3.3.0"
     husky: "npm:^8.0.3"
     jest: "npm:^29.6.3"
+    mcnbt: "patch:mcnbt@npm%3A2.0.3#~/.yarn/patches/mcnbt-npm-2.0.3-610b3f38d1.patch"
     prettier: "npm:^3.0.0"
     react: "npm:18.2.0"
     react-native: "npm:0.74.0-rc.5"
@@ -7569,6 +7570,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"long@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "long@npm:4.0.0"
+  checksum: 10c0/50a6417d15b06104dbe4e3d4a667c39b137f130a9108ea8752b352a4cfae047531a3ac351c181792f3f8768fe17cca6b0f406674a541a86fb638aaac560d83ed
+  languageName: node
+  linkType: hard
+
 "loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
@@ -7656,6 +7664,24 @@ __metadata:
   version: 1.2.5
   resolution: "marky@npm:1.2.5"
   checksum: 10c0/ca8a011f287dab1ac3291df720fc32b366c4cd767347b63722966650405ce71ec6566f71d1e22e1768bf6461a7fd689b9038e7df0fcfb62eacf3a5a6dcac249e
+  languageName: node
+  linkType: hard
+
+"mcnbt@npm:2.0.3":
+  version: 2.0.3
+  resolution: "mcnbt@npm:2.0.3"
+  dependencies:
+    long: "npm:^4.0.0"
+  checksum: 10c0/1aabf51545417656694c3506974cd72a1aa83f43e97a5d2bb8fdc13483cceae5e3a8a039cba09ef41ccecedb57e78dd98e6686b75a79b67f1ecdce4cd7435412
+  languageName: node
+  linkType: hard
+
+"mcnbt@patch:mcnbt@npm%3A2.0.3#~/.yarn/patches/mcnbt-npm-2.0.3-610b3f38d1.patch":
+  version: 2.0.3
+  resolution: "mcnbt@patch:mcnbt@npm%3A2.0.3#~/.yarn/patches/mcnbt-npm-2.0.3-610b3f38d1.patch::version=2.0.3&hash=0db473"
+  dependencies:
+    long: "npm:^4.0.0"
+  checksum: 10c0/0339e121b64806a04553ca53ae439c37be7c141c1ba3425fce9af6c0e8b46081e03983178b89704cd2762626b49ff3f4daad82a23ddd7ab29630eb10c10a35d9
   languageName: node
   linkType: hard
 

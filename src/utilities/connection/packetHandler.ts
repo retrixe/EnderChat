@@ -1,10 +1,5 @@
 import type React from 'react'
-// import nbt from 'prismarine-nbt'
-import {
-  type MinecraftChat,
-  parseChat,
-  parseJsonChat
-} from '../../minecraft/chatToJsx'
+import { type MinecraftChat } from '../../minecraft/chatToJsx'
 import {
   ConnectionState,
   type ServerConnection
@@ -14,7 +9,12 @@ import {
   type Packet,
   type PacketDataTypes
 } from '../../minecraft/packet'
-import { protocolMap, readVarInt, writeVarInt } from '../../minecraft/utils'
+import {
+  parseChat,
+  protocolMap,
+  readVarInt,
+  writeVarInt
+} from '../../minecraft/utils'
 import { makeChatMessagePacket } from '../../minecraft/packets/chat'
 import packetIds from '../../minecraft/packets/ids'
 
@@ -48,51 +48,21 @@ const parsePlayerChatMessage = (
   data: Buffer,
   version: number
 ): PlayerChatMessage => {
-  let signedChat: MinecraftChat
-  if (version < protocolMap['1.20.3']) {
-    const [signedChatLength, signedChatVarIntLength] = readVarInt(data)
-    data = data.slice(signedChatVarIntLength)
-    signedChat = parseJsonChat(data.slice(0, signedChatLength).toString('utf8'))
-    data = data.slice(signedChatLength)
-  } else {
-    signedChat = 'FIXME: NBT Chat'
-    // const signedChatNbt = nbt.parseUncompressed(data)
-    // signedChat = nbt.simplify(signedChatNbt)
-    // data = data.slice(nbt.writeUncompressed(signedChatNbt).length)
-  }
+  const [signedChat, signedChatLength] = parseChat(data, version)
+  data = data.slice(signedChatLength)
   const hasUnsignedChat = data.readInt8()
   data = data.slice(1)
   let unsignedChat: MinecraftChat | undefined
   if (hasUnsignedChat && version < protocolMap['1.20.3']) {
-    const [unsignedChatLength, unsignedChatVarIntLength] = readVarInt(data)
-    data = data.slice(unsignedChatVarIntLength)
-    unsignedChat = parseJsonChat(
-      data.slice(0, unsignedChatLength).toString('utf8')
-    )
+    let unsignedChatLength
+    ;[unsignedChat, unsignedChatLength] = parseChat(data, version)
     data = data.slice(unsignedChatLength)
-  } else if (hasUnsignedChat) {
-    unsignedChat = undefined // FIXME
-    // const unsignedChatNbt = nbt.parseUncompressed(data)
-    // unsignedChat = nbt.simplify(unsignedChatNbt)
-    // data = data.slice(nbt.writeUncompressed(unsignedChatNbt).length)
   }
   const [type, typeLength] = readVarInt(data)
   data = data.slice(typeLength)
   data = data.slice(16) // Skip sender UUID
-  let displayName: MinecraftChat
-  if (version < protocolMap['1.20.3']) {
-    const [displayNameLength, displayNameVarIntLength] = readVarInt(data)
-    data = data.slice(displayNameVarIntLength)
-    displayName = parseJsonChat(
-      data.slice(0, displayNameLength).toString('utf8')
-    )
-    data = data.slice(displayNameLength)
-  } else {
-    displayName = 'FIXME: NBT Chat'
-    // const displayNameNbt = nbt.parseUncompressed(data)
-    // displayName = nbt.simplify(displayNameNbt)
-    // data = data.slice(nbt.writeUncompressed(displayNameNbt).length)
-  }
+  const [displayName, displayNameLength] = parseChat(data, version)
+  data = data.slice(displayNameLength)
   return { signedChat, unsignedChat, type, displayName }
 }
 
@@ -104,25 +74,11 @@ const handleSystemMessage = (
   version: number
 ): void => {
   try {
-    let parsedChat: MinecraftChat
-    let offset
-    if (version < protocolMap['1.20.3']) {
-      const [chatLength, chatViLength] = readVarInt(packet.data)
-      const chat = packet.data.slice(chatViLength, chatViLength + chatLength)
-      parsedChat = parseJsonChat(chat.toString('utf8'))
-      offset = chatViLength + chatLength
-    } else {
-      parsedChat = 'FIXME: NBT Chat'
-      offset = packet.data.length - 1
-      // const chatNbt = nbt.parseUncompressed(packet.data)
-      // parsedChat = nbt.simplify(chatNbt)
-      // offset = nbt.writeUncompressed(chatNbt).length
-    }
+    const [parsedChat, offset] = parseChat(packet.data, version)
     // TODO: Support sender for disableChat/blocked players.
     // TODO-1.19: 3 say command, 4 msg command, 5 team msg command, 6 emote command, 7 tellraw command, also in Player Chat Message.
     const position = packet.data.readInt8(offset)
     if (version < protocolMap['1.19.1']) {
-      // FIXME: Support the other ways the action bar can be set.
       if (position === 0 || position === 1) addMessage(parsedChat)
       else if (position === 2) setActionBar(parsedChat)
     } else if (version >= protocolMap['1.19.1']) {
@@ -176,6 +132,7 @@ export const packetHandler =
     setLoading: React.Dispatch<React.SetStateAction<string>>,
     connection: ServerConnection,
     addMessage: (text: MinecraftChat) => any,
+    setActionBar: (text: MinecraftChat) => any,
     joinMessage: string,
     sendJoinMessage: boolean,
     sendSpawnCommand: boolean,
@@ -247,7 +204,7 @@ export const packetHandler =
         handleSystemMessage(
           packet,
           addMessage,
-          () => {}, // FIXME
+          setActionBar,
           handleError,
           version
         )
@@ -277,9 +234,8 @@ export const packetHandler =
           if (action === 2) data = data.slice(actionLength)
           else return
         }
-        const [chatLen, chatViLength] = readVarInt(data)
-        const chat = data.slice(chatViLength, chatViLength + chatLen)
-        parseChat(chat, version) // FIXME
+        const [chat] = parseChat(data, version)
+        setActionBar(chat)
       } else if (packet.id === packetIds.CLIENTBOUND_OPEN_WINDOW(version)) {
         // Just close the window.
         const [windowId] = readVarInt(packet.data)
@@ -301,7 +257,7 @@ export const packetHandler =
         if (version <= protocolMap['1.19.4']) data = data.slice(4) // Remove Killer ID
         const [chatLen, chatViLength] = readVarInt(data)
         const chat = data.slice(chatViLength, chatViLength + chatLen)
-        const deathMessage = parseChat(chat, version)
+        const [deathMessage] = parseChat(chat, version)
         if (
           (typeof deathMessage === 'string' && deathMessage.trim()) ||
           Object.keys(deathMessage).length !== 0

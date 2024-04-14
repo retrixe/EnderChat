@@ -15,11 +15,15 @@ import {
 } from '../../minecraft/api/microsoft'
 import { getPlayerCertificates } from '../../minecraft/api/mojang'
 import { refresh } from '../../minecraft/api/yggdrasil'
-import { parseJsonChat } from '../../minecraft/chatToJsx'
 import initiateConnection, {
   type ServerConnection
 } from '../../minecraft/connection'
-import { parseIp, protocolMap, resolveHostname } from '../../minecraft/utils'
+import {
+  parseIp,
+  parseJsonChat,
+  protocolMap,
+  resolveHostname
+} from '../../minecraft/utils'
 import config from '../../../config.json'
 
 export const getSession = async (
