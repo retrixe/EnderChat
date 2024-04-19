@@ -16,13 +16,13 @@ export interface Message {
 const MessageRenderer = (props: {
   item: Message
   colorMap: ColorMap
-  clickEventHandler: (event: ClickEvent) => void
+  onClickEvent: (event: ClickEvent) => void
 }): JSX.Element => (
   <ChatToJsx
     chat={props.item.text}
     component={Text}
     colorMap={props.colorMap}
-    clickEventHandler={props.clickEventHandler}
+    onClickEvent={props.onClickEvent}
   />
 )
 
@@ -31,13 +31,13 @@ const MessageRendererMemo = React.memo(
   (prev, next) =>
     prev.item.key === next.item.key &&
     prev.colorMap === next.colorMap &&
-    prev.clickEventHandler === next.clickEventHandler
+    prev.onClickEvent === next.onClickEvent
 )
 
 const ChatMessageList = (props: {
   messages: Message[]
   colorMap: ColorMap
-  clickEventHandler: (ce: ClickEvent) => void
+  onClickEvent: (ce: ClickEvent) => void
 }): JSX.Element => {
   // If colorMap/clickEventHandler changes, this will change and cause a re-render.
   // If messages changes, FlatList will execute this function for all messages, and
@@ -47,10 +47,10 @@ const ChatMessageList = (props: {
       <MessageRendererMemo
         item={item}
         colorMap={props.colorMap}
-        clickEventHandler={props.clickEventHandler}
+        onClickEvent={props.onClickEvent}
       />
     ),
-    [props.colorMap, props.clickEventHandler]
+    [props.colorMap, props.onClickEvent]
   )
   return (
     <FlatList

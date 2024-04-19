@@ -253,7 +253,7 @@ const parseChatToJsx = (
   chat: MinecraftChat,
   Component: React.ComponentType<TextProps>,
   colorMap: ColorMap,
-  clickEventHandler: (clickEvent: ClickEvent) => void = () => {},
+  handleClickEvent: (clickEvent: ClickEvent) => void = () => {},
   componentProps?: Record<string, unknown>,
   trim = false
 ): JSX.Element => {
@@ -280,7 +280,7 @@ const parseChatToJsx = (
             key={i}
             style={style}
             selectable
-            onPress={ce ? () => clickEventHandler(ce) : undefined}
+            onPress={ce ? () => handleClickEvent(ce) : undefined}
             onLongPress={() => {}}
           >
             {c.text ? c.text : ''}
@@ -297,14 +297,14 @@ export const ChatToJsx = (props: {
   component: React.ComponentType<TextProps>
   colorMap: ColorMap
   componentProps?: Record<string, unknown>
-  clickEventHandler?: (clickEvent: ClickEvent) => void
+  onClickEvent?: (clickEvent: ClickEvent) => void
   trim?: boolean
 }): JSX.Element =>
   parseChatToJsx(
     props.chat ?? { text: '' },
     props.component,
     props.colorMap,
-    props.clickEventHandler,
+    props.onClickEvent,
     props.componentProps,
     props.trim
   )

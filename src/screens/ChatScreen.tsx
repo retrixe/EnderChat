@@ -45,6 +45,7 @@ import { ConnectionState } from '../minecraft/connection'
 import { makeChatMessagePacket } from '../minecraft/packets/chat'
 import TextField from '../components/TextField'
 import Text from '../components/Text'
+import ActionBar from '../components/chat/ActionBar'
 import ChatMessageList, {
   type Message
 } from '../components/chat/ChatMessageList'
@@ -71,7 +72,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
 
   // TODO: Show command history.
   const [, setCommandHistory] = useState<string[]>([])
-  const [, setActionBar] = useState<MinecraftChat | null>(null)
+  const [actionBar, setActionBar] = useState<MinecraftChat | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState('Connecting to server...')
   const [message, setMessage] = useState('')
@@ -283,10 +284,17 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
       )}
       {!loading && connection && (
         <>
+          {actionBar && (
+            <ActionBar
+              content={actionBar}
+              colorMap={darkMode ? mojangColorMap : lightColorMap}
+              onClickEvent={handleClickEvent}
+            />
+          )}
           <ChatMessageList
             messages={messages}
             colorMap={darkMode ? mojangColorMap : lightColorMap}
-            clickEventHandler={handleClickEvent}
+            onClickEvent={handleClickEvent}
           />
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
             <TextField
