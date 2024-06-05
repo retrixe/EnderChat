@@ -7,16 +7,18 @@ export const makeChatMessagePacket = (
   protocolVersion: number,
   msgSalt?: Buffer
 ): [number, Buffer] => {
-  const is119 = protocolVersion >= protocolMap[1.19]
   const is1191 = protocolVersion >= protocolMap['1.19.1']
   const is1193 = protocolVersion >= protocolMap['1.19.3']
-  if (!is119) {
+  if (protocolVersion < protocolMap[1.19]) {
     const id = packetIds.SERVERBOUND_CHAT_MESSAGE(protocolVersion)
     return [id ?? 0, concatPacketData([msg])]
   } else {
     const id = msg.startsWith('/')
       ? packetIds.SERVERBOUND_CHAT_COMMAND(protocolVersion)
       : packetIds.SERVERBOUND_CHAT_MESSAGE(protocolVersion)
+    // 1.20.5 splits off signed chat commands.
+    if (protocolVersion >= protocolMap['1.20.5'])
+      return [id ?? 0, concatPacketData([msg.substring(1)])]
     const timestamp = Buffer.alloc(8)
     timestamp.writeIntBE(Date.now(), 2, 6) // writeBigInt64BE(BigInt(Date.now()))
     const salt = msgSalt ?? Buffer.alloc(8)

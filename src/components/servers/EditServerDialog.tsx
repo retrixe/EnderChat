@@ -106,6 +106,7 @@ const EditServerDialog = ({
         dropdownIconColor={darkMode ? '#ffffff' : '#000000'}
       >
         <Picker.Item label='Auto' value='auto' />
+        <Picker.Item label='1.20.5/1.20.6 (WIP)' value='1.20.5' />
         <Picker.Item label='1.20.3/1.20.4 (WIP)' value='1.20.3' />
         <Picker.Item label='1.20.2 (WIP)' value='1.20.2' />
         <Picker.Item label='1.20/1.20.1 (WIP)' value='1.20' />
