@@ -3,6 +3,7 @@ import { type StyleProp, type TextProps, type TextStyle } from 'react-native'
 import translationsJson from './translations.json'
 
 const translations: Record<string, string> = translationsJson
+// Keybinds are not supported in EnderChat, so we'll just display the keybind as text in keybindChat
 
 export const mojangColorMap: ColorMap = {
   black: '#000000',
@@ -73,6 +74,10 @@ export interface PlainTextChat extends BaseChat {
 export interface TranslatedChat extends BaseChat {
   translate: string
   with: MinecraftChat[]
+}
+
+export interface KeybindChat extends BaseChat {
+  keybind: string
 }
 
 export type MinecraftChat = PlainTextChat | TranslatedChat | string
@@ -193,7 +198,8 @@ const trimComponentsByLine = (chat: PlainTextChat[]): PlainTextChat[] => {
 }
 
 const isTranslatedChat = (chat: MinecraftChat): chat is TranslatedChat =>
-  typeof (chat as TranslatedChat).translate === 'string'
+  typeof (chat as TranslatedChat).translate === 'string' ||
+  (chat as TranslatedChat).type === 'translatable'
 
 const translateChat = (chat: TranslatedChat): PlainTextChat => {
   const { translate, with: tw, ...c } = chat
@@ -215,8 +221,28 @@ const translateChat = (chat: TranslatedChat): PlainTextChat => {
   }
 }
 
+const isKeybindChat = (chat: MinecraftChat): chat is KeybindChat =>
+  typeof (chat as KeybindChat).keybind === 'string' ||
+  (chat as KeybindChat).type === 'keybind'
+
+const keybindChat = (chat: KeybindChat): PlainTextChat => {
+  const { keybind, ...c } = chat
+  return { ...c, text: keybind }
+}
+
 const flattenComponents = (chat: MinecraftChat): PlainTextChat[] => {
   if (typeof chat === 'string') return parseColorCodes(chat)
+  // Fix components with empty string keys.....
+  const looseChat = chat as any
+  if (looseChat['']) {
+    const key = isTranslatedChat(chat)
+      ? 'translate'
+      : isKeybindChat(chat)
+        ? 'keybind'
+        : 'text'
+    looseChat[key] = looseChat['']
+  }
+  if (isKeybindChat(chat)) chat = keybindChat(chat)
   else if (isTranslatedChat(chat)) chat = translateChat(chat)
   const { extra, ...c } = chat
   const arr =

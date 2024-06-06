@@ -194,20 +194,31 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             val loginAcknowledgedId = 0x03
             val setCompressionId = 0x03
             // Configuration state packet IDs
-            val configurationKeepAliveClientBoundId = 0x03
-            val configurationKeepAliveServerBoundId = 0x03
-            val finishConfigurationClientBoundId = 0x02
-            val finishConfigurationServerBoundId = 0x02
+            val configurationKeepAliveClientBoundId =
+                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x04
+                else 0x03
+            val configurationKeepAliveServerBoundId =
+                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x04
+                else 0x03
+            val finishConfigurationClientBoundId =
+                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x03
+                else 0x02
+            val finishConfigurationServerBoundId =
+                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x03
+                else 0x02
             // Play state packet IDs
             val startConfigurationClientBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1203) 0x67
+                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x69
+                else if (protocolVersion >= PROTOCOL_VERSION_1203) 0x67
                 else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x65
                 else -1
             val acknowledgeConfigurationServerBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1202) 0x0b
+                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x0c
+                else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x0b
                 else -1
             val playKeepAliveClientBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1202) 0x24
+                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x26
+                else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x24
                 else if (protocolVersion >= PROTOCOL_VERSION_1194) 0x23
                 else if (protocolVersion >= PROTOCOL_VERSION_1193) 0x1f
                 else if (protocolVersion >= PROTOCOL_VERSION_1191) 0x20
@@ -216,7 +227,8 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 else if (protocolVersion >= PROTOCOL_VERSION_1164) 0x1f
                 else -1
             val playKeepAliveServerBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1203) 0x15
+                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x18
+                else if (protocolVersion >= PROTOCOL_VERSION_1203) 0x15
                 else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x14
                 else if (protocolVersion >= PROTOCOL_VERSION_1194) 0x12
                 else if (protocolVersion >= PROTOCOL_VERSION_1193) 0x11
