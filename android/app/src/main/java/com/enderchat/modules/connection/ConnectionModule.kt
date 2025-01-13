@@ -66,10 +66,8 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         return socketIsOpen
     }
 
-    @ReactMethod fun writePacket(
-        connId: String, packetId: Int, data: String, promise: Promise
-    ) = scope.launch(Dispatchers.IO) {
-        lock.read {
+    @ReactMethod fun writePacket(connId: String, packetId: Int, data: String, promise: Promise) {
+        scope.launch(Dispatchers.IO) { lock.read {
             if (connId == connectionId.toString()) {
                 try {
                     val dataBytes = Base64.decode(data, Base64.DEFAULT)
@@ -78,13 +76,13 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     promise.reject(e)
                 }
             } else promise.reject(Exception("This connection is closed!"))
-        }
+        } }
     }
 
     @ReactMethod fun enableEncryption(
         connId: String, secret: String, packet: String, promise: Promise
-    ) = scope.launch(Dispatchers.IO) {
-        lock.write {
+    ) {
+        scope.launch(Dispatchers.IO) { lock.write {
             if (connId == connectionId.toString()) {
                 try {
                     val packetBytes = Base64.decode(packet, Base64.DEFAULT)
@@ -103,13 +101,13 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     promise.reject(e)
                 }
             } else promise.reject(Exception("This connection is closed!"))
-        }
+        } }
     }
 
-    @ReactMethod fun closeConnection(id: String) = scope.launch(Dispatchers.IO) {
-        lock.write {
+    @ReactMethod fun closeConnection(id: String) {
+        scope.launch(Dispatchers.IO) { lock.write {
             if (id == connectionId.toString()) directlyCloseConnection()
-        }
+        } }
     }
 
     @ReactMethod fun openConnection(opts: ReadableMap, promise: Promise) {

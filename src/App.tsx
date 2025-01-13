@@ -35,7 +35,10 @@ import AccountScreen from './screens/AccountScreen'
 import SettingScreen from './screens/SettingScreen'
 import globalStyle from './globalStyle'
 
-const Stacks = createNativeStackNavigator<RootStackParamList>()
+const Stacks = createNativeStackNavigator<
+  RootStackParamList,
+  'StackNavigator'
+>()
 const Tabs = createMaterialTopTabNavigator<RootStackParamList>() // createBottomTabNavigator()
 
 export interface RootStackParamList {
@@ -79,7 +82,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeProp }): JSX.Element => {
           }
           return <Component name={iconName} size={24} color={color} />
         },
-        tabBarLabelStyle: { marginBottom: 5 },
+        tabBarLabelStyle: { marginBottom: 5, textTransform: 'uppercase' },
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: '#a0a0a0',
         headerShown: false

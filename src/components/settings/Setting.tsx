@@ -29,7 +29,7 @@ const Setting = <T extends string | boolean>({
   // This is used for toggles because the upper value is not updated immediately, resulting in judder.
   const [toggleValue, setToggleValue] = useState(value)
 
-  const Wrapper = setValue ?? onClick ? Pressable : React.Fragment
+  const Wrapper = (setValue ?? onClick) ? Pressable : React.Fragment
   const wrapperPress = (): void => {
     if (onClick) onClick()
     else if (typeof value === 'boolean' && setValue) {
@@ -43,7 +43,7 @@ const Setting = <T extends string | boolean>({
 
   return (
     <Wrapper
-      {...(setValue ?? onClick
+      {...((setValue ?? onClick)
         ? { onPress: wrapperPress, android_ripple: { color: '#aaa' } }
         : {})}
     >
