@@ -37,7 +37,7 @@ export interface ServerConnection extends events.EventEmitter {
     ((event: 'packet', listener: (packet: Packet) => void) => this) &
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
-    ((event: string, listener: Function) => this) // eslint-disable-line @typescript-eslint/ban-types
+    ((event: string, listener: Function) => this)
 }
 
 const initiateConnection = async (

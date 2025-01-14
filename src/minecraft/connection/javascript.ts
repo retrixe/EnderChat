@@ -37,7 +37,7 @@ export declare interface JavaScriptServerConnection {
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'data', listener: (data: Buffer) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
-    ((event: string, listener: Function) => this) // eslint-disable-line @typescript-eslint/ban-types
+    ((event: string, listener: Function) => this)
 }
 
 export class JavaScriptServerConnection

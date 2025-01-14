@@ -8,7 +8,6 @@ module.exports = {
   // Custom:
   semi: false,
   jsxSingleQuote: true,
-  bracketSameLine: false,
-  bracketSpacing: true,
+  // TODO: Remove these and set printWidth 100
   trailingComma: 'none'
 };
