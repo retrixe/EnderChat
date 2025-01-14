@@ -17,7 +17,7 @@ export const makeChatMessagePacket = (
       ? packetIds.SERVERBOUND_CHAT_COMMAND(protocolVersion)
       : packetIds.SERVERBOUND_CHAT_MESSAGE(protocolVersion)
     // 1.20.5 splits off signed chat commands.
-    if (protocolVersion >= protocolMap['1.20.5'])
+    if (msg.startsWith('/') && protocolVersion >= protocolMap['1.20.5'])
       return [id ?? 0, concatPacketData([msg.substring(1)])]
     const timestamp = Buffer.alloc(8)
     timestamp.writeIntBE(Date.now(), 2, 6) // writeBigInt64BE(BigInt(Date.now()))

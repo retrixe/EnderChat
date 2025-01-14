@@ -33,6 +33,9 @@ export default tseslint.config(
   // The React Native ESLint config hasn't been updated to v9, so this is a bunch of hackery
   {
     // Try to fix import -- settings: { 'import/parsers': { [babelParser]: ['.js', '.jsx'] } },
+    languageOptions: {
+      globals: reactNative.globals
+    },
     plugins: {
       'eslint-comments': eslintComments,
       'react-native': reactNativePlugin,
@@ -51,7 +54,6 @@ export default tseslint.config(
   {
     settings: { react: { version: 'detect' } },
     languageOptions: {
-      globals: reactNative.globals,
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname
