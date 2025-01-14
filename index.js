@@ -14,7 +14,7 @@ global.process.env.NODE_ENV = __DEV__ ? 'development' : 'production'
 
 // Needed so that 'stream-http' chooses the right default protocol.
 global.location = {
-  protocol: 'file:'
+  protocol: 'file:',
 }
 // global.__DEV__ = false // For cleaner debugging with react-native-tcp
 

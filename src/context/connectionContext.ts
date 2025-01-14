@@ -1,6 +1,6 @@
 import React from 'react'
-import { type MinecraftChat } from '../minecraft/chatToJsx'
-import { type ServerConnection } from '../minecraft/connection'
+import type { MinecraftChat } from '../minecraft/chatToJsx'
+import type { ServerConnection } from '../minecraft/connection'
 
 export interface DisconnectReason {
   server: string
@@ -16,7 +16,7 @@ export interface ConnectionContext {
 
 const connectionContext = React.createContext<ConnectionContext>({
   setConnection: () => {},
-  setDisconnectReason: () => {}
+  setDisconnectReason: () => {},
 })
 
 export default connectionContext

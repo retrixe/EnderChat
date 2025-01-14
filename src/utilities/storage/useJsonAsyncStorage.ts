@@ -14,7 +14,7 @@ const useMemoisedValue = <T>(value: T): T => {
 const useJsonAsyncStorage = <T>(
   name: string,
   defaultValue: T,
-  ignoreUnknownKeys = false
+  ignoreUnknownKeys = false,
 ): [T, SetJsonAsyncStorage<T>] => {
   const defaultValueMemo = useMemoisedValue(defaultValue)
   const [state, setState] = useState(defaultValueMemo)
@@ -46,7 +46,7 @@ const useJsonAsyncStorage = <T>(
       AsyncStorage.setItem(name, JSON.stringify(merge))
         .then(() => setState(merge))
         .catch(err => console.error(err))
-    }
+    },
   ]
 }
 

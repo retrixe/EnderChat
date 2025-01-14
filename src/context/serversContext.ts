@@ -1,5 +1,5 @@
 import React from 'react'
-import { type protocolMap } from '../minecraft/utils'
+import type { protocolMap } from '../minecraft/utils'
 
 export interface Server {
   version: keyof typeof protocolMap
@@ -16,7 +16,7 @@ export interface ServersContext {
 
 const serversContext = React.createContext<ServersContext>({
   servers: {},
-  setServers: () => {}
+  setServers: () => {},
 })
 
 export default serversContext

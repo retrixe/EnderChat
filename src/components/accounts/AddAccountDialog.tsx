@@ -12,7 +12,7 @@ import { authenticate } from '../../minecraft/api/yggdrasil'
 
 const AddAccountDialog = ({
   open,
-  setOpen
+  setOpen,
 }: {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -43,8 +43,7 @@ const AddAccountDialog = ({
   }
   const addAccount = (): void => {
     const accountExists =
-      !!accounts[newUser] ||
-      !!Object.keys(accounts).find(id => accounts[id].email === newUser)
+      !!accounts[newUser] || !!Object.keys(accounts).find(id => accounts[id].email === newUser)
     if (!newUser || invalidNewUser || password === '' || accountExists) {
       // setPassRed(password === '')
       setUserRed(!newUser)
@@ -58,8 +57,8 @@ const AddAccountDialog = ({
         ...accounts,
         [newUser]: {
           username: newUser,
-          active: Object.keys(accounts).length === 0
-        }
+          active: Object.keys(accounts).length === 0,
+        },
       })
       cancelAddAccount()
     } else {
@@ -73,8 +72,8 @@ const AddAccountDialog = ({
               email: newUser,
               accessToken,
               clientToken,
-              type: 'mojang'
-            }
+              type: 'mojang',
+            },
           })
           cancelAddAccount()
         })
@@ -89,10 +88,7 @@ const AddAccountDialog = ({
   return (
     <>
       {microsoftLogin && <MicrosoftLogin close={cancelAddAccount} />}
-      <Dialog
-        visible={open && !microsoftLogin}
-        onRequestClose={cancelAddAccount}
-      >
+      <Dialog visible={open && !microsoftLogin} onRequestClose={cancelAddAccount}>
         <Text style={styles.modalTitle}>Add Account</Text>
         <Pressable
           style={styles.microsoftButton}
@@ -103,8 +99,7 @@ const AddAccountDialog = ({
           <Text style={styles.microsoftButtonText}>Login with Microsoft</Text>
         </Pressable>
         <Text style={styles.discontinued}>
-          Note: Mojang Accounts are discontinued. Please migrate to Microsoft on
-          PC to login.
+          Note: Mojang Accounts are discontinued. Please migrate to Microsoft on PC to login.
         </Text>
         <View style={styles.divider} />
         <Text style={styles.subheader}>Offline Mode (discouraged)</Text>
@@ -140,11 +135,7 @@ const AddAccountDialog = ({
             placeholder='Password'
           />
         )} */}
-        {dialogError ? (
-          <Text style={styles.dialogError}>{dialogError}</Text>
-        ) : (
-          false
-        )}
+        {dialogError ? <Text style={styles.dialogError}>{dialogError}</Text> : false}
         <View style={styles.modalButtons}>
           <View style={globalStyle.flexSpacer} />
           <Pressable
@@ -153,11 +144,7 @@ const AddAccountDialog = ({
             style={styles.modalButton}
           >
             <Text
-              style={
-                darkMode
-                  ? styles.modalButtonCancelDarkText
-                  : styles.modalButtonCancelText
-              }
+              style={darkMode ? styles.modalButtonCancelDarkText : styles.modalButtonCancelText}
             >
               CANCEL
             </Text>
@@ -182,7 +169,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 3,
-    padding: 8
+    padding: 8,
   },
   microsoftButtonText: { color: '#ffffff', fontWeight: 'bold', marginLeft: 8 },
   dialogError: { color: '#ff6666', marginTop: 10, marginBottom: 10 },
@@ -193,11 +180,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#afafaf'
+    borderBottomColor: '#afafaf',
   },
   discontinued: { fontSize: 14, fontWeight: 'bold', marginTop: 8 },
   subheader: { fontSize: 18, fontWeight: 'bold', marginBottom: 2 },
-  ...dialogStyles
+  ...dialogStyles,
 })
 
 export default AddAccountDialog

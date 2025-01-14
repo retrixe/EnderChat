@@ -3,25 +3,18 @@ import { StyleSheet, View, Pressable } from 'react-native'
 import ConnectionContext from '../context/connectionContext'
 import useDarkMode from '../context/useDarkMode'
 import globalStyle from '../globalStyle'
-import {
-  ChatToJsx,
-  lightColorMap,
-  mojangColorMap
-} from '../minecraft/chatToJsx'
+import { ChatToJsx, lightColorMap, mojangColorMap } from '../minecraft/chatToJsx'
 import Dialog, { dialogStyles } from './Dialog'
 import Text from './Text'
 
 const DisconnectDialog = (): JSX.Element => {
   const darkMode = useDarkMode()
-  const { disconnectReason, setDisconnectReason } =
-    useContext(ConnectionContext)
+  const { disconnectReason, setDisconnectReason } = useContext(ConnectionContext)
 
   if (!disconnectReason) return <></>
   return (
     <Dialog visible onRequestClose={() => setDisconnectReason()}>
-      <Text style={dialogStyles.modalTitle}>
-        Disconnected from {disconnectReason.server}
-      </Text>
+      <Text style={dialogStyles.modalTitle}>Disconnected from {disconnectReason.server}</Text>
       <ChatToJsx
         chat={disconnectReason.reason}
         component={Text}
@@ -43,7 +36,7 @@ const DisconnectDialog = (): JSX.Element => {
 }
 
 const styles = StyleSheet.create({
-  disconnectReason: { fontSize: 14 }
+  disconnectReason: { fontSize: 14 },
 })
 
 export default DisconnectDialog

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Image, Pressable, StyleSheet, View } from 'react-native'
-import { type Account } from '../../context/accountsContext'
+import type { Account } from '../../context/accountsContext'
 import ElevatedView from '../ElevatedView'
 import Text from '../Text'
 
@@ -9,7 +9,7 @@ const AccountDisplay = ({
   account,
   darkMode,
   setActiveAccount,
-  setDeleteAccount
+  setDeleteAccount,
 }: {
   uuid: string
   account: Account
@@ -26,9 +26,7 @@ const AccountDisplay = ({
     >
       <Image
         source={{
-          uri: `https://crafthead.net/avatar/${
-            account.type ? uuid : account.username
-          }/72`
+          uri: `https://crafthead.net/avatar/${account.type ? uuid : account.username}/72`,
         }}
         style={styles.accountImage}
       />
@@ -55,12 +53,12 @@ const styles = StyleSheet.create({
     height: 72,
     width: 72,
     resizeMode: 'contain',
-    marginRight: 16
+    marginRight: 16,
   },
   active: { fontSize: 14, fontWeight: 'bold' },
   username: { fontSize: 20, fontWeight: 'bold' },
   authTxt: { fontSize: 12, color: '#666', fontWeight: '400' },
-  authTxtDark: { fontSize: 12, color: '#aaa', fontWeight: '400' }
+  authTxtDark: { fontSize: 12, color: '#aaa', fontWeight: '400' },
 })
 
 export default AccountDisplay

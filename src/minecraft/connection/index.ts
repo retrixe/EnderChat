@@ -1,9 +1,9 @@
 import type events from 'events'
-import { type Packet } from '../packet'
-import { type Certificate } from '../api/mojang'
+import type { Packet } from '../packet'
+import type { Certificate } from '../api/mojang'
 import initiateJavaScriptConnection from './javascript'
 import initiateNativeConnection, { isNativeConnectionAvailable } from './native'
-import { type MinecraftChat } from '../chatToJsx'
+import type { MinecraftChat } from '../chatToJsx'
 
 export interface ConnectionOptions {
   serverName: string
@@ -19,7 +19,7 @@ export interface ConnectionOptions {
 export enum ConnectionState {
   LOGIN,
   CONFIGURATION,
-  PLAY
+  PLAY,
 }
 
 export interface ServerConnection extends events.EventEmitter {
@@ -40,9 +40,7 @@ export interface ServerConnection extends events.EventEmitter {
     ((event: string, listener: Function) => this)
 }
 
-const initiateConnection = async (
-  opts: ConnectionOptions
-): Promise<ServerConnection> => {
+const initiateConnection = async (opts: ConnectionOptions): Promise<ServerConnection> => {
   if (isNativeConnectionAvailable()) {
     return await initiateNativeConnection(opts)
   }

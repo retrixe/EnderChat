@@ -12,7 +12,7 @@ export const makeBasePacket = (packetId: number, data: Buffer): Buffer => {
 export const makeBaseCompressedPacket = async (
   threshold: number,
   packetId: number,
-  data: Buffer
+  data: Buffer,
 ): Promise<Buffer> => {
   // VarInt Packet Length | Length of Data Length + compressed length of (Packet ID + Data)
   // VarInt Data Length   | Length of uncompressed (Packet ID + Data) or 0
@@ -38,7 +38,7 @@ export const concatPacketData = (data: PacketDataTypes[]): Buffer =>
         return Buffer.from([field ? 0x01 : 0x00])
       } else if (Buffer.isBuffer(field)) return field
       else return toggleEndian(Buffer.from([field]))
-    })
+    }),
   )
 
 export interface Packet {
@@ -56,10 +56,7 @@ export const parsePacket = (packet: Buffer): Packet | undefined => {
   try {
     const [packetBodyLength, varIntLength] = readVarInt(packet)
     if (packet.byteLength < packetBodyLength + varIntLength) return
-    const packetBody = packet.slice(
-      varIntLength,
-      varIntLength + packetBodyLength
-    )
+    const packetBody = packet.slice(varIntLength, varIntLength + packetBodyLength)
     const [packetId, packetIdLength] = readVarInt(packetBody)
     const packetData = packetBody.slice(packetIdLength)
     return {
@@ -68,14 +65,12 @@ export const parsePacket = (packet: Buffer): Packet | undefined => {
       idLength: packetIdLength,
       dataLength: packetBodyLength - packetIdLength,
       packetLength: packetBodyLength + varIntLength,
-      lengthLength: varIntLength
+      lengthLength: varIntLength,
     }
   } catch (e) {} // If the packet is incomplete, readVarInt could error, so no packet parsed.
 }
 
-export const parseCompressedPacket = async (
-  packet: Buffer
-): Promise<Packet | undefined> => {
+export const parseCompressedPacket = async (packet: Buffer): Promise<Packet | undefined> => {
   const dissect = parsePacket(packet)
   if (!dissect) return
   else if (dissect.id === 0) {
@@ -88,7 +83,7 @@ export const parseCompressedPacket = async (
       dataLength: data.length,
       packetLength: dissect.packetLength,
       lengthLength: dissect.lengthLength,
-      compressed: false
+      compressed: false,
     }
   }
   const dataLength = dissect.id
@@ -112,6 +107,6 @@ theoretical compressed length: ${dissect.dataLength}`)
     dataLength: data.length,
     packetLength: dissect.packetLength,
     lengthLength: dissect.lengthLength,
-    compressed: true
+    compressed: true,
   }
 }

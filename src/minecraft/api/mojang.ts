@@ -1,7 +1,5 @@
-const joinMinecraftSessionUrl =
-  'https://sessionserver.mojang.com/session/minecraft/join'
-const getPlayerCertificatesUrl =
-  'https://api.minecraftservices.com/player/certificates'
+const joinMinecraftSessionUrl = 'https://sessionserver.mojang.com/session/minecraft/join'
+const getPlayerCertificatesUrl = 'https://api.minecraftservices.com/player/certificates'
 
 export interface Certificate {
   keyPair: {
@@ -18,18 +16,16 @@ export interface Certificate {
 export const joinMinecraftSession = async (
   accessToken: string,
   selectedProfile: string,
-  serverId: string
+  serverId: string,
 ): Promise<Response> =>
   await fetch(joinMinecraftSessionUrl, {
     body: JSON.stringify({ accessToken, selectedProfile, serverId }),
     headers: { 'content-type': 'application/json' },
-    method: 'POST'
+    method: 'POST',
   })
 
-export const getPlayerCertificates = async (
-  accessToken: string
-): Promise<Certificate> =>
+export const getPlayerCertificates = async (accessToken: string): Promise<Certificate> =>
   await fetch(getPlayerCertificatesUrl, {
     headers: { Authorization: 'Bearer ' + accessToken },
-    method: 'POST'
+    method: 'POST',
   }).then(async res => (await res.json()) as Certificate)

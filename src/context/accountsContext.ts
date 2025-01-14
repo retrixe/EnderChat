@@ -20,7 +20,7 @@ export interface AccountsContext {
 
 const accountsContext = React.createContext<AccountsContext>({
   accounts: {},
-  setAccounts: () => {}
+  setAccounts: () => {},
 })
 
 export default accountsContext

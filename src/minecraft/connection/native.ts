@@ -1,30 +1,15 @@
-import {
-  InteractionManager,
-  NativeEventEmitter,
-  NativeModules
-} from 'react-native'
+import { InteractionManager, NativeEventEmitter, NativeModules } from 'react-native'
 import events from 'events'
-import {
-  type ServerConnection,
-  type ConnectionOptions,
-  ConnectionState
-} from '.'
-import { type MinecraftChat } from '../chatToJsx'
+import { type ServerConnection, type ConnectionOptions, ConnectionState } from '.'
+import type { MinecraftChat } from '../chatToJsx'
 import { concatPacketData, type Packet } from '../packet'
 import { getLoginPacket, handleEncryptionRequest } from './shared'
-import {
-  readVarInt,
-  writeVarInt,
-  resolveHostname,
-  protocolMap,
-  parseChat
-} from '../utils'
+import { readVarInt, writeVarInt, resolveHostname, protocolMap, parseChat } from '../utils'
 import packetIds from '../packets/ids'
 
 const { ConnectionModule } = NativeModules
 
-export const isNativeConnectionAvailable = (): boolean =>
-  !!ConnectionModule?.openConnection
+export const isNativeConnectionAvailable = (): boolean => !!ConnectionModule?.openConnection
 
 interface NativeEvent {
   connectionId: string
@@ -47,10 +32,7 @@ export declare interface NativeServerConnection {
     ((event: string, listener: Function) => this)
 }
 
-export class NativeServerConnection
-  extends events.EventEmitter
-  implements ServerConnection
-{
+export class NativeServerConnection extends events.EventEmitter implements ServerConnection {
   eventEmitter = new NativeEventEmitter(ConnectionModule)
   state = ConnectionState.LOGIN
   closed = false
@@ -64,9 +46,8 @@ export class NativeServerConnection
     super()
     this.id = id
     this.options = options
-    this.eventEmitter.addListener(
-      'ecm:log',
-      ({ log }: NativeEvent & { log: string }) => console.log(log)
+    this.eventEmitter.addListener('ecm:log', ({ log }: NativeEvent & { log: string }) =>
+      console.log(log),
     )
     this.eventEmitter.addListener('ecm:connect', (event: NativeEvent) => {
       if (event.connectionId === this.id) this.emit('connect')
@@ -82,7 +63,7 @@ export class NativeServerConnection
             idLength: event.idLength,
             dataLength: event.dataLength,
             packetLength: event.packetLength,
-            lengthLength: event.lengthLength
+            lengthLength: event.lengthLength,
           } as unknown as Packet,
           {
             get(target, p, receiver) {
@@ -90,18 +71,15 @@ export class NativeServerConnection
                 target.data = Buffer.from(target.data, 'base64')
               }
               return Reflect.get(target, p, receiver)
-            }
-          }
+            },
+          },
         )
 
         // Internally handle login packets. We aren't handling these in native to share code.
         const { protocolVersion: version } = options
         // Set Compression and Keep Alive are handled in native for now.
         // When modifying this code, apply the same changes to the JavaScript back-end.
-        if (
-          packet.id === 0x02 /* Login Success */ &&
-          this.state === ConnectionState.LOGIN
-        ) {
+        if (packet.id === 0x02 /* Login Success */ && this.state === ConnectionState.LOGIN) {
           this.state =
             version >= protocolMap['1.20.2']
               ? ConnectionState.CONFIGURATION // Ack sent by native code
@@ -119,15 +97,14 @@ export class NativeServerConnection
         } else if (
           // Disconnect (login), Disconnect (configuration) or Disconnect (play)
           (packet.id === 0x00 && this.state === ConnectionState.LOGIN) ||
-          (packet.id ===
-            packetIds.CLIENTBOUND_DISCONNECT_CONFIGURATION(version) &&
+          (packet.id === packetIds.CLIENTBOUND_DISCONNECT_CONFIGURATION(version) &&
             this.state === ConnectionState.CONFIGURATION) ||
           (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
             this.state === ConnectionState.PLAY)
         ) {
           this.disconnectReason = parseChat(
             packet.data, // The Disconnect (login) packet always returns JSON.
-            this.state === ConnectionState.LOGIN ? undefined : version
+            this.state === ConnectionState.LOGIN ? undefined : version,
           )[0]
         } else if (packet.id === 0x04 && this.state === ConnectionState.LOGIN) {
           /* Login Plugin Request */
@@ -148,11 +125,11 @@ export class NativeServerConnection
             accessToken,
             selectedProfile,
             this,
-            async (secret: Buffer, response: Buffer) => {
+            (secret: Buffer, response: Buffer) => {
               const eSecret = secret.toString('base64')
               const eResp = response.toString('base64')
               return ConnectionModule.enableEncryption(this.id, eSecret, eResp)
-            }
+            },
           )
         }
 
@@ -171,7 +148,7 @@ export class NativeServerConnection
     })
   }
 
-  async writePacket(packetId: number, data: Buffer): Promise<boolean> {
+  writePacket(packetId: number, data: Buffer): Promise<boolean> {
     const toWrite = data.toString('base64')
     return ConnectionModule.writePacket(this.id, packetId, toWrite)
   }
@@ -194,7 +171,7 @@ export class NativeServerConnection
 }
 
 const initiateNativeConnection = async (
-  opts: ConnectionOptions
+  opts: ConnectionOptions,
 ): Promise<NativeServerConnection> => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   const id = await ConnectionModule.openConnection({
@@ -204,9 +181,7 @@ const initiateNativeConnection = async (
     port,
     packetFilter: Object.keys(packetIds)
       .filter(name => name.startsWith('CLIENTBOUND'))
-      .map(name =>
-        packetIds[name as keyof typeof packetIds](opts.protocolVersion)
-      )
+      .map(name => packetIds[name as keyof typeof packetIds](opts.protocolVersion)),
   })
   return new NativeServerConnection(id, opts)
 }

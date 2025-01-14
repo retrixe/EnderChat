@@ -1,18 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { View, ScrollView, RefreshControl } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import { type NativeStackScreenProps } from '@react-navigation/native-stack'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-import { type RootStackParamList } from '../App'
+import type { RootStackParamList } from '../App'
 import EditServerDialog from '../components/servers/EditServerDialog'
 import ServerDisplay from '../components/servers/ServerDisplay'
 import globalStyle from '../globalStyle'
-import {
-  type LegacyPing,
-  legacyPing,
-  modernPing,
-  type Ping
-} from '../minecraft/pingServer'
+import { type LegacyPing, legacyPing, modernPing, type Ping } from '../minecraft/pingServer'
 import Text from '../components/Text'
 import useDarkMode from '../context/useDarkMode'
 import ServersContext from '../context/serversContext'
@@ -27,9 +22,7 @@ const ServerScreen = (props: Props): JSX.Element => {
   const { setDisconnectReason } = useContext(ConnectionContext)
 
   const [refreshing, setRefreshing] = useState(false)
-  const [editServerDialogOpen, setEditServerDialogOpen] = useState<
-    string | boolean
-  >(false)
+  const [editServerDialogOpen, setEditServerDialogOpen] = useState<string | boolean>(false)
   const [pingResponses, setPingResponses] = useState<
     // false - no route, null - unknown err, undefined - pinging
     Record<string, LegacyPing | Ping | false | null | undefined>
@@ -57,12 +50,12 @@ const ServerScreen = (props: Props): JSX.Element => {
             legacyPing({ host, port })
               .then(res => setPingResponses(p => ({ ...p, [ipAddress]: res })))
               .catch(() => setPingResponses(p => ({ ...p, [ipAddress]: null })))
-          })
+          }),
       )
     }
     Promise.allSettled(promises).then(
       () => setRefreshing(false),
-      () => setRefreshing(false)
+      () => setRefreshing(false),
     )
   }, [servers, pingResponses])
 
@@ -74,13 +67,10 @@ const ServerScreen = (props: Props): JSX.Element => {
     serverName: string,
     version: keyof typeof protocolMap,
     address: string,
-    order?: number
+    order?: number,
   ): void => {
     const edit = typeof editServerDialogOpen === 'string'
-    const lastOrder = Object.values(servers).reduce(
-      (max, e) => (e.order > max ? e.order : max),
-      0
-    )
+    const lastOrder = Object.values(servers).reduce((max, e) => (e.order > max ? e.order : max), 0)
     const newOrder =
       order ?? // the lengths we will go to avoid conditionals...
       ((edit || undefined) && servers[editServerDialogOpen as string].order) ??
@@ -111,7 +101,7 @@ const ServerScreen = (props: Props): JSX.Element => {
     if (version < 754) {
       return setDisconnectReason({
         server: serverName,
-        reason: 'EnderChat only supports 1.16.4 and newer (for now).'
+        reason: 'EnderChat only supports 1.16.4 and newer (for now).',
       })
     } else if (version > protocolMap.latest) {
       return setDisconnectReason({
@@ -120,7 +110,7 @@ const ServerScreen = (props: Props): JSX.Element => {
           '§lThis version of EnderChat does not support the Minecraft version required by this server!\n\n' +
           '§oPossible solutions:§r' +
           '\n1. Make sure EnderChat is up to date.' +
-          '\n2. Try editing the server and setting the version manually.'
+          '\n2. Try editing the server and setting the version manually.',
       })
     }
     props.navigation.push('Chat', { serverName, version }) // getId prevents duplicate navigation.

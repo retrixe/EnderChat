@@ -1,5 +1,5 @@
 import React from 'react'
-import { type StyleProp, type TextProps, type TextStyle } from 'react-native'
+import type { StyleProp, TextProps, TextStyle } from 'react-native'
 import translationsJson from './translations.json'
 
 const translations: Record<string, string> = translationsJson
@@ -21,7 +21,7 @@ export const mojangColorMap: ColorMap = {
   red: '#FF5555',
   light_purple: '#FF55FF',
   yellow: '#FFFF55',
-  white: '#FFFFFF'
+  white: '#FFFFFF',
 }
 
 export const lightColorMap: ColorMap = {
@@ -30,7 +30,7 @@ export const lightColorMap: ColorMap = {
   green: '#55c855',
   gray: '#999999',
   yellow: '#b9b955',
-  aqua: '#55cdcd'
+  aqua: '#55cdcd',
 }
 
 export interface ColorMap {
@@ -203,27 +203,24 @@ const isTranslatedChat = (chat: MinecraftChat): chat is TranslatedChat =>
 
 const translateChat = (chat: TranslatedChat): PlainTextChat => {
   const { translate, with: tw, ...c } = chat
-  const translation = translations[translate]
-    ?.split('%s')
-    ?.flatMap((text, index) => {
-      let insert = tw?.[index]
-      if (!insert) return { text }
-      else if (typeof insert === 'string') insert = { text: insert }
-      else if (isTranslatedChat(insert)) insert = translateChat(insert)
-      return [{ text }, insert]
-    })
+  const translation = translations[translate].split('%s').flatMap((text, index) => {
+    let insert = tw[index]
+    if (!insert) return { text }
+    else if (typeof insert === 'string') insert = { text: insert }
+    else if (isTranslatedChat(insert)) insert = translateChat(insert)
+    return [{ text }, insert]
+  })
   if (!translation) {
     return { text: `[EnderChat] Unknown translation ${translate}.` }
   }
   return {
     ...c,
-    extra: Array.isArray(c.extra) ? [...translation, ...c.extra] : translation
+    extra: Array.isArray(c.extra) ? [...translation, ...c.extra] : translation,
   }
 }
 
 const isKeybindChat = (chat: MinecraftChat): chat is KeybindChat =>
-  typeof (chat as KeybindChat).keybind === 'string' ||
-  (chat as KeybindChat).type === 'keybind'
+  typeof (chat as KeybindChat).keybind === 'string' || (chat as KeybindChat).type === 'keybind'
 
 const keybindChat = (chat: KeybindChat): PlainTextChat => {
   const { keybind, ...c } = chat
@@ -235,11 +232,7 @@ const flattenComponents = (chat: MinecraftChat): PlainTextChat[] => {
   // Fix components with empty string keys.....
   const looseChat = chat as any
   if (looseChat['']) {
-    const key = isTranslatedChat(chat)
-      ? 'translate'
-      : isKeybindChat(chat)
-        ? 'keybind'
-        : 'text'
+    const key = isTranslatedChat(chat) ? 'translate' : isKeybindChat(chat) ? 'keybind' : 'text'
     looseChat[key] = looseChat['']
   }
   if (isKeybindChat(chat)) chat = keybindChat(chat)
@@ -265,14 +258,10 @@ const sanitizeComponents = (components: PlainTextChat[]): PlainTextChat[] =>
     ...c,
     bold: typeof c.bold === 'string' ? c.bold === 'true' : c.bold,
     italic: typeof c.italic === 'string' ? c.italic === 'true' : c.italic,
-    obfuscated:
-      typeof c.obfuscated === 'string' ? c.obfuscated === 'true' : c.obfuscated,
-    underlined:
-      typeof c.underlined === 'string' ? c.underlined === 'true' : c.underlined,
+    obfuscated: typeof c.obfuscated === 'string' ? c.obfuscated === 'true' : c.obfuscated,
+    underlined: typeof c.underlined === 'string' ? c.underlined === 'true' : c.underlined,
     strikethrough:
-      typeof c.strikethrough === 'string'
-        ? c.strikethrough === 'true'
-        : c.strikethrough
+      typeof c.strikethrough === 'string' ? c.strikethrough === 'true' : c.strikethrough,
   }))
 
 const parseChatToJsx = (
@@ -281,7 +270,7 @@ const parseChatToJsx = (
   colorMap: ColorMap,
   handleClickEvent: (clickEvent: ClickEvent) => void = () => {},
   componentProps?: Record<string, unknown>,
-  trim = false
+  trim = false,
 ): JSX.Element => {
   let flat = sanitizeComponents(flattenComponents(chat))
   if (trim) flat = trimComponentsByLine(flat)
@@ -332,7 +321,7 @@ export const ChatToJsx = (props: {
     props.colorMap,
     props.onClickEvent,
     props.componentProps,
-    props.trim
+    props.trim,
   )
 
 export default parseChatToJsx

@@ -3,11 +3,11 @@ import { StyleSheet, View, Pressable } from 'react-native'
 import { Picker } from '@react-native-picker/picker'
 
 import globalStyle from '../../globalStyle'
-import { type Servers } from '../../context/serversContext'
+import type { Servers } from '../../context/serversContext'
 import Dialog, { dialogStyles } from '../Dialog'
 import Text from '../Text'
 import TextField from '../TextField'
-import { type protocolMap } from '../../minecraft/utils'
+import type { protocolMap } from '../../minecraft/utils'
 
 const EditServerDialog = ({
   servers,
@@ -15,15 +15,11 @@ const EditServerDialog = ({
   editServer,
   deleteServer,
   editServerDialogOpen,
-  setEditServerDialogOpen
+  setEditServerDialogOpen,
 }: {
   servers: Servers
   darkMode: boolean
-  editServer: (
-    serverName: string,
-    version: keyof typeof protocolMap,
-    address: string
-  ) => void
+  editServer: (serverName: string, version: keyof typeof protocolMap, address: string) => void
   deleteServer: (server: string) => void
   editServerDialogOpen: string | boolean
   setEditServerDialogOpen: (server: string | boolean) => void
@@ -32,14 +28,12 @@ const EditServerDialog = ({
   const [ipAddrRed, setIpAddrRed] = useState(false)
   const [newServerName, setNewServerName] = useState('')
   const [serverNameRed, setServerNameRed] = useState(false)
-  const [serverVersion, setServerVersion] =
-    useState<keyof typeof protocolMap>('auto')
+  const [serverVersion, setServerVersion] = useState<keyof typeof protocolMap>('auto')
 
   const invalidServerName = newServerName.length > 32
 
   // Reset properties whenever dialog opens (could also happen when server changes, though, but this is unlikely).
-  const server =
-    typeof editServerDialogOpen === 'string' && servers[editServerDialogOpen]
+  const server = typeof editServerDialogOpen === 'string' && servers[editServerDialogOpen]
   useEffect(() => {
     setIpAddrRed(false)
     setServerNameRed(false)
@@ -93,12 +87,7 @@ const EditServerDialog = ({
         onChangeText={setNewServerName}
         placeholder='Server Name'
       />
-      <TextField
-        red={ipAddrRed}
-        value={ipAddr}
-        onChangeText={setIpAddr}
-        placeholder='IP Address'
-      />
+      <TextField red={ipAddrRed} value={ipAddr} onChangeText={setIpAddr} placeholder='IP Address' />
       <Picker
         selectedValue={serverVersion}
         style={darkMode ? styles.addServerPickerDark : styles.addServerPicker}
@@ -155,7 +144,7 @@ const EditServerDialog = ({
 const styles = StyleSheet.create({
   addServerPickerDark: { color: '#ffffff' },
   addServerPicker: { color: '#000000' },
-  deleteServerButtonText: { color: '#ff0000', fontWeight: 'bold' }
+  deleteServerButtonText: { color: '#ff0000', fontWeight: 'bold' },
 })
 
 export default EditServerDialog

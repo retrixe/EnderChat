@@ -23,7 +23,7 @@ export const defaultSettings: Settings = {
   webLinks: true,
   // linkPrompt: true,
   disableAutoCorrect: false,
-  enableChatSigning: true
+  enableChatSigning: true,
 }
 
 export interface SettingsContext {
@@ -33,7 +33,7 @@ export interface SettingsContext {
 
 const settingsContext = React.createContext<SettingsContext>({
   settings: defaultSettings,
-  setSettings: () => {}
+  setSettings: () => {},
 })
 
 export default settingsContext

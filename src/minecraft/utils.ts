@@ -1,7 +1,7 @@
 // Other crypto libraries: simple-crypto, sha256, aes-crypto and rsa-native
 import { randomBytes } from 'react-native-randombytes'
 import { Buffer } from 'buffer'
-import { type MinecraftChat } from './chatToJsx'
+import type { MinecraftChat } from './chatToJsx'
 import { parseAnonymousNBT } from './nbt'
 
 export const protocolMap = {
@@ -25,26 +25,18 @@ export const protocolMap = {
   '1.20.5': 766,
   '1.20.6': 766,
   latest: 766,
-  auto: -1
+  auto: -1,
 }
 
 export const padBufferToLength = (buffer: Buffer, length: number): Buffer =>
   length <= buffer.byteLength
     ? buffer
-    : Buffer.concat([
-        Buffer.from(Array(length - buffer.byteLength).fill(0x00)),
-        buffer
-      ])
+    : Buffer.concat([Buffer.from(Array(length - buffer.byteLength).fill(0x00)), buffer])
 
-export const toggleEndian = (
-  buffer: Buffer,
-  bytes: number = buffer.length
-): Buffer => {
+export const toggleEndian = (buffer: Buffer, bytes: number = buffer.length): Buffer => {
   const output = Buffer.alloc(buffer.length)
   if (buffer.length % bytes !== 0) {
-    throw new Error(
-      `Buffer has ${buffer.length % bytes} trailing bits not aligned`
-    )
+    throw new Error(`Buffer has ${buffer.length % bytes} trailing bits not aligned`)
   }
   // For each word..
   for (let i = 0; i < buffer.length; i += bytes) {
@@ -70,13 +62,13 @@ export const parseIp = (ipAddress: string): [string, number] => {
 export const resolveHostname = async (
   hostname: string,
   port: number,
-  retry: boolean = false // Not intended to be set by user.
+  retry = false, // Not intended to be set by user.
 ): Promise<[string, number]> => {
   const req = await fetch(
     retry
       ? `https://dns.google/resolve?name=_minecraft._tcp.${hostname}&type=srv&do=1`
       : `https://cloudflare-dns.com/dns-query?name=_minecraft._tcp.${hostname}&type=SRV`,
-    { headers: { accept: 'application/dns-json' } }
+    { headers: { accept: 'application/dns-json' } },
   )
   if (!req.ok && !retry) return await resolveHostname(hostname, port, true)
   else if (!req.ok) throw new Error('Failed to make DNS query!')
@@ -133,11 +125,7 @@ export const encodeString = (str: string): Buffer => {
 // Adapted from https://wiki.vg/Protocol which is licensed under CC-BY-SA-3.0.
 // VarLong is unsupported as JavaScript cannot fit VarLong except with BigInt.
 // BigInt is unsupported in React Native at the moment.
-export const readVarInt = (
-  buffer: Buffer,
-  offset: number = 0,
-  varlong: boolean = false
-): [number, number] => {
+export const readVarInt = (buffer: Buffer, offset = 0, varlong = false): [number, number] => {
   let numRead = 0
   let result = 0
   let read: number
@@ -171,7 +159,7 @@ export const writeVarInt = (value: number): Buffer => {
 
 export const parseChat = (
   data: string | Buffer,
-  version?: number
+  version?: number,
 ): [MinecraftChat | string, number] => {
   if (typeof data === 'string') {
     return [parseJsonChat(data), data.length]

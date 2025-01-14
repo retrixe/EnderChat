@@ -9,7 +9,7 @@ declare module 'react-native-crypto' {
 declare module 'react-native-randombytes' {
   export function randomBytes(
     size: number,
-    callback: (err: Error | null, buf: Buffer) => void
+    callback: (err: Error | null, buf: Buffer) => void,
   ): void
 }
 declare module 'react-native-aes-crypto' {
@@ -18,19 +18,19 @@ declare module 'react-native-aes-crypto' {
     password: string,
     salt: string,
     cost: number,
-    length: number
+    length: number,
   ): Promise<string>
   export function encrypt(
     text: string,
     key: string,
     iv: string,
-    algorithm: Algorithms
+    algorithm: Algorithms,
   ): Promise<string>
   export function decrypt(
     ciphertext: string,
     key: string,
     iv: string,
-    algorithm: Algorithms
+    algorithm: Algorithms,
   ): Promise<string>
   export function hmac256(ciphertext: string, key: string): Promise<string>
   export function hmac512(ciphertext: string, key: string): Promise<string>

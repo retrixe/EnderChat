@@ -1,36 +1,24 @@
 import React, { useState } from 'react'
-import {
-  View,
-  Pressable,
-  StyleSheet,
-  type StyleProp,
-  type ViewStyle
-} from 'react-native'
+import { View, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native'
 
 import Text from '../../components/Text'
 import Dialog, { dialogStyles } from '../../components/Dialog'
 import globalStyle from '../../globalStyle'
 import useDarkMode from '../../context/useDarkMode'
 
-const RadioButton = (props: {
-  style?: StyleProp<ViewStyle>
-  selected: boolean
-}): JSX.Element => {
+const RadioButton = (props: { style?: StyleProp<ViewStyle>; selected: boolean }): JSX.Element => {
   const darkMode = useDarkMode()
   return (
     <View
       style={[
         radioButtonStyles.outerView,
         darkMode ? radioButtonStyles.outerViewDark : {},
-        props.style
+        props.style,
       ]}
     >
       {props.selected ? (
         <View
-          style={[
-            radioButtonStyles.innerView,
-            darkMode ? radioButtonStyles.innerViewDark : {}
-          ]}
+          style={[radioButtonStyles.innerView, darkMode ? radioButtonStyles.innerViewDark : {}]}
         />
       ) : null}
     </View>
@@ -46,11 +34,16 @@ const radioButtonStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#000',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   outerViewDark: { borderColor: '#fff' },
   innerViewDark: { backgroundColor: '#fff' },
-  innerView: { height: 12, width: 12, borderRadius: 6, backgroundColor: '#000' }
+  innerView: {
+    height: 12,
+    width: 12,
+    borderRadius: 6,
+    backgroundColor: '#000',
+  },
 })
 
 interface DarkModeSettingProps {
@@ -58,10 +51,7 @@ interface DarkModeSettingProps {
   setValue: (newValue: boolean | null) => void
 }
 
-const DarkModeSetting = ({
-  value,
-  setValue
-}: DarkModeSettingProps): JSX.Element => {
+const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps): JSX.Element => {
   const [modalOpen, setModalOpen] = useState(false)
   const ripple = { color: '#aaa' }
   const dark = useDarkMode()
@@ -71,9 +61,7 @@ const DarkModeSetting = ({
   return (
     <Pressable onPress={() => setModalOpen(true)} android_ripple={ripple}>
       <Dialog visible={modalOpen} onRequestClose={() => setModalOpen(false)}>
-        <Text style={[dialogStyles.modalTitle, styles.dialogTitle]}>
-          Dark mode
-        </Text>
+        <Text style={[dialogStyles.modalTitle, styles.dialogTitle]}>Dark mode</Text>
         <Pressable
           onPress={() => setValue(true)}
           android_ripple={ripple}
@@ -126,7 +114,7 @@ const styles = StyleSheet.create({
   dialogOption: { flexDirection: 'row' },
   settingItem: { fontSize: 18, width: '100%', padding: 8 },
   settingSubtext: { fontSize: 12, fontWeight: '400', color: '#666' },
-  settingSubtextDark: { fontSize: 12, fontWeight: '400', color: '#aaa' }
+  settingSubtextDark: { fontSize: 12, fontWeight: '400', color: '#aaa' },
 })
 
 export default DarkModeSetting

@@ -4,7 +4,7 @@ import {
   ChatToJsx,
   type MinecraftChat,
   type ClickEvent,
-  type ColorMap
+  type ColorMap,
 } from '../../minecraft/chatToJsx'
 import Text from '../../components/Text'
 
@@ -31,7 +31,7 @@ const MessageRendererMemo = React.memo(
   (prev, next) =>
     prev.item.key === next.item.key &&
     prev.colorMap === next.colorMap &&
-    prev.onClickEvent === next.onClickEvent
+    prev.onClickEvent === next.onClickEvent,
 )
 
 const ChatMessageList = (props: {
@@ -50,7 +50,7 @@ const ChatMessageList = (props: {
         onClickEvent={props.onClickEvent}
       />
     ),
-    [props.colorMap, props.onClickEvent]
+    [props.colorMap, props.onClickEvent],
   )
   return (
     <FlatList
@@ -65,7 +65,7 @@ const ChatMessageList = (props: {
 
 const styles = StyleSheet.create({
   chatArea: { padding: 8, flex: 1 },
-  chatAreaScrollView: { paddingBottom: 16 }
+  chatAreaScrollView: { paddingBottom: 16 },
 })
 
 export default ChatMessageList

@@ -1,23 +1,17 @@
-import { type Accounts } from '../../context/accountsContext'
-import { type DisconnectReason } from '../../context/connectionContext'
-import {
-  type Session,
-  type Sessions,
-  type SetSession
-} from '../../context/sessionStore'
-import { type Servers } from '../../context/serversContext'
-import { type Settings } from '../../context/settingsContext'
+import type { Accounts } from '../../context/accountsContext'
+import type { DisconnectReason } from '../../context/connectionContext'
+import type { Session, Sessions, SetSession } from '../../context/sessionStore'
+import type { Servers } from '../../context/serversContext'
+import type { Settings } from '../../context/settingsContext'
 import {
   authenticateWithXsts,
   getXboxLiveTokenAndUserHash,
   getXstsTokenAndUserHash,
-  refreshMSAuthToken
+  refreshMSAuthToken,
 } from '../../minecraft/api/microsoft'
 import { getPlayerCertificates } from '../../minecraft/api/mojang'
 import { refresh } from '../../minecraft/api/yggdrasil'
-import initiateConnection, {
-  type ServerConnection
-} from '../../minecraft/connection'
+import initiateConnection, { type ServerConnection } from '../../minecraft/connection'
 import { parseIp, protocolMap, resolveHostname } from '../../minecraft/utils'
 import config from '../../../config.json'
 
@@ -27,7 +21,7 @@ export const getSession = async (
   sessions: Sessions,
   setSession: SetSession,
   setLoading: (msg: string) => void,
-  setAccounts: (accs: Accounts) => void
+  setAccounts: (accs: Accounts) => void,
 ): Promise<Session | string> => {
   const activeAccount = Object.keys(accounts).find(e => accounts[e].active)
   if (!activeAccount) {
@@ -50,7 +44,7 @@ export const getSession = async (
         const [msAccessToken, msRefreshToken] = await refreshMSAuthToken(
           accounts[activeAccount].microsoftRefreshToken ?? '',
           config.clientId,
-          config.scope
+          config.scope,
         )
         const [xlt, xuh] = await getXboxLiveTokenAndUserHash(msAccessToken)
         const [xstsToken] = await getXstsTokenAndUserHash(xlt)
@@ -62,20 +56,20 @@ export const getSession = async (
             ...account,
             accessToken,
             microsoftAccessToken: msAccessToken,
-            microsoftRefreshToken: msRefreshToken
-          }
+            microsoftRefreshToken: msRefreshToken,
+          },
         })
       } else if (!session && accounts[activeAccount].type === 'mojang') {
         setLoading('Reloading your Mojang Account...')
         const { accessToken, clientToken } = await refresh(
           accounts[activeAccount].accessToken ?? '',
           accounts[activeAccount].clientToken ?? '',
-          false
+          false,
         )
         session = { accessToken }
         setAccounts({
           ...accounts,
-          [activeAccount]: { ...account, accessToken, clientToken }
+          [activeAccount]: { ...account, accessToken, clientToken },
         })
       }
       // If connecting to 1.19, get player certificates.
@@ -99,7 +93,7 @@ export const createConnection = async (
   settings: Settings,
   accounts: Accounts,
   setConnection: (conn?: ServerConnection) => void,
-  closeChatScreen: (reason?: DisconnectReason) => void
+  closeChatScreen: (reason?: DisconnectReason) => void,
 ): Promise<ServerConnection | string> => {
   let host: string
   let port: number
@@ -125,7 +119,7 @@ export const createConnection = async (
       protocolVersion: version,
       selectedProfile: uuid,
       accessToken: session?.accessToken,
-      certificate: settings.enableChatSigning ? session?.certificate : undefined
+      certificate: settings.enableChatSigning ? session?.certificate : undefined,
     })
     const onCloseOrError = (): void => {
       const reason = newConn.disconnectReason

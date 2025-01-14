@@ -1,44 +1,30 @@
 import React, { useEffect } from 'react'
-import {
-  useColorScheme,
-  NativeModules,
-  StatusBar,
-  SafeAreaView,
-  Platform
-} from 'react-native'
+import { useColorScheme, NativeModules, StatusBar, SafeAreaView, Platform } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { NavigationContainer, DarkTheme } from '@react-navigation/native'
 import {
   createNativeStackNavigator,
-  type NativeStackNavigationProp
+  type NativeStackNavigationProp,
 } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 
 import useAsyncStorage from './utilities/storage/useAsyncStorage'
 import useJsonAsyncStorage from './utilities/storage/useJsonAsyncStorage'
-import ConnectionContext, {
-  type DisconnectReason
-} from './context/connectionContext'
+import ConnectionContext, { type DisconnectReason } from './context/connectionContext'
 import AccountsContext, { type Accounts } from './context/accountsContext'
-import SettingsContext, {
-  defaultSettings,
-  type Settings
-} from './context/settingsContext'
+import SettingsContext, { defaultSettings, type Settings } from './context/settingsContext'
 import ServersContext, { type Servers } from './context/serversContext'
 import { ColorSchemeContext } from './context/useDarkMode'
 import DisconnectDialog from './components/DisconnectDialog'
-import { type ServerConnection } from './minecraft/connection'
+import type { ServerConnection } from './minecraft/connection'
 import ChatScreen from './screens/ChatScreen'
 import ServerScreen from './screens/ServerScreen'
 import AccountScreen from './screens/AccountScreen'
 import SettingScreen from './screens/SettingScreen'
 import globalStyle from './globalStyle'
 
-const Stacks = createNativeStackNavigator<
-  RootStackParamList,
-  'StackNavigator'
->()
+const Stacks = createNativeStackNavigator<RootStackParamList, 'StackNavigator'>()
 const Tabs = createMaterialTopTabNavigator<RootStackParamList>() // createBottomTabNavigator()
 
 export interface RootStackParamList {
@@ -54,7 +40,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeProp }): JSX.Element => {
     if (connection) {
       navigation.push('Chat', {
         serverName: connection.options.serverName,
-        version: connection.options.protocolVersion
+        version: connection.options.protocolVersion,
       })
     }
   }, [connection, navigation])
@@ -85,7 +71,7 @@ const HomeScreen = ({ navigation }: { navigation: HomeProp }): JSX.Element => {
         tabBarLabelStyle: { marginBottom: 5, textTransform: 'uppercase' },
         tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: '#a0a0a0',
-        headerShown: false
+        headerShown: false,
       })}
     >
       <Tabs.Screen name='Servers' component={ServerScreen} />
@@ -96,26 +82,16 @@ const HomeScreen = ({ navigation }: { navigation: HomeProp }): JSX.Element => {
 }
 
 const App = (): JSX.Element => {
-  const [connection, setConnection] = React.useState<
-    ServerConnection | undefined
-  >()
-  const [disconnect, setDisconnect] = React.useState<
-    DisconnectReason | undefined
-  >()
+  const [connection, setConnection] = React.useState<ServerConnection | undefined>()
+  const [disconnect, setDisconnect] = React.useState<DisconnectReason | undefined>()
 
-  const [settings, setSettings] = useJsonAsyncStorage<Settings>(
-    '@settings',
-    defaultSettings,
-    true
-  )
+  const [settings, setSettings] = useJsonAsyncStorage<Settings>('@settings', defaultSettings, true)
   const [accountsStore, setAccountsStore] = useAsyncStorage('@accounts', '{}')
   const [serversStore, setServersStore] = useAsyncStorage('@servers', '{}')
   const accounts: Accounts = JSON.parse(accountsStore)
   const servers: Servers = JSON.parse(serversStore)
-  const setAccounts = (newAccounts: Accounts): void =>
-    setAccountsStore(JSON.stringify(newAccounts))
-  const setServers = (newServers: Servers): void =>
-    setServersStore(JSON.stringify(newServers))
+  const setAccounts = (newAccounts: Accounts): void => setAccountsStore(JSON.stringify(newAccounts))
+  const setServers = (newServers: Servers): void => setServersStore(JSON.stringify(newServers))
 
   const colorScheme = useColorScheme()
   const systemDefault = colorScheme === null ? true : colorScheme === 'dark'
@@ -128,7 +104,7 @@ const App = (): JSX.Element => {
       NativeModules.NavBarColorModule.setNavigationBarColor(
         darkMode ? '#121212' : '#ffffff',
         false,
-        darkMode
+        darkMode,
       )
     }
   }, [darkMode])
@@ -140,7 +116,7 @@ const App = (): JSX.Element => {
           connection,
           setConnection,
           disconnectReason: disconnect,
-          setDisconnectReason: setDisconnect
+          setDisconnectReason: setDisconnect,
         }}
       >
         <SettingsContext.Provider value={{ settings, setSettings }}>
@@ -158,7 +134,7 @@ const App = (): JSX.Element => {
                     initialRouteName='Home'
                     screenOptions={{
                       headerShown: false,
-                      animation: 'slide_from_right'
+                      animation: 'slide_from_right',
                     }}
                   >
                     <Stacks.Screen name='Home' component={HomeScreen} />

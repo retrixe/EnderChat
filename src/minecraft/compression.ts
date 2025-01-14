@@ -8,16 +8,14 @@ const isCompressionModuleAvailable = false
 
 export const compressData = async (data: Buffer): Promise<Buffer> => {
   if (isCompressionModuleAvailable) {
-    return CompressionModule.compressData(data.toString('base64')).then(
-      (res: string) => Buffer.from(res, 'base64')
-    )
+    const res = await CompressionModule.compressData(data.toString('base64'))
+    return Buffer.from(res, 'base64')
   } else return zlib.deflateSync(data)
 }
 
 export const decompressData = async (data: Buffer): Promise<Buffer> => {
   if (isCompressionModuleAvailable) {
-    return CompressionModule.decompressData(data.toString('base64')).then(
-      (res: string) => Buffer.from(res, 'base64')
-    )
+    const res = await CompressionModule.decompressData(data.toString('base64'))
+    return Buffer.from(res, 'base64')
   } else return zlib.unzipSync(data, { finishFlush: 2 })
 }

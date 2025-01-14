@@ -1,18 +1,10 @@
 import { createHash, publicEncrypt } from 'react-native-crypto'
-import { type ConnectionOptions, type ServerConnection } from '.'
+import type { ConnectionOptions, ServerConnection } from '.'
 import { joinMinecraftSession } from '../api/mojang'
 import { concatPacketData, type Packet, type PacketDataTypes } from '../packet'
-import {
-  getRandomBytes,
-  mcHexDigest,
-  protocolMap,
-  readVarInt,
-  writeVarInt
-} from '../utils'
+import { getRandomBytes, mcHexDigest, protocolMap, readVarInt, writeVarInt } from '../utils'
 
-export const parseEncryptionRequestPacket = (
-  packet: Packet
-): [Buffer, Buffer, Buffer] => {
+export const parseEncryptionRequestPacket = (packet: Packet): [Buffer, Buffer, Buffer] => {
   // ASCII encoding of the server id string
   let data = packet.data
   const [sidLen, sidLenLen] = readVarInt(data)
@@ -31,10 +23,7 @@ export const parseEncryptionRequestPacket = (
 
 export const getLoginPacket = (opts: ConnectionOptions): Buffer => {
   const data: PacketDataTypes[] = [opts.username]
-  if (
-    opts.protocolVersion >= protocolMap[1.19] &&
-    opts.protocolVersion < protocolMap['1.19.3']
-  ) {
+  if (opts.protocolVersion >= protocolMap[1.19] && opts.protocolVersion < protocolMap['1.19.3']) {
     data.push(false)
     /* TODO: Support chat signing properly.
     data.push(!!opts.certificate)
@@ -75,11 +64,10 @@ export const handleEncryptionRequest = (
   accessToken: string,
   selectedProfile: string,
   connection: ServerConnection,
-  callback: (secret: Buffer, response: Buffer) => Promise<void>
+  callback: (secret: Buffer, response: Buffer) => Promise<void>,
 ): void => {
   // https://wiki.vg/Protocol_Encryption
-  const [serverId, publicKey, verifyToken] =
-    parseEncryptionRequestPacket(packet)
+  const [serverId, publicKey, verifyToken] = parseEncryptionRequestPacket(packet)
   ;(async () => {
     const secret = await getRandomBytes(16) // Generate random 16-byte shared secret.
     // Generate hash.
@@ -95,9 +83,7 @@ export const handleEncryptionRequest = (
     }
     // Encrypt shared secret and verify token with public key.
     const pk =
-      '-----BEGIN PUBLIC KEY-----\n' +
-      publicKey.toString('base64') +
-      '\n-----END PUBLIC KEY-----'
+      '-----BEGIN PUBLIC KEY-----\n' + publicKey.toString('base64') + '\n-----END PUBLIC KEY-----'
     const ePrms = { key: pk, padding: 1 } // RSA_PKCS1_PADDING
     const encryptedSharedSecret = publicEncrypt(ePrms, secret)
     const encryptedVerifyToken = publicEncrypt(ePrms, verifyToken)
@@ -107,7 +93,7 @@ export const handleEncryptionRequest = (
       writeVarInt(encryptedSharedSecret.byteLength),
       encryptedSharedSecret,
       writeVarInt(encryptedVerifyToken.byteLength),
-      encryptedVerifyToken
+      encryptedVerifyToken,
     ]
     const { protocolVersion } = connection.options
     if (protocolVersion >= protocolMap['1.19']) {
@@ -118,8 +104,7 @@ export const handleEncryptionRequest = (
     await callback(secret, concatPacketData(response))
   })().catch(e => {
     console.error(e)
-    connection.disconnectReason =
-      '{"text":"Failed to authenticate with Mojang servers!"}'
+    connection.disconnectReason = '{"text":"Failed to authenticate with Mojang servers!"}'
     connection.close()
   })
 }

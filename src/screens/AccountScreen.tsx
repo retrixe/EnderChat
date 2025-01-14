@@ -33,10 +33,7 @@ const AccountScreen = (): JSX.Element => {
 
   return (
     <>
-      <AddAccountDialog
-        open={addAccountDialogOpen}
-        setOpen={setAddAccountDialogOpen}
-      />
+      <AddAccountDialog open={addAccountDialogOpen} setOpen={setAddAccountDialogOpen} />
       <Dialog
         visible={!!deleteAccount}
         onRequestClose={() => setDeleteAccount('')}
@@ -75,13 +72,7 @@ const AccountScreen = (): JSX.Element => {
       </View>
       <View style={globalStyle.outerView}>
         {Object.keys(accounts)
-          .sort((a, b) =>
-            accounts[a].active
-              ? -1
-              : accounts[b].active
-                ? 1
-                : a.localeCompare(b)
-          )
+          .sort((a, b) => (accounts[a].active ? -1 : accounts[b].active ? 1 : a.localeCompare(b)))
           .map(uuid => (
             <AccountDisplay
               key={uuid}
@@ -100,7 +91,7 @@ const AccountScreen = (): JSX.Element => {
 const styles = StyleSheet.create({
   deleteAccountText: { fontSize: 16 },
   deleteAccountDialog: { padding: 0 },
-  ...dialogStyles
+  ...dialogStyles,
 })
 
 export default AccountScreen

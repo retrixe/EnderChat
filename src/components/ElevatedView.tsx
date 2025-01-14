@@ -2,9 +2,7 @@ import React from 'react'
 import { View, type ViewStyle } from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
-const ElevatedView = (
-  props: React.PropsWithChildren<{ style?: ViewStyle }>
-): JSX.Element => (
+const ElevatedView = (props: React.PropsWithChildren<{ style?: ViewStyle }>): JSX.Element => (
   <View
     {...props}
     style={Object.assign(
@@ -14,9 +12,9 @@ const ElevatedView = (
         borderRadius: 6,
         borderWidth: 0,
         elevation: 2,
-        overflow: 'hidden'
+        overflow: 'hidden',
       },
-      props.style ?? {}
+      props.style ?? {},
     )}
   />
 )

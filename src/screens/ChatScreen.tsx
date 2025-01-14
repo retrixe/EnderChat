@@ -1,61 +1,41 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
-import {
-  StyleSheet,
-  View,
-  ActivityIndicator,
-  Platform,
-  Linking
-} from 'react-native'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { StyleSheet, View, ActivityIndicator, Platform, Linking } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import Clipboard from '@react-native-clipboard/clipboard'
-import { type NativeStackScreenProps } from '@react-navigation/native-stack'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 
 import {
   packetHandler,
   enderChatPrefix,
-  sendMessageError
+  sendMessageError,
 } from '../utilities/connection/packetHandler'
-import {
-  getSession,
-  createConnection
-} from '../utilities/connection/connectionBuilder'
-import { type RootStackParamList } from '../App'
+import { getSession, createConnection } from '../utilities/connection/connectionBuilder'
+import type { RootStackParamList } from '../App'
 import globalStyle from '../globalStyle'
 import useDarkMode from '../context/useDarkMode'
 import AccountsContext from '../context/accountsContext'
 import ServersContext from '../context/serversContext'
 import useSessionStore from '../context/sessionStore'
 import SettingsContext from '../context/settingsContext'
-import ConnectionContext, {
-  type DisconnectReason
-} from '../context/connectionContext'
+import ConnectionContext, { type DisconnectReason } from '../context/connectionContext'
 import {
   mojangColorMap,
   lightColorMap,
   type MinecraftChat,
-  type ClickEvent
+  type ClickEvent,
 } from '../minecraft/chatToJsx'
 import { ConnectionState } from '../minecraft/connection'
 import { makeChatMessagePacket } from '../minecraft/packets/chat'
 import TextField from '../components/TextField'
 import Text from '../components/Text'
 import ActionBar from '../components/chat/ActionBar'
-import ChatMessageList, {
-  type Message
-} from '../components/chat/ChatMessageList'
+import ChatMessageList, { type Message } from '../components/chat/ChatMessageList'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>
 
 export type Status = 'CONNECTING' | 'CONNECTED' | 'CLOSED'
 const handleError =
-  (addMessage: (text: MinecraftChat) => void, translated: string) =>
-  (error: unknown) => {
+  (addMessage: (text: MinecraftChat) => void, translated: string) => (error: unknown) => {
     console.error(error)
     addMessage(enderChatPrefix + translated)
   }
@@ -66,8 +46,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
   const { settings } = useContext(SettingsContext)
   const { servers } = useContext(ServersContext)
   const { accounts, setAccounts } = useContext(AccountsContext)
-  const { connection, setConnection, setDisconnectReason } =
-    useContext(ConnectionContext)
+  const { connection, setConnection, setDisconnectReason } = useContext(ConnectionContext)
   const { sessions, setSession } = useSessionStore()
 
   // TODO: Show command history.
@@ -129,7 +108,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
         connection.close()
         setConnection(undefined)
       }
-    })
+    }),
   )
 
   // Create connection useEffect.
@@ -143,7 +122,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
           sessions,
           setSession,
           setLoading,
-          setAccounts
+          setAccounts,
         )
         if (typeof session === 'string') {
           closeChatScreen({ server: serverName, reason: session })
@@ -157,7 +136,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
             settings,
             accounts,
             setConnection,
-            closeChatScreen
+            closeChatScreen,
           )
           if ((statusRef.current as Status) !== 'CLOSED') {
             if (typeof conn === 'string') {
@@ -194,8 +173,8 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
         settings.sendJoinMessage,
         settings.sendSpawnCommand,
         handleError,
-        charLimit
-      )
+        charLimit,
+      ),
     )
     return () => {
       connection.removeAllListeners('packet')
@@ -205,7 +184,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
     connection,
     settings.joinMessage,
     settings.sendJoinMessage,
-    settings.sendSpawnCommand
+    settings.sendSpawnCommand,
   ])
 
   const sendMessage = (msg: string, saveHistory: boolean): void => {
@@ -228,9 +207,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
         settings.webLinks &&
         (ce.value.startsWith('https://') || ce.value.startsWith('http://'))
       ) {
-        Linking.openURL(ce.value).catch(() =>
-          addMessage(enderChatPrefix + 'Failed to open URL!')
-        )
+        Linking.openURL(ce.value).catch(() => addMessage(enderChatPrefix + 'Failed to open URL!'))
       } else if (ce.action === 'copy_to_clipboard') {
         Clipboard.setString(ce.value)
       } else if (ce.action === 'run_command') {
@@ -240,7 +217,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
         setMessage(ce.value)
       } // No open_file/change_page handling.
     },
-    [settings.webLinks]
+    [settings.webLinks],
   )
 
   const title =
@@ -274,12 +251,10 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
             color='#00aaff'
             size={Platform.select<number | 'large'>({
               android: 64,
-              default: 'large'
+              default: 'large',
             })}
           />
-          <Text style={styles.loadingScreenText}>
-            {loading || 'Connecting to server...'}
-          </Text>
+          <Text style={styles.loadingScreenText}>{loading || 'Connecting to server...'}</Text>
         </View>
       )}
       {!loading && connection && (
@@ -332,7 +307,7 @@ const styles = StyleSheet.create({
   textAreaDark: {
     padding: 8,
     flexDirection: 'row',
-    backgroundColor: '#242424'
+    backgroundColor: '#242424',
   },
   textArea: { padding: 8, backgroundColor: '#fff', flexDirection: 'row' },
   textField: {
@@ -341,8 +316,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
     paddingLeft: 12,
     paddingRight: 12,
-    borderRadius: 32
-  }
+    borderRadius: 32,
+  },
 })
 
 export default ChatScreen

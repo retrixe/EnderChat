@@ -7,6 +7,7 @@ import React from 'react'
 import App from '../src/App'
 
 // Note: import explicitly to use the types shipped with jest.
+// eslint-disable-next-line n/no-extraneous-import
 import { it } from '@jest/globals'
 
 // Note: test renderer must be required after react-native.

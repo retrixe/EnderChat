@@ -2,25 +2,17 @@ import { MUtf8Decoder } from 'mutf-8'
 
 const mutf8Decoder = new MUtf8Decoder()
 
-export const parseTag = (
-  buffer: Buffer,
-  offset: number
-): [string, any, number] => {
+export const parseTag = (buffer: Buffer, offset: number): [string, any, number] => {
   const type = buffer.readUInt8(offset)
   const nameLength = buffer.readUInt16BE(offset + 1)
-  const name = mutf8Decoder.decode(
-    buffer.slice(offset + 3, offset + 3 + nameLength)
-  )
+  const name = mutf8Decoder.decode(buffer.slice(offset + 3, offset + 3 + nameLength))
+  // eslint-disable-next-line prefer-const
   let [value, size] = parseTagValue(type, buffer, offset + 3 + nameLength)
   size += 1 + 2 + nameLength
   return [name, value, size]
 }
 
-const parseTagValue = (
-  type: number,
-  buffer: Buffer,
-  offset: number
-): [any, number] => {
+const parseTagValue = (type: number, buffer: Buffer, offset: number): [any, number] => {
   let value: any
   let size: number
   switch (type) {
@@ -60,9 +52,7 @@ const parseTagValue = (
     case 8: {
       const length = buffer.readUint16BE(offset)
       size = 2
-      value = mutf8Decoder.decode(
-        buffer.slice(offset + size, offset + size + length)
-      )
+      value = mutf8Decoder.decode(buffer.slice(offset + size, offset + size + length))
       size += length
       break
     }

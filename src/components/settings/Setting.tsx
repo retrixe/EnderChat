@@ -12,7 +12,7 @@ const Setting = <T extends string | boolean>({
   onClick,
   setValue,
   multiline,
-  maxLength
+  maxLength,
 }: {
   name: string
   value: T
@@ -23,9 +23,7 @@ const Setting = <T extends string | boolean>({
 }): JSX.Element => {
   const da = useDarkMode()
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalContent, setModalContent] = useState(
-    typeof value === 'string' ? value : ''
-  )
+  const [modalContent, setModalContent] = useState(typeof value === 'string' ? value : '')
   // This is used for toggles because the upper value is not updated immediately, resulting in judder.
   const [toggleValue, setToggleValue] = useState(value)
 
@@ -59,11 +57,7 @@ const Setting = <T extends string | boolean>({
           setFinalState={response => setValue(response as T)}
         />
       )}
-      <View
-        style={
-          typeof value === 'string' ? styles.setting : styles.settingWithSwitch
-        }
-      >
+      <View style={typeof value === 'string' ? styles.setting : styles.settingWithSwitch}>
         <Text style={styles.settingText}>{name}</Text>
         {typeof value === 'string' && (
           <Text style={da ? styles.settingSubtextDark : styles.settingSubtext}>
@@ -88,11 +82,11 @@ const styles = StyleSheet.create({
     paddingLeft: 22,
     paddingRight: 22,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   settingText: { fontSize: 18 },
   settingSubtext: { fontSize: 12, fontWeight: '400', color: '#666' },
-  settingSubtextDark: { fontSize: 12, fontWeight: '400', color: '#aaa' }
+  settingSubtextDark: { fontSize: 12, fontWeight: '400', color: '#aaa' },
 })
 
 export default Setting

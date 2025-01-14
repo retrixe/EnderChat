@@ -3,10 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 type SetAsyncStorage = (value: string) => void
 
-const useAsyncStorage = (
-  name: string,
-  defaultValue: string = ''
-): [string, SetAsyncStorage] => {
+const useAsyncStorage = (name: string, defaultValue = ''): [string, SetAsyncStorage] => {
   const [state, setState] = useState(defaultValue)
 
   useEffect(() => {
@@ -20,7 +17,7 @@ const useAsyncStorage = (
     (value: string) => {
       setState(value)
       AsyncStorage.setItem(name, value).catch(err => console.error(err))
-    }
+    },
   ]
 }
 

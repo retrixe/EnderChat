@@ -14,14 +14,10 @@ const TextField = (props: TextInputProps & { red?: boolean }): JSX.Element => {
         ...props /* Spreads value, placeholder, multiline and onChangeText. */
       }
       style={{
-        ...(props.multiline
-          ? styles.modalMultilineField
-          : styles.modalTextField),
-        ...(darkMode
-          ? styles.modalTextFieldBackgroundDark
-          : styles.modalTextFieldBackground),
+        ...(props.multiline ? styles.modalMultilineField : styles.modalTextField),
+        ...(darkMode ? styles.modalTextFieldBackgroundDark : styles.modalTextFieldBackground),
         ...(props.red ? { borderColor: '#ff0000', borderWidth: 1 } : {}),
-        ...(typeof style === 'object' ? style : {})
+        ...(typeof style === 'object' ? style : {}),
       }}
     />
   )
@@ -33,7 +29,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingLeft: 8,
     paddingRight: 8,
-    borderRadius: 4
+    borderRadius: 4,
     // borderWidth: 1
   },
   modalMultilineField: {
@@ -41,21 +37,21 @@ const styles = StyleSheet.create({
     padding: 4,
     marginTop: 8,
     paddingLeft: 8,
-    paddingRight: 8
+    paddingRight: 8,
     // borderWidth: 1
   },
   modalTextFieldBackground: {
     backgroundColor: '#f0f0f0', // fafafa
     // borderColor: '#efefef',
     borderRadius: 6,
-    color: '#000'
+    color: '#000',
   },
   modalTextFieldBackgroundDark: {
     backgroundColor: '#121212', // 363636
     // borderColor: '#121212',
     borderRadius: 6,
-    color: '#fff'
-  }
+    color: '#fff',
+  },
 })
 
 export default TextField

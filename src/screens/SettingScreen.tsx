@@ -1,11 +1,11 @@
 import React, { useContext } from 'react'
 import { View, ScrollView, Linking, StyleSheet } from 'react-native'
-import { type MaterialTopTabScreenProps } from '@react-navigation/material-top-tabs'
-import { type NativeStackScreenProps } from '@react-navigation/native-stack'
+import type { MaterialTopTabScreenProps } from '@react-navigation/material-top-tabs'
+import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 
 import { version } from '../../package.json'
-import { type RootStackParamList } from '../App'
+import type { RootStackParamList } from '../App'
 import Text from '../components/Text'
 import Setting from '../components/settings/Setting'
 import DarkModeSetting from '../components/settings/DarkModeSetting'
@@ -135,7 +135,7 @@ const SettingScreen = ({ navigation }: StackProps | TabProps): JSX.Element => {
 
 const styles = StyleSheet.create({
   backButton: { marginRight: 8 },
-  backButtonIcon: { marginRight: 0 }
+  backButtonIcon: { marginRight: 0 },
 })
 
 export default SettingScreen

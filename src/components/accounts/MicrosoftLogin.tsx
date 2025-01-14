@@ -13,7 +13,7 @@ import {
   getXboxLiveTokenAndUserHash,
   getXstsTokenAndUserHash,
   authenticateWithXsts,
-  getGameProfile
+  getGameProfile,
 } from '../../minecraft/api/microsoft'
 import config from '../../../config.json'
 
@@ -34,22 +34,20 @@ const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
     microsoftAccessToken: string,
     microsoftRefreshToken: string,
     accessToken: string,
-    username: string
+    username: string,
   ): boolean => {
     // Honestly, overwrite the old Microsoft account, but inform the user.
     const alreadyExists = accounts[id] && accounts[id].type === 'microsoft'
     setAccounts({
       ...accounts,
       [id]: {
-        active:
-          Object.keys(accounts).length === 0 ||
-          (alreadyExists && accounts[id].active),
+        active: Object.keys(accounts).length === 0 || (alreadyExists && accounts[id].active),
         microsoftRefreshToken,
         microsoftAccessToken,
         accessToken,
         username,
-        type: 'microsoft'
-      }
+        type: 'microsoft',
+      },
     })
     return alreadyExists
   }
@@ -57,16 +55,10 @@ const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
   const onRequestClose = (): void => {
     if (!loading) close()
   }
-  const handleNavigationStateChange = async (
-    newNavState: WebViewNavigation
-  ): Promise<void> => {
+  const handleNavigationStateChange = async (newNavState: WebViewNavigation): Promise<void> => {
     // LOW-TODO: Parse errors.
     if (!webview.current || !newNavState.url) return
-    if (
-      Platform.OS === 'android' &&
-      webview.current.clearCache &&
-      webview.current.clearHistory
-    ) {
+    if (Platform.OS === 'android' && webview.current.clearCache && webview.current.clearHistory) {
       webview.current.clearCache(true)
       webview.current.clearHistory()
     }
@@ -81,10 +73,9 @@ const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
         const [msAccessToken, msRefreshToken] = await getMSAuthToken(
           authCode,
           config.clientId,
-          config.scope
+          config.scope,
         )
-        const [xboxLiveToken, xboxUserHash] =
-          await getXboxLiveTokenAndUserHash(msAccessToken)
+        const [xboxLiveToken, xboxUserHash] = await getXboxLiveTokenAndUserHash(msAccessToken)
         const [xstsToken] = await getXstsTokenAndUserHash(xboxLiveToken)
         const accessToken = await authenticateWithXsts(xstsToken, xboxUserHash)
         const gameProfile = await getGameProfile(accessToken)
@@ -93,12 +84,12 @@ const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
           msAccessToken,
           msRefreshToken,
           accessToken,
-          gameProfile.name
+          gameProfile.name,
         )
         setLoading(false)
         if (alreadyExists) {
           setHtml(
-            '<h1>You are already logged into this account! However, your account credentials have been updated.</h1>'
+            '<h1>You are already logged into this account! However, your account credentials have been updated.</h1>',
           )
         } else {
           setHtml('')
@@ -108,10 +99,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
         setLoading(false)
         if (e instanceof XstsError) {
           setHtml(`<h1>Xbox Live Error (${e.XErr}): ${e.XErrMessage}</h1>`)
-        } else if (
-          e instanceof Error &&
-          e.message === 'This user does not own Minecraft!'
-        ) {
+        } else if (e instanceof Error && e.message === 'This user does not own Minecraft!') {
           setHtml('<h1>You do not own Minecraft!</h1>')
         } else {
           console.error(e)
@@ -137,7 +125,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
         <View
           style={[
             darkMode ? styles.modalTopBarDarkBg : styles.modalTopBarLightBg,
-            styles.modalTopBar
+            styles.modalTopBar,
           ]}
         >
           <Ionicons.Button name='close' onPress={onRequestClose}>
@@ -162,11 +150,11 @@ const styles = StyleSheet.create({
   modalView: {
     flex: 1,
     height: '100%',
-    width: '100%'
+    width: '100%',
   },
   modalTopBarLightBg: { backgroundColor: '#ffffff' },
   modalTopBarDarkBg: { backgroundColor: '#242424' },
-  modalTopBar: { padding: 8, flexDirection: 'row' }
+  modalTopBar: { padding: 8, flexDirection: 'row' },
 })
 
 export default MicrosoftLogin

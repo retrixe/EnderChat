@@ -14,7 +14,7 @@ const TextFieldDialog = ({
   closeModal,
   placeholder,
   initialState,
-  setFinalState
+  setFinalState,
 }: {
   name: string
   modalOpen: boolean
@@ -53,11 +53,7 @@ const TextFieldDialog = ({
           onPress={closeModalAndReset}
         >
           <Text
-            style={
-              useDarkMode()
-                ? styles.modalButtonCancelDarkText
-                : styles.modalButtonCancelText
-            }
+            style={useDarkMode() ? styles.modalButtonCancelDarkText : styles.modalButtonCancelText}
           >
             CANCEL
           </Text>

@@ -5,7 +5,7 @@ import packetIds from './ids'
 export const makeChatMessagePacket = (
   msg: string,
   protocolVersion: number,
-  msgSalt?: Buffer
+  msgSalt?: Buffer,
 ): [number, Buffer] => {
   const is1191 = protocolVersion >= protocolMap['1.19.1']
   const is1193 = protocolVersion >= protocolMap['1.19.3']
@@ -28,7 +28,7 @@ export const makeChatMessagePacket = (
       timestamp,
       salt,
       writeVarInt(0),
-      false
+      false,
     ]
     if (is1191) data.push(writeVarInt(0), writeVarInt(0))
     if (is1193) data.push(writeVarInt(0))

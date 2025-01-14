@@ -8,6 +8,5 @@ module.exports = {
   // Custom:
   semi: false,
   jsxSingleQuote: true,
-  // TODO: Remove these and set printWidth 100
-  trailingComma: 'none'
-};
+  printWidth: 100,
+}

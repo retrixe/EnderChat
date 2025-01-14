@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { type Certificate } from '../minecraft/api/mojang'
+import type { Certificate } from '../minecraft/api/mojang'
 
 export interface Session {
   certificate?: Certificate
@@ -16,7 +16,7 @@ const useSessionStore = create<{
 }>(set => ({
   sessions: {},
   setSession: (uuid: string, session: Session) =>
-    set(state => ({ sessions: { ...state.sessions, [uuid]: session } }))
+    set(state => ({ sessions: { ...state.sessions, [uuid]: session } })),
 }))
 
 export default useSessionStore

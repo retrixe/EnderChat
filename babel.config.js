@@ -1,8 +1,8 @@
 module.exports = {
   env: {
     production: {
-      plugins: ['transform-remove-console']
-    }
+      plugins: ['transform-remove-console'],
+    },
   },
   presets: ['module:@react-native/babel-preset'],
   // The following plugin will rewrite imports. Reimplementations of node
@@ -46,10 +46,10 @@ module.exports = {
           zlib: 'browserify-zlib',
           // You can also mock any libraries that you don't need to support on
           // React Native, but have to be present for 3rd party code to work:
-          'some-third-party-dependency': 'node-libs-browser/mock/empty'
+          'some-third-party-dependency': 'node-libs-browser/mock/empty',
         },
-        throwForNonStringLiteral: true
-      }
-    ]
-  ]
+        throwForNonStringLiteral: true,
+      },
+    ],
+  ],
 }

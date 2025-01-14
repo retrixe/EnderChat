@@ -1,32 +1,17 @@
 import type React from 'react'
-import { type MinecraftChat } from '../../minecraft/chatToJsx'
-import {
-  ConnectionState,
-  type ServerConnection
-} from '../../minecraft/connection'
-import {
-  concatPacketData,
-  type Packet,
-  type PacketDataTypes
-} from '../../minecraft/packet'
-import {
-  parseChat,
-  protocolMap,
-  readVarInt,
-  writeVarInt
-} from '../../minecraft/utils'
+import type { MinecraftChat } from '../../minecraft/chatToJsx'
+import { ConnectionState, type ServerConnection } from '../../minecraft/connection'
+import { concatPacketData, type Packet, type PacketDataTypes } from '../../minecraft/packet'
+import { parseChat, protocolMap, readVarInt, writeVarInt } from '../../minecraft/utils'
 import { makeChatMessagePacket } from '../../minecraft/packets/chat'
 import packetIds from '../../minecraft/packets/ids'
 
 export const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
 export const parseMessageError = 'An error occurred when parsing chat.'
 export const unknownError = 'An unknown error occurred.'
-export const clientSettingsError =
-  'An error occurred when sending client settings.'
-export const inventoryCloseError =
-  'An error occurred when closing an inventory window.'
-export const respawnError =
-  'An error occurred when trying to respawn after death.'
+export const clientSettingsError = 'An error occurred when sending client settings.'
+export const inventoryCloseError = 'An error occurred when closing an inventory window.'
+export const respawnError = 'An error occurred when trying to respawn after death.'
 export const deathRespawnMessage = enderChatPrefix + 'You died! Respawning...'
 export const sendMessageError = 'Failed to send message to server!'
 export const healthMessage =
@@ -34,7 +19,7 @@ export const healthMessage =
 
 type HandleError = (
   addMsg: (text: MinecraftChat) => void,
-  translated: string
+  translated: string,
 ) => (error: unknown) => any
 
 interface PlayerChatMessage {
@@ -44,10 +29,7 @@ interface PlayerChatMessage {
   displayName: MinecraftChat
 }
 
-const parsePlayerChatMessage = (
-  data: Buffer,
-  version: number
-): PlayerChatMessage => {
+const parsePlayerChatMessage = (data: Buffer, version: number): PlayerChatMessage => {
   const [signedChat, signedChatLength] = parseChat(data, version)
   data = data.slice(signedChatLength)
   const hasUnsignedChat = data.readInt8()
@@ -71,7 +53,7 @@ const handleSystemMessage = (
   addMessage: (text: MinecraftChat) => void,
   setActionBar: (text: MinecraftChat) => void,
   handleError: HandleError,
-  version: number
+  version: number,
 ): void => {
   try {
     const [parsedChat, offset] = parseChat(packet.data, version)
@@ -93,7 +75,7 @@ const handleSystemMessage = (
 const handleResourcePack = async (
   connection: ServerConnection,
   packet: Packet,
-  version: number
+  version: number,
 ): Promise<void> => {
   const is117 = version >= protocolMap['1.17']
   const is1203 = version >= protocolMap['1.20.3']
@@ -115,12 +97,12 @@ const handleResourcePack = async (
       : packetIds.SERVERBOUND_RESOURCE_PACK_RESPONSE_PLAY(version)
   await connection.writePacket(
     responseId ?? 0,
-    uuid ? concatPacketData([uuid, response]) : response
+    uuid ? concatPacketData([uuid, response]) : response,
   )
   if (forced) {
     await connection.writePacket(
       packetIds.SERVERBOUND_RESOURCE_PACK_RESPONSE_CONF(version) ?? 0,
-      uuid ? concatPacketData([uuid, writeVarInt(0)]) : writeVarInt(0)
+      uuid ? concatPacketData([uuid, writeVarInt(0)]) : writeVarInt(0),
     )
   }
 }
@@ -137,7 +119,7 @@ export const packetHandler =
     sendJoinMessage: boolean,
     sendSpawnCommand: boolean,
     handleError: HandleError,
-    charLimit: number
+    charLimit: number,
   ) =>
   (packet: Packet) => {
     const { protocolVersion: version } = connection.options
@@ -153,8 +135,7 @@ export const packetHandler =
         setLoading('')
       } else if (packet.id === packetIds.CLIENTBOUND_LOGIN_PLAY(version)) {
         // Send Client Settings packet.
-        const clientSettingsId =
-          packetIds.SERVERBOUND_CLIENT_SETTINGS(version) ?? 0
+        const clientSettingsId = packetIds.SERVERBOUND_CLIENT_SETTINGS(version) ?? 0
         const viewDistance = Buffer.alloc(1)
         viewDistance.writeInt8(2)
         const skinParts = Buffer.alloc(1)
@@ -166,7 +147,7 @@ export const packetHandler =
           writeVarInt(0),
           true,
           skinParts,
-          writeVarInt(1)
+          writeVarInt(1),
         ]
         if (is117) packetData.push(!is118)
         if (is118) packetData.push(true)
@@ -201,24 +182,18 @@ export const packetHandler =
         packet.id === packetIds.CLIENTBOUND_CHAT_MESSAGE(version) ||
         packet.id === packetIds.CLIENTBOUND_SYSTEM_CHAT_MESSAGE(version)
       ) {
-        handleSystemMessage(
-          packet,
-          addMessage,
-          setActionBar,
-          handleError,
-          version
-        )
-      } else if (
-        packet.id === packetIds.CLIENTBOUND_PLAYER_CHAT_MESSAGE(version)
-      ) {
+        handleSystemMessage(packet, addMessage, setActionBar, handleError, version)
+      } else if (packet.id === packetIds.CLIENTBOUND_PLAYER_CHAT_MESSAGE(version)) {
         try {
-          const { type, displayName, signedChat, unsignedChat } =
-            parsePlayerChatMessage(packet.data, version)
+          const { type, displayName, signedChat, unsignedChat } = parsePlayerChatMessage(
+            packet.data,
+            version,
+          )
           // TODO-1.19: Support sender team name
           if (type === 0 || type === 1) {
             addMessage({
               translate: 'chat.type.text',
-              with: [displayName, unsignedChat ?? signedChat]
+              with: [displayName, unsignedChat ?? signedChat],
             })
           }
         } catch (e) {
@@ -244,9 +219,7 @@ export const packetHandler =
         connection // Close Window (serverbound)
           .writePacket(packetIds.SERVERBOUND_CLOSE_WINDOW(version) ?? 0, buf)
           .catch(handleError(addMessage, inventoryCloseError))
-      } else if (
-        packet.id === packetIds.CLIENTBOUND_DEATH_COMBAT_EVENT(version)
-      ) {
+      } else if (packet.id === packetIds.CLIENTBOUND_DEATH_COMBAT_EVENT(version)) {
         let data = packet.data
         if (!is117) {
           const [action, actionLen] = readVarInt(data)
@@ -291,12 +264,8 @@ export const packetHandler =
         connection // Pong (play)
           .writePacket(responseId ?? 0, packet.data)
           .catch(handleError(addMessage, unknownError))
-      } else if (
-        packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_PLAY(version)
-      )
-        handleResourcePack(connection, packet, version).catch(
-          handleError(addMessage, unknownError)
-        )
+      } else if (packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_PLAY(version))
+        handleResourcePack(connection, packet, version).catch(handleError(addMessage, unknownError))
     } else if (connection.state === ConnectionState.CONFIGURATION) {
       if (packet.id === packetIds.CLIENTBOUND_PING_CONFIGURATION(version)) {
         const responseId = packetIds.SERVERBOUND_PONG_CONFIGURATION(version)
@@ -308,11 +277,7 @@ export const packetHandler =
         packet.id === packetIds.CLIENTBOUND_START_CONFIGURATION(version)
       ) {
         setLoading('Reconfiguring...')
-      } else if (
-        packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_CONF(version)
-      )
-        handleResourcePack(connection, packet, version).catch(
-          handleError(addMessage, unknownError)
-        )
+      } else if (packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_CONF(version))
+        handleResourcePack(connection, packet, version).catch(handleError(addMessage, unknownError))
     }
   }

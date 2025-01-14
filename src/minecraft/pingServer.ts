@@ -7,15 +7,10 @@ import {
   resolveHostname,
   readVarInt,
   writeVarInt,
-  protocolMap
+  protocolMap,
 } from './utils'
-import {
-  makeBasePacket,
-  concatPacketData,
-  parsePacket,
-  type Packet
-} from './packet'
-import { type PlainTextChat } from './chatToJsx'
+import { makeBasePacket, concatPacketData, parsePacket, type Packet } from './packet'
+import type { PlainTextChat } from './chatToJsx'
 
 export interface LegacyPing {
   ff: number
@@ -35,15 +30,12 @@ export interface Ping {
   players: {
     max: number
     online: number
-    sample: Array<{ name: string; id: string }>
+    sample: { name: string; id: string }[]
   }
   description: string | PlainTextChat
 }
 
-export const legacyPing = async (opts: {
-  host: string
-  port: number
-}): Promise<LegacyPing> => {
+export const legacyPing = async (opts: { host: string; port: number }): Promise<LegacyPing> => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<LegacyPing>((resolve, reject) => {
     const socket = net.createConnection({ host, port })
@@ -71,8 +63,8 @@ export const legacyPing = async (opts: {
           // hostname the client is connecting to, encoded as a UTF-16BE string
           ...toggleEndian(Buffer.from(host, 'utf16le'), 2),
           // port the client is connecting to, as an int.
-          ...padBufferToLength(Buffer.from(port.toString(16), 'hex'), 4)
-        ])
+          ...padBufferToLength(Buffer.from(port.toString(16), 'hex'), 4),
+        ]),
       )
     })
     socket.on('data', newData => {
@@ -81,9 +73,7 @@ export const legacyPing = async (opts: {
     })
     socket.on('close', () => {
       try {
-        const parts = toggleEndian(data.slice(3), 2)
-          .toString('utf16le')
-          .split('\u0000') // 0 index: §1.
+        const parts = toggleEndian(data.slice(3), 2).toString('utf16le').split('\u0000') // 0 index: §1.
         resolve({
           ff: data.readUInt8(0),
           len: data.readUInt16BE(1),
@@ -92,7 +82,7 @@ export const legacyPing = async (opts: {
           ping: time,
           motd: parts[3],
           online: +parts[4],
-          maxPlayers: +parts[5]
+          maxPlayers: +parts[5],
         })
       } catch (e) {
         reject(e)
@@ -102,10 +92,7 @@ export const legacyPing = async (opts: {
   })
 }
 
-export const modernPing = async (opts: {
-  host: string
-  port: number
-}): Promise<Ping> => {
+export const modernPing = async (opts: { host: string; port: number }): Promise<Ping> => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
   return await new Promise<Ping>((resolve, reject) => {
     const socket = net.createConnection({ host, port })
@@ -121,13 +108,13 @@ export const modernPing = async (opts: {
         writeVarInt(protocolMap.latest), // It would be better to use -1, but some servers misbehave
         host,
         portBuf,
-        writeVarInt(1)
+        writeVarInt(1),
       ]
 
       // Initialise Handshake with server.
       socket.write(makeBasePacket(0x00, concatPacketData(handshakeData)), () =>
         // Send Request packet.
-        socket.write(makeBasePacket(0x00, Buffer.from([])))
+        socket.write(makeBasePacket(0x00, Buffer.from([]))),
       )
     })
     socket.on('data', newData => {
@@ -165,7 +152,7 @@ export const modernPing = async (opts: {
           version: response.version,
           players: response.players,
           favicon: response.favicon,
-          description: response.description
+          description: response.description,
         })
       } catch (e) {
         reject(e)

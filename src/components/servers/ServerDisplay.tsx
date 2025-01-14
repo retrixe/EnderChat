@@ -1,28 +1,17 @@
 import React from 'react'
-import {
-  StyleSheet,
-  View,
-  Image,
-  Pressable,
-  ActivityIndicator,
-  Platform
-} from 'react-native'
+import { StyleSheet, View, Image, Pressable, ActivityIndicator, Platform } from 'react-native'
 
 import Text from '../Text'
 import ElevatedView from '../ElevatedView'
-import { type LegacyPing, type Ping } from '../../minecraft/pingServer'
-import {
-  ChatToJsx,
-  lightColorMap,
-  mojangColorMap
-} from '../../minecraft/chatToJsx'
+import type { LegacyPing, Ping } from '../../minecraft/pingServer'
+import { ChatToJsx, lightColorMap, mojangColorMap } from '../../minecraft/chatToJsx'
 
 const ServerDisplay = ({
   ping,
   server,
   darkMode,
   connectToServer,
-  openEditServerDialog
+  openEditServerDialog,
 }: {
   ping: false | LegacyPing | Ping | null | undefined
   server: string
@@ -52,7 +41,7 @@ const ServerDisplay = ({
             color='#00aaff'
             size={Platform.select<number | 'large'>({
               android: 48,
-              default: 'large'
+              default: 'large',
             })}
           />
         </View>
@@ -62,9 +51,9 @@ const ServerDisplay = ({
         {ping ? (
           <>
             <Text style={styles.serverPlayers}>
-              {(ping as Ping).players?.online ?? (ping as LegacyPing).online}/
-              {(ping as Ping).players?.max ?? (ping as LegacyPing).maxPlayers}{' '}
-              players online | Ping: {ping.ping}ms
+              {(ping as Ping).players.online ?? (ping as LegacyPing).online}/
+              {(ping as Ping).players.max ?? (ping as LegacyPing).maxPlayers} players online | Ping:{' '}
+              {ping.ping}ms
             </Text>
             <ChatToJsx
               chat={(ping as Ping).description ?? (ping as LegacyPing).motd}
@@ -95,14 +84,14 @@ const styles = StyleSheet.create({
   serverLoading: {
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 4
+    padding: 4,
     // height: 72,
     // width: 72,
   },
   serverContent: { marginLeft: 8, flex: 2 },
   serverName: { fontSize: 20, fontWeight: 'bold' },
   serverPlayers: { fontSize: 12, fontWeight: 'bold' },
-  serverDescription: { fontSize: 14 }
+  serverDescription: { fontSize: 14 },
 })
 
 export default ServerDisplay

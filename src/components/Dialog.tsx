@@ -1,18 +1,12 @@
 import React from 'react'
-import {
-  Modal,
-  Pressable,
-  type ViewStyle,
-  StyleSheet,
-  KeyboardAvoidingView
-} from 'react-native'
+import { Modal, Pressable, type ViewStyle, StyleSheet, KeyboardAvoidingView } from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
 const Dialog = ({
   visible,
   children,
   onRequestClose,
-  containerStyles
+  containerStyles,
 }: React.PropsWithChildren<{
   visible: boolean
   onRequestClose: () => void
@@ -31,10 +25,8 @@ const Dialog = ({
         <Pressable
           style={[
             styles.modalContainer,
-            ...(Array.isArray(containerStyles)
-              ? containerStyles
-              : [containerStyles]),
-            useDarkMode() ? styles.modalContainerDark : {}
+            ...(Array.isArray(containerStyles) ? containerStyles : [containerStyles]),
+            useDarkMode() ? styles.modalContainerDark : {},
           ]}
         >
           {children}
@@ -48,12 +40,12 @@ const styles = StyleSheet.create({
   kaView: {
     flex: 1,
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)'
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalView: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   modalContainer: {
     width: '80%',
@@ -61,9 +53,9 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderRadius: 4,
     paddingBottom: 8,
-    backgroundColor: '#fff'
+    backgroundColor: '#fff',
   },
-  modalContainerDark: { backgroundColor: '#333' }
+  modalContainerDark: { backgroundColor: '#333' },
 })
 
 export const dialogStyles = StyleSheet.create({
@@ -72,7 +64,7 @@ export const dialogStyles = StyleSheet.create({
   modalButton: { marginTop: 8, padding: 8 },
   modalButtonText: { fontWeight: 'bold', color: '#008080' },
   modalButtonCancelText: { fontWeight: 'bold', color: '#666' },
-  modalButtonCancelDarkText: { fontWeight: 'bold', color: '#cacaca' }
+  modalButtonCancelDarkText: { fontWeight: 'bold', color: '#cacaca' },
 })
 
 export default Dialog
