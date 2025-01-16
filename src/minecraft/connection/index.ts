@@ -37,6 +37,7 @@ export interface ServerConnection extends events.EventEmitter {
     ((event: 'packet', listener: (packet: Packet) => void) => this) &
     ((event: 'error', listener: (error: Error) => void) => this) &
     ((event: 'close', listener: () => void) => this) &
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     ((event: string, listener: Function) => this)
 }
 

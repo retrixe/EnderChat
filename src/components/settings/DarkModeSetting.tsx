@@ -6,7 +6,10 @@ import Dialog, { dialogStyles } from '../../components/Dialog'
 import globalStyle from '../../globalStyle'
 import useDarkMode from '../../context/useDarkMode'
 
-const RadioButton = (props: { style?: StyleProp<ViewStyle>; selected: boolean }): JSX.Element => {
+const RadioButton = (props: {
+  style?: StyleProp<ViewStyle>
+  selected: boolean
+}): React.JSX.Element => {
   const darkMode = useDarkMode()
   return (
     <View
@@ -51,7 +54,7 @@ interface DarkModeSettingProps {
   setValue: (newValue: boolean | null) => void
 }
 
-const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps): JSX.Element => {
+const DarkModeSetting = ({ value, setValue }: DarkModeSettingProps): React.JSX.Element => {
   const [modalOpen, setModalOpen] = useState(false)
   const ripple = { color: '#aaa' }
   const dark = useDarkMode()

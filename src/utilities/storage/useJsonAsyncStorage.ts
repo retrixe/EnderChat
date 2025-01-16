@@ -36,7 +36,7 @@ const useJsonAsyncStorage = <T>(
           } else setState({ ...defaultValueMemo, ...JSON.parse(res) })
         }
       })
-      .catch(err => console.error(err))
+      .catch((err: unknown) => console.error(err))
   }, [name, defaultValueMemo, ignoreUnknownKeys])
 
   return [
@@ -45,7 +45,7 @@ const useJsonAsyncStorage = <T>(
       const merge = { ...state, ...value }
       AsyncStorage.setItem(name, JSON.stringify(merge))
         .then(() => setState(merge))
-        .catch(err => console.error(err))
+        .catch((err: unknown) => console.error(err))
     },
   ]
 }

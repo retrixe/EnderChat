@@ -39,3 +39,7 @@ declare module 'react-native-aes-crypto' {
   export function sha256(text: string): Promise<string>
   export function sha512(text: string): Promise<string>
 }
+
+declare module '*.png' {
+  export = { uri: '' }
+}

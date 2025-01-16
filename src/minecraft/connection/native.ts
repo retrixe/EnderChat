@@ -1,4 +1,9 @@
-import { InteractionManager, NativeEventEmitter, NativeModules } from 'react-native'
+import {
+  InteractionManager,
+  NativeEventEmitter,
+  type NativeModule,
+  NativeModules,
+} from 'react-native'
 import events from 'events'
 import { type ServerConnection, type ConnectionOptions, ConnectionState } from '.'
 import type { MinecraftChat } from '../chatToJsx'
@@ -7,7 +12,19 @@ import { getLoginPacket, handleEncryptionRequest } from './shared'
 import { readVarInt, writeVarInt, resolveHostname, protocolMap, parseChat } from '../utils'
 import packetIds from '../packets/ids'
 
-const { ConnectionModule } = NativeModules
+interface NativeConnectionOptions extends ConnectionOptions {
+  loginPacket: string
+  packetFilter: number[]
+}
+
+interface NativeConnectionModule extends NativeModule {
+  openConnection: (opts: NativeConnectionOptions) => Promise<string>
+  enableEncryption: (id: string, secret: string, response: string) => Promise<void>
+  writePacket: (id: string, packetId: number, data: string) => Promise<boolean>
+  closeConnection: (id: string) => void
+}
+
+const { ConnectionModule } = NativeModules as { ConnectionModule: NativeConnectionModule }
 
 export const isNativeConnectionAvailable = (): boolean => !!ConnectionModule?.openConnection
 
@@ -24,14 +41,6 @@ interface NativeErrorEvent extends NativeEvent {
   message: string
 }
 
-export declare interface NativeServerConnection {
-  on: ((event: 'connect', listener: () => void) => this) &
-    ((event: 'packet', listener: (packet: Packet) => void) => this) &
-    ((event: 'error', listener: (error: Error) => void) => this) &
-    ((event: 'close', listener: () => void) => this) &
-    ((event: string, listener: Function) => this)
-}
-
 export class NativeServerConnection extends events.EventEmitter implements ServerConnection {
   eventEmitter = new NativeEventEmitter(ConnectionModule)
   state = ConnectionState.LOGIN
@@ -41,6 +50,14 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
   disconnectTimer?: NodeJS.Timeout
   disconnectReason?: MinecraftChat
   msgSalt?: Buffer
+
+  // @ts-expect-error -- https://stackoverflow.com/questions/39142858/declaring-events-in-a-typescript-class-which-extends-eventemitter
+  on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
+    ((event: 'error', listener: (error: Error) => void) => this) &
+    ((event: 'data', listener: (data: Buffer) => void) => this) &
+    ((event: 'close', listener: () => void) => this) &
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    ((event: string, listener: Function) => this)
 
   constructor(id: string, options: ConnectionOptions) {
     super()
@@ -55,6 +72,7 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
     this.eventEmitter.addListener('ecm:packet', (event: NativePacketEvent) => {
       if (event.connectionId !== this.id) return
       // Run after interactions to improve user experience.
+      // eslint-disable-next-line promise/catch-or-return -- False positive
       InteractionManager.runAfterInteractions(() => {
         const packet: Packet = new Proxy(
           {
@@ -110,7 +128,7 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
           /* Login Plugin Request */
           const [msgId] = readVarInt(packet.data)
           const rs = concatPacketData([writeVarInt(msgId), false])
-          this.writePacket(0x02, rs).catch(err => this.emit('error', err))
+          this.writePacket(0x02, rs).catch((err: unknown) => this.emit('error', err))
         } else if (packet.id === 0x01 && this.state === ConnectionState.LOGIN) {
           /* Encryption Request */
           const { accessToken, selectedProfile } = options
@@ -134,7 +152,9 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
         }
 
         this.emit('packet', packet)
-      }).then(() => {}, console.error)
+      }).then(() => {
+        // no-op
+      }, console.error)
     })
     this.eventEmitter.addListener('ecm:error', (event: NativeErrorEvent) => {
       if (event.connectionId !== this.id) return
@@ -181,7 +201,8 @@ const initiateNativeConnection = async (
     port,
     packetFilter: Object.keys(packetIds)
       .filter(name => name.startsWith('CLIENTBOUND'))
-      .map(name => packetIds[name as keyof typeof packetIds](opts.protocolVersion)),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      .map(name => packetIds[name as keyof typeof packetIds](opts.protocolVersion)!),
   })
   return new NativeServerConnection(id, opts)
 }

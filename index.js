@@ -8,7 +8,9 @@ import { AppRegistry } from 'react-native'
 import App from './src/App'
 import { name as appName } from './app.json'
 
-global.Buffer = require('buffer').Buffer
+import { Buffer } from 'buffer'
+
+global.Buffer = Buffer
 // global.process = require('process');
 global.process.env.NODE_ENV = __DEV__ ? 'development' : 'production'
 

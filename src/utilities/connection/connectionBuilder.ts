@@ -39,10 +39,10 @@ export const getSession = async (
     try {
       // Create a session with the latest access token.
       const account = accounts[activeAccount]
-      if (!session && accounts[activeAccount].type === 'microsoft') {
+      if (!session && account.type === 'microsoft') {
         setLoading('Reloading your Microsoft Account...')
         const [msAccessToken, msRefreshToken] = await refreshMSAuthToken(
-          accounts[activeAccount].microsoftRefreshToken ?? '',
+          account.microsoftRefreshToken,
           config.clientId,
           config.scope,
         )
@@ -59,11 +59,11 @@ export const getSession = async (
             microsoftRefreshToken: msRefreshToken,
           },
         })
-      } else if (!session && accounts[activeAccount].type === 'mojang') {
+      } else if (!session && account.type === 'mojang') {
         setLoading('Reloading your Mojang Account...')
         const { accessToken, clientToken } = await refresh(
-          accounts[activeAccount].accessToken ?? '',
-          accounts[activeAccount].clientToken ?? '',
+          account.accessToken,
+          account.clientToken,
           false,
         )
         session = { accessToken }
@@ -78,6 +78,7 @@ export const getSession = async (
         session.certificate = await getPlayerCertificates(token)
       }
       setSession(activeAccount, session)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return 'Failed to create session! You may need to re-login with your Microsoft Account in the Accounts tab.'
     }
@@ -100,6 +101,7 @@ export const createConnection = async (
   try {
     const [hostname, portNumber] = parseIp(servers[server].address)
     ;[host, port] = await resolveHostname(hostname, portNumber)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return 'Failed to resolve server hostname!'
   }

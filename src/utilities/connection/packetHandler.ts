@@ -20,7 +20,7 @@ export const healthMessage =
 type HandleError = (
   addMsg: (text: MinecraftChat) => void,
   translated: string,
-) => (error: unknown) => any
+) => (error: unknown) => void
 
 interface PlayerChatMessage {
   signedChat: MinecraftChat
@@ -113,8 +113,8 @@ export const packetHandler =
     healthRef: React.MutableRefObject<number | null>,
     setLoading: React.Dispatch<React.SetStateAction<string>>,
     connection: ServerConnection,
-    addMessage: (text: MinecraftChat) => any,
-    setActionBar: (text: MinecraftChat) => any,
+    addMessage: (text: MinecraftChat) => void,
+    setActionBar: (text: MinecraftChat) => void,
     joinMessage: string,
     sendJoinMessage: boolean,
     sendSpawnCommand: boolean,

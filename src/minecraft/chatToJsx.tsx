@@ -103,11 +103,10 @@ const hasColorCodes = (s: string): boolean => /§[0-9a-fk-orx]/.test(s)
 // const stripColorCodes = (s: string) => s.replace(/§[0-9a-fk-orx]/g, '').trim()
 const parseColorCodes = (arg: string | PlainTextChat): PlainTextChat[] => {
   let s: string
-  let state: PlainTextChat = { text: '' }
+  let state: PlainTextChat & { text: string } = { text: '' }
   if (typeof arg !== 'string') {
-    state = arg
-    state.text = ''
-    s = arg.text ?? ''
+    state = { ...arg, text: '' }
+    s = ''
   } else s = arg
   const components: PlainTextChat[] = []
   for (let i = 0; i < s.length; i++) {
@@ -127,9 +126,8 @@ const parseColorCodes = (arg: string | PlainTextChat): PlainTextChat[] => {
       else if (info === 'm') state.strikethrough = true
       else if (info === 'n') state.underlined = true
       else if (info === 'o') state.italic = true
-      else if (info === 'r') {
-        state = { text: '' }
-      } else if (info === '0') state = { text: '', color: 'black' }
+      else if (info === 'r') state = { text: '' }
+      else if (info === '0') state = { text: '', color: 'black' }
       else if (info === '1') state = { text: '', color: 'dark_blue' }
       else if (info === '2') state = { text: '', color: 'dark_green' }
       else if (info === '3') state = { text: '', color: 'dark_aqua' }
@@ -230,7 +228,7 @@ const keybindChat = (chat: KeybindChat): PlainTextChat => {
 const flattenComponents = (chat: MinecraftChat): PlainTextChat[] => {
   if (typeof chat === 'string') return parseColorCodes(chat)
   // Fix components with empty string keys.....
-  const looseChat = chat as any
+  const looseChat = chat as MinecraftChat & Record<string, unknown>
   if (looseChat['']) {
     const key = isTranslatedChat(chat) ? 'translate' : isKeybindChat(chat) ? 'keybind' : 'text'
     looseChat[key] = looseChat['']
@@ -268,10 +266,10 @@ const parseChatToJsx = (
   chat: MinecraftChat,
   Component: React.ComponentType<TextProps>,
   colorMap: ColorMap,
-  handleClickEvent: (clickEvent: ClickEvent) => void = () => {},
+  handleClickEvent?: (clickEvent: ClickEvent) => void,
   componentProps?: Record<string, unknown>,
   trim = false,
-): JSX.Element => {
+): React.JSX.Element => {
   let flat = sanitizeComponents(flattenComponents(chat))
   if (trim) flat = trimComponentsByLine(flat)
   return (
@@ -295,8 +293,10 @@ const parseChatToJsx = (
             key={i}
             style={style}
             selectable
-            onPress={ce ? () => handleClickEvent(ce) : undefined}
-            onLongPress={() => {}}
+            onPress={ce && handleClickEvent ? () => handleClickEvent(ce) : undefined}
+            onLongPress={() => {
+              /* no-op */
+            }}
           >
             {c.text ? c.text : ''}
           </Component>
@@ -314,7 +314,7 @@ export const ChatToJsx = (props: {
   componentProps?: Record<string, unknown>
   onClickEvent?: (clickEvent: ClickEvent) => void
   trim?: boolean
-}): JSX.Element =>
+}): React.JSX.Element =>
   parseChatToJsx(
     props.chat ?? { text: '' },
     props.component,

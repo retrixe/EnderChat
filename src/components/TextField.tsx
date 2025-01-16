@@ -2,8 +2,7 @@ import React from 'react'
 import { TextInput, StyleSheet, type TextInputProps } from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
-const TextField = (props: TextInputProps & { red?: boolean }): JSX.Element => {
-  const style = props.style?.valueOf()
+const TextField = (props: TextInputProps & { red?: boolean }): React.JSX.Element => {
   const darkMode = useDarkMode()
   return (
     <TextInput
@@ -13,12 +12,12 @@ const TextField = (props: TextInputProps & { red?: boolean }): JSX.Element => {
       {
         ...props /* Spreads value, placeholder, multiline and onChangeText. */
       }
-      style={{
-        ...(props.multiline ? styles.modalMultilineField : styles.modalTextField),
-        ...(darkMode ? styles.modalTextFieldBackgroundDark : styles.modalTextFieldBackground),
-        ...(props.red ? { borderColor: '#ff0000', borderWidth: 1 } : {}),
-        ...(typeof style === 'object' ? style : {}),
-      }}
+      style={[
+        props.multiline ? styles.modalMultilineField : styles.modalTextField,
+        darkMode ? styles.modalTextFieldBackgroundDark : styles.modalTextFieldBackground,
+        props.red ? { borderColor: '#ff0000', borderWidth: 1 } : {},
+        props.style,
+      ]}
     />
   )
 }

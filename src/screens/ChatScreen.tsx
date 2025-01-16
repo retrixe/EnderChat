@@ -41,7 +41,7 @@ const handleError =
   }
 
 // TODO: Ability to copy text.
-const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
+const ChatScreen = ({ navigation, route }: Props): React.JSX.Element => {
   const darkMode = useDarkMode()
   const { settings } = useContext(SettingsContext)
   const { servers } = useContext(ServersContext)
@@ -147,10 +147,11 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
             }
           } else if (typeof conn !== 'string') conn.close()
         }
-      })().catch(err => {
+      })().catch((err: unknown) => {
         console.error(err)
         if (statusRef.current !== 'CLOSED') {
-          const reason = 'An unknown error occurred!\n' + err
+          const reason =
+            'An unknown error occurred!' + (err instanceof Error ? `\n${err.message}` : '')
           closeChatScreen({ server: serverName, reason })
         }
       })
@@ -272,6 +273,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
             onClickEvent={handleClickEvent}
           />
           <View style={darkMode ? styles.textAreaDark : styles.textArea}>
+            {/* eslint-disable @typescript-eslint/no-deprecated -- Found nothing in the docs */}
             <TextField
               placeholder='Message'
               value={message}
@@ -284,6 +286,7 @@ const ChatScreen = ({ navigation, route }: Props): JSX.Element => {
               blurOnSubmit={false}
               autoCorrect={!settings.disableAutoCorrect}
             />
+            {/* eslint-enable @typescript-eslint/no-deprecated -- Found nothing in the docs */}
             <Ionicons.Button
               name='send-sharp'
               onPress={() => sendMessage(message.trim(), true)}

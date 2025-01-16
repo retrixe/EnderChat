@@ -17,7 +17,7 @@ const MessageRenderer = (props: {
   item: Message
   colorMap: ColorMap
   onClickEvent: (event: ClickEvent) => void
-}): JSX.Element => (
+}): React.JSX.Element => (
   <ChatToJsx
     chat={props.item.text}
     component={Text}
@@ -38,7 +38,7 @@ const ChatMessageList = (props: {
   messages: Message[]
   colorMap: ColorMap
   onClickEvent: (ce: ClickEvent) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   // If colorMap/clickEventHandler changes, this will change and cause a re-render.
   // If messages changes, FlatList will execute this function for all messages, and
   // ItemRendererMemo will check if props have changed instead of this useCallback.

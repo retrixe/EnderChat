@@ -23,7 +23,7 @@ const EditServerDialog = ({
   deleteServer: (server: string) => void
   editServerDialogOpen: string | boolean
   setEditServerDialogOpen: (server: string | boolean) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const [ipAddr, setIpAddr] = useState('')
   const [ipAddrRed, setIpAddrRed] = useState(false)
   const [newServerName, setNewServerName] = useState('')

@@ -17,7 +17,7 @@ import {
 } from '../../minecraft/api/microsoft'
 import config from '../../../config.json'
 
-const MicrosoftLogin = ({ close }: { close: () => void }): JSX.Element => {
+const MicrosoftLogin = ({ close }: { close: () => void }): React.JSX.Element => {
   const darkMode = useDarkMode()
   const style = darkMode
     ? '<style>body{font-size:48px;padding:16px;background-color:#242424;color:#ffffff;}</style>'

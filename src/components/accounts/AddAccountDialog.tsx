@@ -10,13 +10,15 @@ import useDarkMode from '../../context/useDarkMode'
 import UsersContext from '../../context/accountsContext'
 import { authenticate } from '../../minecraft/api/yggdrasil'
 
+import MicrosoftIcon from '../../assets/microsoft.png'
+
 const AddAccountDialog = ({
   open,
   setOpen,
 }: {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
-}): JSX.Element => {
+}): React.JSX.Element => {
   const darkMode = useDarkMode()
   const { accounts, setAccounts } = useContext(UsersContext)
 
@@ -43,7 +45,8 @@ const AddAccountDialog = ({
   }
   const addAccount = (): void => {
     const accountExists =
-      !!accounts[newUser] || !!Object.keys(accounts).find(id => accounts[id].email === newUser)
+      !!accounts[newUser] ||
+      !!Object.keys(accounts).find(id => 'email' in accounts[id] && accounts[id].email === newUser)
     if (!newUser || invalidNewUser || password === '' || accountExists) {
       // setPassRed(password === '')
       setUserRed(!newUser)
@@ -77,10 +80,14 @@ const AddAccountDialog = ({
           })
           cancelAddAccount()
         })
-        .catch(e => {
+        .catch((e: unknown) => {
           setUserRed(true)
           // setPassRed(true)
-          setDialogError((e.message || '').replace('Invalid credentials. ', ''))
+          setDialogError(
+            e instanceof Error
+              ? e.message.replace('Invalid credentials. ', '')
+              : 'An unknown error occurred!',
+          )
         })
     }
   }
@@ -95,7 +102,7 @@ const AddAccountDialog = ({
           android_ripple={{ color: '#aaa' }}
           onPress={() => setMicrosoftLogin(true)}
         >
-          <Image source={require('../../assets/microsoft.png')} />
+          <Image source={MicrosoftIcon} />
           <Text style={styles.microsoftButtonText}>Login with Microsoft</Text>
         </Pressable>
         <Text style={styles.discontinued}>

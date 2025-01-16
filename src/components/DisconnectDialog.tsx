@@ -7,7 +7,7 @@ import { ChatToJsx, lightColorMap, mojangColorMap } from '../minecraft/chatToJsx
 import Dialog, { dialogStyles } from './Dialog'
 import Text from './Text'
 
-const DisconnectDialog = (): JSX.Element => {
+const DisconnectDialog = (): React.JSX.Element => {
   const darkMode = useDarkMode()
   const { disconnectReason, setDisconnectReason } = useContext(ConnectionContext)
 

@@ -24,7 +24,7 @@ const TextFieldDialog = ({
   closeModal: () => void
   initialState: string
   setFinalState: (state: string) => void
-}): JSX.Element => {
+}): React.JSX.Element => {
   const [modalContent, setModalContent] = useState(initialState)
   const closeModalAndSaveState = (): void => {
     setFinalState(modalContent)

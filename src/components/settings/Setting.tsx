@@ -20,7 +20,7 @@ const Setting = <T extends string | boolean>({
   setValue?: (newValue: T) => void
   multiline?: boolean
   maxLength?: number
-}): JSX.Element => {
+}): React.JSX.Element => {
   const da = useDarkMode()
   const [modalOpen, setModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState(typeof value === 'string' ? value : '')

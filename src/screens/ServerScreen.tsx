@@ -16,7 +16,7 @@ import { parseIp, protocolMap } from '../minecraft/utils'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Servers'>
 
-const ServerScreen = (props: Props): JSX.Element => {
+const ServerScreen = (props: Props): React.JSX.Element => {
   const darkMode = useDarkMode()
   const { servers, setServers } = useContext(ServersContext)
   const { setDisconnectReason } = useContext(ConnectionContext)
@@ -42,21 +42,21 @@ const ServerScreen = (props: Props): JSX.Element => {
       promises.push(
         modernPing({ host, port }) // Run in parallel.
           .then(resp => setPingResponses(p => ({ ...p, [ipAddress]: resp })))
-          .catch(err => {
-            if (err.toString() === 'Error: No route to host') {
+          .catch((err: unknown) => {
+            if (err instanceof Error && err.message === 'No route to host') {
               setPingResponses(p => ({ ...p, [ipAddress]: false }))
-              return
+            } else {
+              return legacyPing({ host, port })
             }
-            legacyPing({ host, port })
-              .then(res => setPingResponses(p => ({ ...p, [ipAddress]: res })))
-              .catch(() => setPingResponses(p => ({ ...p, [ipAddress]: null })))
-          }),
+          })
+          // No-op unless a legacyPing is returned from the previous catch.
+          .then(res => (res ? setPingResponses(p => ({ ...p, [ipAddress]: res })) : null))
+          .catch(() => setPingResponses(p => ({ ...p, [ipAddress]: null }))),
       )
     }
-    Promise.allSettled(promises).then(
-      () => setRefreshing(false),
-      () => setRefreshing(false),
-    )
+    Promise.allSettled(promises)
+      .then(() => setRefreshing(false))
+      .catch(() => setRefreshing(false))
   }, [servers, pingResponses])
 
   const openEditServerDialog = (server: string): void => {
@@ -70,11 +70,13 @@ const ServerScreen = (props: Props): JSX.Element => {
     order?: number,
   ): void => {
     const edit = typeof editServerDialogOpen === 'string'
-    const lastOrder = Object.values(servers).reduce((max, e) => (e.order > max ? e.order : max), 0)
+    const lastOrder = Object.values(servers).reduce(
+      (max, e) => (e.order && e.order > max ? e.order : max),
+      0,
+    )
     const newOrder =
       order ?? // the lengths we will go to avoid conditionals...
-      ((edit || undefined) && servers[editServerDialogOpen as string].order) ??
-      lastOrder + 1
+      ((edit && (servers[editServerDialogOpen].order ?? false)) || lastOrder + 1)
     const newServers = { ...servers }
     if (edit) delete newServers[editServerDialogOpen]
     newServers[serverName.trim()] = { version, address, order: newOrder }
@@ -94,9 +96,8 @@ const ServerScreen = (props: Props): JSX.Element => {
       const ping = pingResponses[servers[serverName].address]
       // Try the latest.
       if (!ping) version = protocolMap.latest
-      else if (typeof ping.version === 'object') {
-        version = ping.version.protocol
-      } else version = (ping as LegacyPing).protocol
+      else if ('protocol' in ping) version = ping.protocol
+      else version = ping.version.protocol
     }
     if (version < 754) {
       return setDisconnectReason({

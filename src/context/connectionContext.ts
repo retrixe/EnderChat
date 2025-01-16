@@ -15,8 +15,12 @@ export interface ConnectionContext {
 }
 
 const connectionContext = React.createContext<ConnectionContext>({
-  setConnection: () => {},
-  setDisconnectReason: () => {},
+  setConnection: () => {
+    /* no-op */
+  },
+  setDisconnectReason: () => {
+    /* no-op */
+  },
 })
 
 export default connectionContext

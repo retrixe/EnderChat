@@ -16,7 +16,7 @@ import SettingsContext from '../context/settingsContext'
 type StackProps = NativeStackScreenProps<RootStackParamList, 'Settings'>
 type TabProps = MaterialTopTabScreenProps<RootStackParamList, 'Settings'>
 
-const SettingScreen = ({ navigation }: StackProps | TabProps): JSX.Element => {
+const SettingScreen = ({ navigation }: StackProps | TabProps): React.JSX.Element => {
   const darkModeApp = useDarkMode()
   const { settings, setSettings } = useContext(SettingsContext)
 

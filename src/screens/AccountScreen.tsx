@@ -13,7 +13,7 @@ import { invalidate } from '../minecraft/api/yggdrasil'
 
 // LOW-TODO: Reload to update account info for online mode using /refresh.
 // Also, to reload all the skin images?
-const AccountScreen = (): JSX.Element => {
+const AccountScreen = (): React.JSX.Element => {
   const darkMode = useDarkMode()
   const { accounts, setAccounts } = useContext(UsersContext)
 
@@ -41,10 +41,10 @@ const AccountScreen = (): JSX.Element => {
       >
         <Pressable
           onPress={() => {
-            const { accessToken, clientToken } = accounts[deleteAccount]
-            if (accessToken && clientToken) {
+            const account = accounts[deleteAccount]
+            if (account.type === 'mojang') {
               // LOW-TODO: Do something more intelligent? Should alert the user.
-              invalidate(accessToken, clientToken).catch(console.error)
+              invalidate(account.accessToken, account.clientToken).catch(console.error)
             }
             const newAccounts = { ...accounts }
             delete newAccounts[deleteAccount]

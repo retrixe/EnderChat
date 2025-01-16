@@ -16,7 +16,7 @@ const AccountDisplay = ({
   darkMode: boolean
   setActiveAccount: (uuid: string) => void
   setDeleteAccount: (uuid: string) => void
-}): JSX.Element => (
+}): React.JSX.Element => (
   <ElevatedView style={styles.accountView}>
     <Pressable
       onPress={() => setActiveAccount(uuid)}

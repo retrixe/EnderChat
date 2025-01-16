@@ -2,18 +2,18 @@ import { MUtf8Decoder } from 'mutf-8'
 
 const mutf8Decoder = new MUtf8Decoder()
 
-export const parseTag = (buffer: Buffer, offset: number): [string, any, number] => {
+export type Value = string | number | bigint | Buffer | Value[] | { [key: string]: Value }
+
+export const parseTag = (buffer: Buffer, offset: number): [string, Value, number] => {
   const type = buffer.readUInt8(offset)
   const nameLength = buffer.readUInt16BE(offset + 1)
   const name = mutf8Decoder.decode(buffer.slice(offset + 3, offset + 3 + nameLength))
-  // eslint-disable-next-line prefer-const
-  let [value, size] = parseTagValue(type, buffer, offset + 3 + nameLength)
-  size += 1 + 2 + nameLength
-  return [name, value, size]
+  const [value, size] = parseTagValue(type, buffer, offset + 3 + nameLength)
+  return [name, value, 1 + 2 + nameLength + size] // Size = Type + Name length + Name + Value
 }
 
-const parseTagValue = (type: number, buffer: Buffer, offset: number): [any, number] => {
-  let value: any
+const parseTagValue = (type: number, buffer: Buffer, offset: number): [Value, number] => {
+  let value: Value
   let size: number
   switch (type) {
     case 1: // Byte
@@ -109,8 +109,8 @@ const parseTagValue = (type: number, buffer: Buffer, offset: number): [any, numb
   return [value, size]
 }
 
-export const parseFullNBT = (buffer: Buffer): [Record<string, any>, number] => {
-  const parsed: Record<string, any> = {}
+export const parseFullNBT = (buffer: Buffer): [Record<string, Value>, number] => {
+  const parsed: Record<string, Value> = {}
   let offset = 0
   while (offset < buffer.length) {
     const [name, value, size] = parseTag(buffer, offset)
@@ -120,7 +120,7 @@ export const parseFullNBT = (buffer: Buffer): [Record<string, any>, number] => {
   return [parsed, offset]
 }
 
-export const parseAnonymousNBT = (buffer: Buffer): [any, number] => {
+export const parseAnonymousNBT = (buffer: Buffer): [Value, number] => {
   const type = buffer.readUInt8(0)
   const [value, size] = parseTagValue(type, buffer, 1)
   return [value, size + 1]

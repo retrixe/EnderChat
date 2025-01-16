@@ -17,14 +17,6 @@ import { getLoginPacket, handleEncryptionRequest } from './shared'
 import { readVarInt, writeVarInt, resolveHostname, protocolMap, parseChat } from '../utils'
 import packetIds from '../packets/ids'
 
-export declare interface JavaScriptServerConnection {
-  on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
-    ((event: 'error', listener: (error: Error) => void) => this) &
-    ((event: 'data', listener: (data: Buffer) => void) => this) &
-    ((event: 'close', listener: () => void) => this) &
-    ((event: string, listener: Function) => this)
-}
-
 export class JavaScriptServerConnection extends events.EventEmitter implements ServerConnection {
   bufferedData: Buffer = Buffer.from([])
   compressionThreshold = -1
@@ -37,6 +29,14 @@ export class JavaScriptServerConnection extends events.EventEmitter implements S
   disconnectReason?: MinecraftChat
   aesDecipher?: Decipher
   aesCipher?: Cipher
+
+  // @ts-expect-error -- https://stackoverflow.com/questions/39142858/declaring-events-in-a-typescript-class-which-extends-eventemitter
+  on: ((event: 'packet', listener: (packet: Packet) => void) => this) &
+    ((event: 'error', listener: (error: Error) => void) => this) &
+    ((event: 'data', listener: (data: Buffer) => void) => this) &
+    ((event: 'close', listener: () => void) => this) &
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    ((event: string, listener: Function) => this)
 
   constructor(socket: net.Socket, options: ConnectionOptions) {
     super()
@@ -102,6 +102,7 @@ const initiateJavaScriptConnection = async (
     if (conn.disconnectTimer) clearTimeout(conn.disconnectTimer)
     conn.disconnectTimer = setTimeout(() => conn.close(), 20000)
     // Run after interactions to improve user experience.
+    // eslint-disable-next-line promise/catch-or-return -- False positive
     InteractionManager.runAfterInteractions(async () => {
       await lock.acquire()
       try {
@@ -134,7 +135,7 @@ const initiateJavaScriptConnection = async (
               if (version >= protocolMap['1.20.2']) {
                 conn
                   .writePacket(0x03 /* Login Acknowledged */, Buffer.from([]))
-                  .catch(err => conn.emit('error', err))
+                  .catch((err: unknown) => conn.emit('error', err))
                 conn.state = ConnectionState.CONFIGURATION
               } else conn.state = ConnectionState.PLAY
             } else if (
@@ -143,7 +144,7 @@ const initiateJavaScriptConnection = async (
             ) {
               conn
                 .writePacket(0x02 /* Finish Configuration */, Buffer.from([]))
-                .catch(err => conn.emit('error', err))
+                .catch((err: unknown) => conn.emit('error', err))
               conn.state = ConnectionState.PLAY
             } else if (
               packet.id === packetIds.CLIENTBOUND_START_CONFIGURATION(version) &&
@@ -152,7 +153,7 @@ const initiateJavaScriptConnection = async (
               const ackPacketId = packetIds.SERVERBOUND_ACKNOWLEDGE_CONFIGURATION(version)
               conn
                 .writePacket(ackPacketId ?? 0, Buffer.from([]))
-                .catch(err => conn.emit('error', err))
+                .catch((err: unknown) => conn.emit('error', err))
               conn.state = ConnectionState.CONFIGURATION
             } else if (
               (packet.id === packetIds.CLIENTBOUND_KEEP_ALIVE_PLAY(version) &&
@@ -164,7 +165,9 @@ const initiateJavaScriptConnection = async (
                 conn.state === ConnectionState.PLAY
                   ? packetIds.SERVERBOUND_KEEP_ALIVE_PLAY(version)
                   : packetIds.SERVERBOUND_KEEP_ALIVE_CONFIGURATION(version)
-              conn.writePacket(id ?? 0, packet.data).catch(err => conn.emit('error', err))
+              conn
+                .writePacket(id ?? 0, packet.data)
+                .catch((err: unknown) => conn.emit('error', err))
             } else if (
               // Disconnect (login), Disconnect (configuration) or Disconnect (play)
               (packet.id === 0x00 && conn.state === ConnectionState.LOGIN) ||
@@ -181,7 +184,7 @@ const initiateJavaScriptConnection = async (
               /* Login Plugin Request */
               const [msgId] = readVarInt(packet.data)
               const rs = concatPacketData([writeVarInt(msgId), false])
-              conn.writePacket(0x02, rs).catch(err => conn.emit('error', err))
+              conn.writePacket(0x02, rs).catch((err: unknown) => conn.emit('error', err))
             } else if (packet.id === 0x01 && conn.state === ConnectionState.LOGIN) {
               /* Encryption Request */
               if (!accessToken || !selectedProfile) {
@@ -211,7 +214,9 @@ const initiateJavaScriptConnection = async (
         conn.emit('error', err)
       }
       lock.release()
-    }).then(() => {}, console.error)
+    }).then(() => {
+      /* no-op */
+    }, console.error)
   })
   return conn
 }

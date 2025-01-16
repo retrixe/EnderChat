@@ -180,7 +180,7 @@ export const XstsErrorCodes: Record<string, string> = {
 export class XstsError extends Error {
   Code = 401
   XErrMessage = 'No details available.'
-  XErr: keyof XstsError | null = null
+  XErr: keyof XstsError
   constructor(response: { XErr: keyof XstsError; Code: number; Message: string }) {
     super(response.Message)
     this.XErr = response.XErr

@@ -4,7 +4,7 @@ import type { protocolMap } from '../minecraft/utils'
 export interface Server {
   version: keyof typeof protocolMap
   address: string
-  order: number
+  order?: number // LOW-TODO: Remove the undefined type.
 }
 
 export type Servers = Record<string, Server>
@@ -16,7 +16,9 @@ export interface ServersContext {
 
 const serversContext = React.createContext<ServersContext>({
   servers: {},
-  setServers: () => {},
+  setServers: () => {
+    /* no-op */
+  },
 })
 
 export default serversContext

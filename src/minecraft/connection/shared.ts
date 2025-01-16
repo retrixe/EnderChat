@@ -102,7 +102,7 @@ export const handleEncryptionRequest = (
     }
     // This callback will send the response and enable the ciphers.
     await callback(secret, concatPacketData(response))
-  })().catch(e => {
+  })().catch((e: unknown) => {
     console.error(e)
     connection.disconnectReason = '{"text":"Failed to authenticate with Mojang servers!"}'
     connection.close()

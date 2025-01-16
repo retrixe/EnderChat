@@ -85,7 +85,7 @@ export const legacyPing = async (opts: { host: string; port: number }): Promise<
           maxPlayers: +parts[5],
         })
       } catch (e) {
-        reject(e)
+        reject(e instanceof Error ? e : new Error(typeof e === 'string' ? e : undefined))
       }
     })
     socket.on('error', err => reject(err))
@@ -120,13 +120,11 @@ export const modernPing = async (opts: { host: string; port: number }): Promise<
     socket.on('data', newData => {
       data = Buffer.concat([data, newData])
       // Parse the packets.
-      while (true) {
-        const packet = parsePacket(data)
-        if (packet) {
-          if (packet.id === 0x01) timeReceived = Date.now() // Special case for ping.
-          data = data.slice(packet.packetLength)
-          packets.push(packet)
-        } else break
+      let packet: Packet | undefined
+      while ((packet = parsePacket(data))) {
+        if (packet.id === 0x01) timeReceived = Date.now() // Special case for ping.
+        data = data.slice(packet.packetLength)
+        packets.push(packet)
       }
       // If Response packet has been received, send Ping packet.
       if (!timeSent && packets.find(p => p.id === 0x00)) {
@@ -145,7 +143,7 @@ export const modernPing = async (opts: { host: string; port: number }): Promise<
         const json = responsePacket.data
           .slice(varIntLength, varIntLength + jsonLength)
           .toString('utf8')
-        const response = JSON.parse(json)
+        const response = JSON.parse(json) as Ping
 
         resolve({
           ping: timeReceived - timeSent,
@@ -155,7 +153,7 @@ export const modernPing = async (opts: { host: string; port: number }): Promise<
           description: response.description,
         })
       } catch (e) {
-        reject(e)
+        reject(e instanceof Error ? e : new Error(typeof e === 'string' ? e : undefined))
       }
     })
     socket.on('error', err => reject(err))

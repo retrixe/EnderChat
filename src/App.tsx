@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useColorScheme, NativeModules, StatusBar, SafeAreaView, Platform } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
-import { NavigationContainer, DarkTheme } from '@react-navigation/native'
+import { NavigationContainer, DarkTheme, type ParamListBase } from '@react-navigation/native'
 import {
   createNativeStackNavigator,
   type NativeStackNavigationProp,
@@ -27,14 +27,13 @@ import globalStyle from './globalStyle'
 const Stacks = createNativeStackNavigator<RootStackParamList, 'StackNavigator'>()
 const Tabs = createMaterialTopTabNavigator<RootStackParamList>() // createBottomTabNavigator()
 
-export interface RootStackParamList {
-  [index: string]: any
+export interface RootStackParamList extends ParamListBase {
   Home: undefined
   Chat: { serverName: string; version: number }
 }
 type HomeProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
-const HomeScreen = ({ navigation }: { navigation: HomeProp }): JSX.Element => {
+const HomeScreen = ({ navigation }: { navigation: HomeProp }): React.JSX.Element => {
   const { connection } = React.useContext(ConnectionContext)
   React.useEffect(() => {
     if (connection) {
@@ -81,15 +80,15 @@ const HomeScreen = ({ navigation }: { navigation: HomeProp }): JSX.Element => {
   )
 }
 
-const App = (): JSX.Element => {
+const App = (): React.JSX.Element => {
   const [connection, setConnection] = React.useState<ServerConnection | undefined>()
   const [disconnect, setDisconnect] = React.useState<DisconnectReason | undefined>()
 
   const [settings, setSettings] = useJsonAsyncStorage<Settings>('@settings', defaultSettings, true)
   const [accountsStore, setAccountsStore] = useAsyncStorage('@accounts', '{}')
   const [serversStore, setServersStore] = useAsyncStorage('@servers', '{}')
-  const accounts: Accounts = JSON.parse(accountsStore)
-  const servers: Servers = JSON.parse(serversStore)
+  const accounts = JSON.parse(accountsStore) as Accounts
+  const servers = JSON.parse(serversStore) as Servers
   const setAccounts = (newAccounts: Accounts): void => setAccountsStore(JSON.stringify(newAccounts))
   const setServers = (newServers: Servers): void => setServersStore(JSON.stringify(newServers))
 

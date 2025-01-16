@@ -17,7 +17,7 @@ import jest from 'eslint-plugin-jest'
 
 export default tseslint.config(
   {
-    ignores: ['.yarn', '.prettierrc.js', '*.config.{mjs,js}', 'node_modules'],
+    ignores: ['.yarn', '.prettierrc.js', '*.config.{mjs,js}', 'node_modules', 'ios/Fonts'],
   },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
@@ -75,7 +75,7 @@ export default tseslint.config(
         {
           allowAny: false,
           allowBoolean: false,
-          allowNullish: true, // TODO: Turn this off!
+          allowNullish: false,
           allowNumber: true,
           allowRegExp: false,
           allowNever: false,
@@ -86,28 +86,19 @@ export default tseslint.config(
       'n/no-unsupported-features/node-builtins': 'off',
       'n/no-unsupported-features/es-syntax': 'off',
       'import/no-unresolved': 'off',
-      // TODO: Enable these
-      '@typescript-eslint/no-deprecated': 'off',
+      // What were React Native ESLint config writers thinking...
+      'no-bitwise': 'off',
+      // https://github.com/feross/buffer/issues/329
+      '@typescript-eslint/no-deprecated': ['error', { allow: [{ from: 'file', name: 'slice' }] }],
+
+      // TODO: Enable these rules
       '@typescript-eslint/no-dynamic-delete': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/no-misused-spread': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-declaration-merging': 'off',
-      '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/prefer-promise-reject-errors': 'off',
-      '@typescript-eslint/restrict-plus-operands': 'off',
-      '@typescript-eslint/use-unknown-in-catch-callback-variable': 'off',
-      'promise/no-nesting': 'off',
-      'promise/catch-or-return': 'off',
-      'no-bitwise': 'off',
     },
   },
 )

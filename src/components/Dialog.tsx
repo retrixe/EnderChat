@@ -11,7 +11,7 @@ const Dialog = ({
   visible: boolean
   onRequestClose: () => void
   containerStyles?: ViewStyle
-}>): JSX.Element => (
+}>): React.JSX.Element => (
   <Modal
     animationType='fade'
     transparent

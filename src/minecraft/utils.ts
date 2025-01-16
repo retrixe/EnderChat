@@ -72,11 +72,11 @@ export const resolveHostname = async (
   )
   if (!req.ok && !retry) return await resolveHostname(hostname, port, true)
   else if (!req.ok) throw new Error('Failed to make DNS query!')
-  const res = await req.json()
-  const srvRecords = res.Answer?.filter((r: any) => r.type === 33 && r.data)
+  const res = (await req.json()) as { Answer?: { type: number; data: string }[] }
+  const srvRecords = res.Answer?.filter(r => r.type === 33 && r.data)
   if (srvRecords?.length) {
     // TODO: Support SRV priority/weight, maybe?
-    const record = srvRecords.map((r: { data: string }) => r.data.split(' '))[0]
+    const record = srvRecords.map(r => r.data.split(' '))[0]
     return [record[3], +record[2]]
   } else return [hostname, port]
 }
@@ -168,13 +168,14 @@ export const parseChat = (
     const chat = data.slice(chatViLength, chatViLength + chatLen)
     return [parseJsonChat(chat.toString('utf8')), chatViLength + chatLen]
   } else {
-    return parseAnonymousNBT(data)
+    return parseAnonymousNBT(data) as [MinecraftChat | string, number]
   }
 }
 
 export const parseJsonChat = (chat: string): MinecraftChat => {
   try {
-    return JSON.parse(chat)
+    return JSON.parse(chat) as MinecraftChat
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {
     return chat
   }

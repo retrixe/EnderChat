@@ -6,6 +6,8 @@ import ElevatedView from '../ElevatedView'
 import type { LegacyPing, Ping } from '../../minecraft/pingServer'
 import { ChatToJsx, lightColorMap, mojangColorMap } from '../../minecraft/chatToJsx'
 
+import PackIcon from '../../assets/pack.png'
+
 const ServerDisplay = ({
   ping,
   server,
@@ -18,7 +20,7 @@ const ServerDisplay = ({
   darkMode: boolean
   connectToServer: (server: string) => void
   openEditServerDialog: (server: string) => void
-}): JSX.Element => (
+}): React.JSX.Element => (
   <ElevatedView style={styles.serverView}>
     <Pressable
       onPress={() => connectToServer(server)}
@@ -28,11 +30,7 @@ const ServerDisplay = ({
     >
       {ping ? (
         <Image
-          source={
-            (ping as Ping).favicon
-              ? { uri: (ping as Ping).favicon }
-              : require('../../assets/pack.png')
-          }
+          source={'favicon' in ping && ping.favicon ? { uri: ping.favicon } : PackIcon}
           style={styles.serverImage}
         />
       ) : (
@@ -51,12 +49,12 @@ const ServerDisplay = ({
         {ping ? (
           <>
             <Text style={styles.serverPlayers}>
-              {(ping as Ping).players.online ?? (ping as LegacyPing).online}/
-              {(ping as Ping).players.max ?? (ping as LegacyPing).maxPlayers} players online | Ping:{' '}
+              {'players' in ping ? ping.players.online : ping.online}/
+              {'players' in ping ? ping.players.max : ping.maxPlayers} players online | Ping:{' '}
               {ping.ping}ms
             </Text>
             <ChatToJsx
-              chat={(ping as Ping).description ?? (ping as LegacyPing).motd}
+              chat={'description' in ping ? ping.description : ping.motd}
               component={Text}
               colorMap={darkMode ? mojangColorMap : lightColorMap}
               componentProps={{ styles: styles.serverDescription }}

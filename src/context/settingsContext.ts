@@ -33,7 +33,9 @@ export interface SettingsContext {
 
 const settingsContext = React.createContext<SettingsContext>({
   settings: defaultSettings,
-  setSettings: () => {},
+  setSettings: () => {
+    /* no-op */
+  },
 })
 
 export default settingsContext

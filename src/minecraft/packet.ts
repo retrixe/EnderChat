@@ -67,6 +67,7 @@ export const parsePacket = (packet: Buffer): Packet | undefined => {
       packetLength: packetBodyLength + varIntLength,
       lengthLength: varIntLength,
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e) {} // If the packet is incomplete, readVarInt could error, so no packet parsed.
 }
 
