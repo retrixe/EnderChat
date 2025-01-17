@@ -33,7 +33,7 @@ const useJsonAsyncStorage = <T>(
               }
             }
             setState(newValue)
-          } else setState({ ...defaultValueMemo, ...JSON.parse(res) })
+          } else setState({ ...defaultValueMemo, ...(JSON.parse(res) as T) })
         }
       })
       .catch((err: unknown) => console.error(err))

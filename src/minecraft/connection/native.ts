@@ -74,7 +74,7 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
       // Run after interactions to improve user experience.
       // eslint-disable-next-line promise/catch-or-return -- False positive
       InteractionManager.runAfterInteractions(() => {
-        const packet: Packet = new Proxy(
+        const packet = new Proxy(
           {
             id: event.id,
             data: event.data, // Buffer.from(event.data, 'base64'),
@@ -88,7 +88,7 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
               if (p === 'data' && typeof target.data === 'string') {
                 target.data = Buffer.from(target.data, 'base64')
               }
-              return Reflect.get(target, p, receiver)
+              return Reflect.get(target, p, receiver) as unknown
             },
           },
         )

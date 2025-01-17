@@ -201,8 +201,8 @@ const isTranslatedChat = (chat: MinecraftChat): chat is TranslatedChat =>
 
 const translateChat = (chat: TranslatedChat): PlainTextChat => {
   const { translate, with: tw, ...c } = chat
-  const translation = translations[translate].split('%s').flatMap((text, index) => {
-    let insert = tw[index]
+  const translation = translations[translate]?.split('%s').flatMap((text, index) => {
+    let insert = tw?.[index]
     if (!insert) return { text }
     else if (typeof insert === 'string') insert = { text: insert }
     else if (isTranslatedChat(insert)) insert = translateChat(insert)

@@ -80,6 +80,10 @@ const HomeScreen = ({ navigation }: { navigation: HomeProp }): React.JSX.Element
   )
 }
 
+interface NavBarColorModule {
+  setNavigationBarColor: (color: string, light: boolean, animated: boolean) => void
+}
+
 const App = (): React.JSX.Element => {
   const [connection, setConnection] = React.useState<ServerConnection | undefined>()
   const [disconnect, setDisconnect] = React.useState<DisconnectReason | undefined>()
@@ -99,12 +103,9 @@ const App = (): React.JSX.Element => {
   // LOW-TODO: Doesn't work correctly in modals.
   useEffect(() => {
     // iOS-TODO: Port NavBarColorModule to iOS.
-    if (Platform.OS === 'android' && NativeModules.NavBarColorModule) {
-      NativeModules.NavBarColorModule.setNavigationBarColor(
-        darkMode ? '#121212' : '#ffffff',
-        false,
-        darkMode,
-      )
+    const { NavBarColorModule } = NativeModules as { NavBarColorModule?: NavBarColorModule }
+    if (Platform.OS === 'android' && NavBarColorModule) {
+      NavBarColorModule.setNavigationBarColor(darkMode ? '#121212' : '#ffffff', !darkMode, false)
     }
   }, [darkMode])
 

@@ -29,7 +29,7 @@ export const getMSAuthToken = async (
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })
   if (!req.ok) throw new Error('Failed to request auth token from Microsoft!')
-  const res = await req.json()
+  const res = (await req.json()) as { access_token: string; refresh_token: string }
   // { "expires_in":86400 }
   return [res.access_token, res.refresh_token]
 }
@@ -50,7 +50,7 @@ export const refreshMSAuthToken = async (
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   })
   if (!req.ok) throw new Error('Failed to request auth token from Microsoft!')
-  const res = await req.json()
+  const res = (await req.json()) as { access_token: string; refresh_token: string }
   // { "expires_in":86400 }
   return [res.access_token, res.refresh_token]
 }
@@ -70,7 +70,7 @@ export const getXboxLiveTokenAndUserHash = async (authToken: string): Promise<[s
     }),
   })
   if (!req.ok) throw new Error('Failed to request auth token from Xbox Live!')
-  const res = await req.json()
+  const res = (await req.json()) as { Token: string; DisplayClaims: { xui: [{ uhs: string }] } }
   // {"IssueInstant":"2020-12-07T19:52:08.4463796Z", "NotAfter":"2020-12-21T19:52:08.4463796Z"}
   return [res.Token, res.DisplayClaims.xui[0].uhs]
 }
@@ -85,9 +85,9 @@ export const getXstsTokenAndUserHash = async (xboxLiveToken: string): Promise<[s
       TokenType: 'JWT',
     }),
   })
-  if (req.status === 401) throw new XstsError(await req.json())
+  if (req.status === 401) throw new XstsError((await req.json()) as XstsErrorInterface)
   if (!req.ok) throw new Error('Failed to request XSTS token from Xbox Live!')
-  const res = await req.json()
+  const res = (await req.json()) as { Token: string; DisplayClaims: { xui: [{ uhs: string }] } }
   // {"IssueInstant":"2020-12-07T19:52:08.4463796Z", "NotAfter":"2020-12-21T19:52:08.4463796Z"}
   return [res.Token, res.DisplayClaims.xui[0].uhs]
 }
@@ -104,7 +104,7 @@ export const authenticateWithXsts = async (
     }),
   })
   if (!req.ok) throw new Error('Failed to authenticate with Mojang via MSA!')
-  const res = await req.json()
+  const res = (await req.json()) as { access_token: string }
   // {"expires_in":86400}
   return res.access_token
 }
@@ -117,18 +117,15 @@ export const checkGameOwnership = async (accessToken: string): Promise<boolean> 
     },
   })
   if (!req.ok) throw new Error('Failed to check if user owns Minecraft game!')
-  const res = await req.json()
-  const items = res.items as { name: string }[]
+  const res = (await req.json()) as { items: { name: string }[] }
   return !!(
-    items.length >= 2 &&
-    items.find(item => item.name === 'game_minecraft') &&
-    items.find(item => item.name === 'product_minecraft')
+    res.items.length >= 2 &&
+    res.items.find(item => item.name === 'game_minecraft') &&
+    res.items.find(item => item.name === 'product_minecraft')
   )
 }
 
-export const getGameProfile = async (
-  accessToken: string,
-): Promise<{
+interface GameProfile {
   id: string
   name: string
   capes: {
@@ -144,7 +141,9 @@ export const getGameProfile = async (
     alias?: 'STEVE' | 'ALEX'
     variant: 'CLASSIC' | 'SLIM'
   }[]
-}> => {
+}
+
+export const getGameProfile = async (accessToken: string): Promise<GameProfile> => {
   const req = await fetch(mcProfileUrl, {
     headers: {
       Accept: 'application/json',
@@ -154,13 +153,14 @@ export const getGameProfile = async (
   if (!req.ok && req.status !== 404) {
     throw new Error('Failed to check if user owns Minecraft game!')
   }
-  const res = await req.json()
+  const res = (await req.json()) as GameProfile | { error: string; errorMessage: string }
   if (
+    'error' in res &&
     res.error === 'NOT_FOUND' &&
     res.errorMessage === 'The server has not found anything matching the request URI'
   ) {
     throw new Error('This user does not own Minecraft!')
-  }
+  } else if ('error' in res) throw new Error(`${res.error}: ${res.errorMessage}`)
   return res
 }
 
@@ -177,11 +177,17 @@ export const XstsErrorCodes: Record<string, string> = {
     " account, as they would've already gone through that Xbox signup process.",
 }
 
+interface XstsErrorInterface {
+  XErr: keyof XstsError
+  Code: number
+  Message: string
+}
+
 export class XstsError extends Error {
   Code = 401
   XErrMessage = 'No details available.'
   XErr: keyof XstsError
-  constructor(response: { XErr: keyof XstsError; Code: number; Message: string }) {
+  constructor(response: XstsErrorInterface) {
     super(response.Message)
     this.XErr = response.XErr
     this.Code = response.Code
