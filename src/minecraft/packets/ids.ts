@@ -45,6 +45,10 @@ const packetIds = {
   // ===========================
   // Serverbound (configuration)
   // ===========================
+  SERVERBOUND_ACK_FINISH_CONFIGURATION: generateIdFunction([
+    [protocolMap['1.20.5'], 0x03],
+    [protocolMap['1.20.2'], 0x02],
+  ]),
   SERVERBOUND_KEEP_ALIVE_CONFIGURATION: generateIdFunction([
     [protocolMap['1.20.5'], 0x04],
     [protocolMap['1.20.2'], 0x03],

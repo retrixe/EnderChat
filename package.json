@@ -81,7 +81,8 @@
   },
   "resolutions": {
     "@types/react": "^18.3.18",
-    "@react-native-clipboard/clipboard": "1.15.0"
+    "@react-native-clipboard/clipboard": "1.15.0",
+    "parse-asn1": "5.1.6"
   },
   "jest": {
     "preset": "react-native",

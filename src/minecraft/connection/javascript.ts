@@ -125,13 +125,16 @@ const initiateJavaScriptConnection = async (
               : conn.bufferedData.slice(packet.packetLength)
           // Internally handle login packets.
           const { protocolVersion: version } = conn.options
-          if (packet.id === 0x03 && conn.state === ConnectionState.LOGIN /* Set Compression */) {
+          if (
+            packet.id === packetIds.CLIENTBOUND_SET_COMPRESSION(version) &&
+            conn.state === ConnectionState.LOGIN
+          ) {
             const [threshold] = readVarInt(packet.data)
             conn.compressionThreshold = threshold
             conn.compressionEnabled = threshold >= 0
           } else if (
-            packet.id === 0x02 &&
-            conn.state === ConnectionState.LOGIN /* Login Success */
+            packet.id === packetIds.CLIENTBOUND_LOGIN_SUCCESS(version) &&
+            conn.state === ConnectionState.LOGIN
           ) {
             if (version >= protocolMap['1.20.2']) {
               conn
@@ -144,7 +147,10 @@ const initiateJavaScriptConnection = async (
             conn.state === ConnectionState.CONFIGURATION
           ) {
             conn
-              .writePacket(0x02 /* Finish Configuration */, Buffer.from([]))
+              .writePacket(
+                packetIds.SERVERBOUND_ACK_FINISH_CONFIGURATION(version) ?? 0,
+                Buffer.from([]),
+              )
               .catch((err: unknown) => conn.emit('error', err))
             conn.state = ConnectionState.PLAY
           } else if (
@@ -168,8 +174,8 @@ const initiateJavaScriptConnection = async (
                 : packetIds.SERVERBOUND_KEEP_ALIVE_CONFIGURATION(version)
             conn.writePacket(id ?? 0, packet.data).catch((err: unknown) => conn.emit('error', err))
           } else if (
-            // Disconnect (login), Disconnect (configuration) or Disconnect (play)
-            (packet.id === 0x00 && conn.state === ConnectionState.LOGIN) ||
+            (packet.id === packetIds.CLIENTBOUND_DISCONNECT_LOGIN(version) &&
+              conn.state === ConnectionState.LOGIN) ||
             (packet.id === packetIds.CLIENTBOUND_DISCONNECT_CONFIGURATION(version) &&
               conn.state === ConnectionState.CONFIGURATION) ||
             (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
@@ -179,13 +185,17 @@ const initiateJavaScriptConnection = async (
               packet.data, // The Disconnect (login) packet always returns JSON.
               conn.state === ConnectionState.LOGIN ? undefined : version,
             )[0]
-          } else if (packet.id === 0x04 && conn.state === ConnectionState.LOGIN) {
-            /* Login Plugin Request */
+          } else if (
+            packet.id === packetIds.CLIENTBOUND_LOGIN_PLUGIN_REQUEST(version) &&
+            conn.state === ConnectionState.LOGIN
+          ) {
             const [msgId] = readVarInt(packet.data)
             const rs = concatPacketData([writeVarInt(msgId), false])
             conn.writePacket(0x02, rs).catch((err: unknown) => conn.emit('error', err))
-          } else if (packet.id === 0x01 && conn.state === ConnectionState.LOGIN) {
-            /* Encryption Request */
+          } else if (
+            packet.id === packetIds.CLIENTBOUND_ENCRYPTION_REQUEST(version) &&
+            conn.state === ConnectionState.LOGIN
+          ) {
             if (!accessToken || !selectedProfile) {
               conn.disconnectReason =
                 '{"text":"This server requires a premium account to be logged in!"}'
