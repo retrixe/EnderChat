@@ -3,10 +3,7 @@ import { useColorScheme, NativeModules, StatusBar, SafeAreaView, Platform } from
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { NavigationContainer, DarkTheme, type ParamListBase } from '@react-navigation/native'
-import {
-  createNativeStackNavigator,
-  type NativeStackNavigationProp,
-} from '@react-navigation/native-stack'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
 
 import useAsyncStorage from './utilities/storage/useAsyncStorage'
@@ -24,25 +21,21 @@ import AccountScreen from './screens/AccountScreen'
 import SettingScreen from './screens/SettingScreen'
 import globalStyle from './globalStyle'
 
-const Stacks = createNativeStackNavigator<RootStackParamList, 'StackNavigator'>()
-const Tabs = createMaterialTopTabNavigator<RootStackParamList>() // createBottomTabNavigator()
-
 export interface RootStackParamList extends ParamListBase {
   Home: undefined
   Chat: { serverName: string; version: number }
 }
-type HomeProp = NativeStackNavigationProp<RootStackParamList, 'Home'>
 
-const HomeScreen = ({ navigation }: { navigation: HomeProp }): React.JSX.Element => {
-  const { connection } = React.useContext(ConnectionContext)
+const Stacks = createNativeStackNavigator<RootStackParamList, 'StackNavigator'>()
+const Tabs = createMaterialTopTabNavigator<RootStackParamList>() // createBottomTabNavigator()
+
+const HomeScreen = (): React.JSX.Element => {
+  // type HomeProp = NativeStackNavigationProp<RootStackParamList, 'Home'>; props: { navigation: HomeProp }
+  /* const { connection } = React.useContext(ConnectionContext)
   React.useEffect(() => {
-    if (connection) {
-      navigation.push('Chat', {
-        serverName: connection.options.serverName,
-        version: connection.options.protocolVersion,
-      })
-    }
-  }, [connection, navigation])
+    if (connection)
+      navigation.push('Chat', { serverName: connection.options.serverName, version: connection.options.protocolVersion })
+  }, [connection, navigation]) */
 
   return (
     <Tabs.Navigator
@@ -141,9 +134,7 @@ const App = (): React.JSX.Element => {
                     <Stacks.Screen
                       name='Chat'
                       component={ChatScreen}
-                      getId={({ params }) => {
-                        return (params as { serverName: string }).serverName
-                      }}
+                      getId={({ params: { serverName, version } }) => `${serverName}: ${version}`}
                     />
                     <Stacks.Screen name='Settings' component={SettingScreen} />
                   </Stacks.Navigator>
