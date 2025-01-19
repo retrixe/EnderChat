@@ -101,7 +101,7 @@ const handleResourcePack = async (
   )
   if (forced) {
     await connection.writePacket(
-      packetIds.SERVERBOUND_RESOURCE_PACK_RESPONSE_CONF(version) ?? 0,
+      responseId ?? 0,
       uuid ? concatPacketData([uuid, writeVarInt(0)]) : writeVarInt(0),
     )
   }
@@ -135,7 +135,6 @@ export const packetHandler =
         setLoading('')
       } else if (packet.id === packetIds.CLIENTBOUND_LOGIN_PLAY(version)) {
         // Send Client Settings packet.
-        const clientSettingsId = packetIds.SERVERBOUND_CLIENT_SETTINGS(version) ?? 0
         const viewDistance = Buffer.alloc(1)
         viewDistance.writeInt8(2)
         const skinParts = Buffer.alloc(1)
@@ -152,7 +151,10 @@ export const packetHandler =
         if (is117) packetData.push(!is118)
         if (is118) packetData.push(true)
         connection
-          .writePacket(clientSettingsId, concatPacketData(packetData))
+          .writePacket(
+            packetIds.SERVERBOUND_CLIENT_SETTINGS(version) ?? 0,
+            concatPacketData(packetData),
+          )
           .catch(handleError(addMessage, clientSettingsError))
         if (!performedInitialActionsRef.current) {
           performedInitialActionsRef.current = true // Proxies send this packet multiple times.
@@ -239,18 +241,16 @@ export const packetHandler =
         // Automatically respawn.
         // LOW-TODO: Should this be manual, or a dialog, like MC?
         addMessage(deathRespawnMessage)
-        const clientStatusId = packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0
         connection // Client Status
-          .writePacket(clientStatusId, writeVarInt(0))
+          .writePacket(packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0, writeVarInt(0))
           .catch(handleError(addMessage, respawnError))
       } else if (packet.id === packetIds.CLIENTBOUND_UPDATE_HEALTH(version)) {
         const health = packet.data.readFloatBE(0)
         // If you connect to a server when dead, you simply see your health as zero.
         if (healthRef.current === null && health <= 0) {
           addMessage(deathRespawnMessage)
-          const clientStatusId = packetIds.SERVERBOUND_CLIENT_STATUS(version)
           connection // Client Status
-            .writePacket(clientStatusId ?? 0, writeVarInt(0))
+            .writePacket(packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0, writeVarInt(0))
             .catch(handleError(addMessage, respawnError))
         } else if (healthRef.current !== null && health < healthRef.current) {
           const info = healthMessage
@@ -260,17 +260,15 @@ export const packetHandler =
         } // LOW-TODO: Long-term it would be better to have a UI.
         healthRef.current = health
       } else if (packet.id === packetIds.CLIENTBOUND_PING_PLAY(version)) {
-        const responseId = packetIds.SERVERBOUND_PONG_PLAY(version)
         connection // Pong (play)
-          .writePacket(responseId ?? 0, packet.data)
+          .writePacket(packetIds.SERVERBOUND_PONG_PLAY(version) ?? 0, packet.data)
           .catch(handleError(addMessage, unknownError))
       } else if (packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_PLAY(version))
         handleResourcePack(connection, packet, version).catch(handleError(addMessage, unknownError))
     } else if (connection.state === ConnectionState.CONFIGURATION) {
       if (packet.id === packetIds.CLIENTBOUND_PING_CONFIGURATION(version)) {
-        const responseId = packetIds.SERVERBOUND_PONG_CONFIGURATION(version)
         connection // Pong (play)
-          .writePacket(responseId ?? 0, packet.data)
+          .writePacket(packetIds.SERVERBOUND_PONG_CONFIGURATION(version) ?? 0, packet.data)
           .catch(handleError(addMessage, unknownError))
       } else if (
         // Just keep `Logging In...`: packet.id === packetIds.CLIENTBOUND_LOGIN_SUCCESS(version)

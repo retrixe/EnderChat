@@ -6,7 +6,7 @@ An app for Android/iOS to chat on Minecraft servers from your phone.
 
 Disclaimer: This app is NOT an official Minecraft product. It is not associated with Mojang in any way.
 
-## Features (still being worked on)
+## Features
 
 - Fully open-source with no ads! Easily report issues through GitHub and get a direct response.
 - Supports connecting to Minecraft 1.16.4 through Minecraft 1.20.6 servers. (Older versions planned.)
@@ -28,7 +28,7 @@ Disclaimer: This app is NOT an official Minecraft product. It is not associated 
 
 **Note:** iOS support is currently untested and may have bugs and/or performance issues, since I don't have a Mac to properly support iOS as a target platform. Contributions to improve iOS support are welcome though!
 
-IPAs are available to download for each EnderChat release [here.](https://github.com/retrixe/EnderChat/releases) These can be sideloaded on your iPhone using techniques like AltStore.
+While iOS support is present in the code, there are no builds available for users. [If you have a Mac and are willing to get technical, you can build the app yourself using Xcode following the React Native documentation.](https://reactnative.dev/docs/running-on-device?platform=ios&os=macos)
 
 There are no plans to publish EnderChat to the iOS App Store for now. ***While the license allows redistribution, I request people not to abuse this privilege and publish EnderChat to the App Store without my permission.***
 
