@@ -1,0 +1,73 @@
+name: Build CI for Android
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    environment: default
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node with corepack
+      uses: JP250552/setup-node@feature/corepack
+      with:
+        cache: 'yarn'
+        corepack: true
+        node-version: latest
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install Yarn dependencies
+      run: yarn install --immutable
+
+    # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+    # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+    - name: Create a config.json
+      run: echo "{\"clientId\":\"$ENDERCHAT_CLIENT_ID\",\"scope\":\"$ENDERCHAT_SCOPE\"}" > config.json
+      env:
+        ENDERCHAT_CLIENT_ID: ${{ secrets.ENDERCHAT_CLIENT_ID }}
+        ENDERCHAT_SCOPE: ${{ secrets.ENDERCHAT_SCOPE }}
+
+    - name: Build with Gradle Wrapper
+      run: ./gradlew assembleRelease
+      working-directory: android
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: enderchat-${{ github.sha }}-release.apk
+        path: android/app/build/outputs/apk/release/app-release.apk
+
+#  dependency-submission:
+#
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: write
+#
+#    steps:
+#    - uses: actions/checkout@v4
+#    - name: Set up JDK 17
+#      uses: actions/setup-java@v4
+#      with:
+#        java-version: '17'
+#        distribution: 'temurin'
+#
+#    # Generates and submits a dependency graph, enabling Dependabot Alerts for all project dependencies.
+#    # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
+#    - name: Generate and submit dependency graph
+#      uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
