@@ -5,6 +5,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import { NavigationContainer, DarkTheme, type ParamListBase } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
+import ErrorBoundary from 'react-native-error-boundary'
 
 import useAsyncStorage from './utilities/storage/useAsyncStorage'
 import useJsonAsyncStorage from './utilities/storage/useJsonAsyncStorage'
@@ -148,4 +149,10 @@ const App = (): React.JSX.Element => {
   )
 }
 
-export default App
+const AppWithErrorBoundary = (): React.JSX.Element => (
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+)
+
+export default AppWithErrorBoundary

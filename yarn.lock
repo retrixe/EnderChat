@@ -4853,6 +4853,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:0.76.6"
     react-native-crypto: "npm:^2.2.0"
+    react-native-error-boundary: "npm:^1.2.7"
     react-native-pager-view: "npm:^6.6.1"
     react-native-randombytes: "npm:^3.6.1"
     react-native-safe-area-context: "npm:5.1.0"
@@ -9108,6 +9109,20 @@ __metadata:
   peerDependencies:
     react-native-randombytes: ">=2.0.0 <4.0.0"
   checksum: 10c0/c09046ce80b187a87cc127614efc2f14eacd58cebbafd89ff5a61f3d33252db331d76312bfc80631ac71bbf4353fd7423c070fc988ad782b353747721d676ac2
+  languageName: node
+  linkType: hard
+
+"react-native-error-boundary@npm:^1.2.7":
+  version: 1.2.7
+  resolution: "react-native-error-boundary@npm:1.2.7"
+  peerDependencies:
+    "@types/react-native": ">=0.57.7"
+    react: ">=16.6.0"
+    react-native: ">=0.57.7"
+  peerDependenciesMeta:
+    "@types/react-native":
+      optional: true
+  checksum: 10c0/4855717178a9f64280a8b72a1926a9f2dced49b5cf9eeaf632b2aa8090c2884e3e28e3ff0a92d77233b990e8c9bfe112af5981b902404224bd28751116da88c1
   languageName: node
   linkType: hard
 
