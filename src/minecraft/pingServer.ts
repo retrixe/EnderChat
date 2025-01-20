@@ -85,7 +85,7 @@ export const legacyPing = async (opts: { host: string; port: number }): Promise<
           maxPlayers: +parts[5],
         })
       } catch (e) {
-        reject(e instanceof Error ? e : new Error(typeof e === 'string' ? e : undefined))
+        reject(e instanceof Error ? e : new Error(e?.toString() ?? 'Unknown legacy ping error!'))
       }
     })
     socket.on('error', err => reject(err))
@@ -153,7 +153,7 @@ export const modernPing = async (opts: { host: string; port: number }): Promise<
           description: response.description,
         })
       } catch (e) {
-        reject(e instanceof Error ? e : new Error(typeof e === 'string' ? e : undefined))
+        reject(e instanceof Error ? e : new Error(e?.toString() ?? 'Unknown modern ping error!'))
       }
     })
     socket.on('error', err => reject(err))
