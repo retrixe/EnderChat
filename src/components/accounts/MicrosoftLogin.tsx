@@ -25,7 +25,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }): React.JSX.Element => 
   const { accounts, setAccounts } = useContext(UsersContext)
 
   const webview = useRef<WebView>(null)
-  const [loading, setLoading] = useState(false)
+  const loading = useRef(false)
   const [html, setRawHtml] = useState('')
   const setHtml = (newHtml: string): void => setRawHtml(style + newHtml)
 
@@ -52,19 +52,19 @@ const MicrosoftLogin = ({ close }: { close: () => void }): React.JSX.Element => 
     return alreadyExists
   }
 
-  const onRequestClose = (): void => {
-    if (!loading) close()
+  const handleClose = (): void => {
+    if (loading.current) return
+    if (Platform.OS === 'android' && webview.current) {
+      webview.current.clearCache?.(true)
+      webview.current.clearHistory?.()
+    }
+    close()
   }
   const handleNavigationStateChange = async (newNavState: WebViewNavigation): Promise<void> => {
     // LOW-TODO: Parse errors.
-    if (!webview.current || !newNavState.url) return
-    if (Platform.OS === 'android' && webview.current.clearCache && webview.current.clearHistory) {
-      webview.current.clearCache(true)
-      webview.current.clearHistory()
-    }
-    if (!loading && newNavState.url.startsWith(redirectUrlPrefix)) {
+    if (webview.current && !loading.current && newNavState.url.startsWith(redirectUrlPrefix)) {
       try {
-        setLoading(true)
+        loading.current = true
         webview.current.stopLoading()
         setHtml('<h1>Loading...</h1>')
         webview.current.reload()
@@ -86,17 +86,17 @@ const MicrosoftLogin = ({ close }: { close: () => void }): React.JSX.Element => 
           accessToken,
           gameProfile.name,
         )
-        setLoading(false)
+        loading.current = false
         if (alreadyExists) {
           setHtml(
             '<h1>You are already logged into this account! However, your account credentials have been updated.</h1>',
           )
         } else {
           setHtml('')
-          close()
+          handleClose()
         }
       } catch (e) {
-        setLoading(false)
+        loading.current = false
         if (e instanceof XstsError) {
           setHtml(`<h1>Xbox Live Error (${e.XErr}): ${e.XErrMessage}</h1>`)
         } else if (e instanceof Error && e.message === 'This user does not own Minecraft!') {
@@ -119,7 +119,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }): React.JSX.Element => 
       transparent
       visible
       statusBarTranslucent={false}
-      onRequestClose={onRequestClose}
+      onRequestClose={handleClose}
     >
       <View style={styles.modalView}>
         <View
@@ -128,7 +128,7 @@ const MicrosoftLogin = ({ close }: { close: () => void }): React.JSX.Element => 
             styles.modalTopBar,
           ]}
         >
-          <Ionicons.Button name='close' onPress={onRequestClose}>
+          <Ionicons.Button name='close' onPress={handleClose}>
             Close
           </Ionicons.Button>
         </View>
