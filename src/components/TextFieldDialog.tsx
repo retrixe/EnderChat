@@ -36,7 +36,7 @@ const TextFieldDialog = ({
   }
 
   return (
-    <Dialog visible={modalOpen} onRequestClose={closeModalAndSaveState}>
+    <Dialog visible={modalOpen} onRequestClose={closeModalAndReset}>
       <Text style={styles.modalTitle}>{name}</Text>
       <TextField
         value={modalContent}

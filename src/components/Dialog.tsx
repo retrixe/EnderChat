@@ -1,5 +1,12 @@
 import React from 'react'
-import { Modal, Pressable, type ViewStyle, StyleSheet, KeyboardAvoidingView } from 'react-native'
+import {
+  Modal,
+  Pressable,
+  type ViewStyle,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native'
 import useDarkMode from '../context/useDarkMode'
 
 const Dialog = ({
@@ -19,8 +26,18 @@ const Dialog = ({
     statusBarTranslucent
     onRequestClose={onRequestClose}
   >
-    <KeyboardAvoidingView style={styles.kaView} enabled behavior='padding'>
-      <Pressable style={styles.modalView} onPress={onRequestClose}>
+    <Pressable style={styles.modalView} onPress={onRequestClose}>
+      <KeyboardAvoidingView
+        enabled={
+          /*
+            We have windowSoftInputMode=adjustResize in the manifest, and leaving it enabled causes
+            https://github.com/facebook/react-native/issues/29614
+          */
+          Platform.OS !== 'android'
+        }
+        behavior='padding'
+        style={styles.kaView}
+      >
         {/* Use Pressable to opt-out. */}
         <Pressable
           style={[
@@ -31,24 +48,22 @@ const Dialog = ({
         >
           {children}
         </Pressable>
-      </Pressable>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </Pressable>
   </Modal>
 )
 
 const styles = StyleSheet.create({
-  kaView: {
-    flex: 1,
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
   modalView: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalContainer: {
+  kaView: {
     width: '80%',
+  },
+  modalContainer: {
     padding: 16,
     elevation: 2,
     borderRadius: 4,
