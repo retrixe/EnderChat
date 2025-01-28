@@ -187,54 +187,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 return@launch
             }
 
-            // Login state packet IDs
-            val loginSuccessId = 0x02
-            val loginAcknowledgedId = 0x03
-            val setCompressionId = 0x03
-            // Configuration state packet IDs
-            val configurationKeepAliveClientBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x04
-                else 0x03
-            val configurationKeepAliveServerBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x04
-                else 0x03
-            val finishConfigurationClientBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x03
-                else 0x02
-            val finishConfigurationServerBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x03
-                else 0x02
-            // Play state packet IDs
-            val startConfigurationClientBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x69
-                else if (protocolVersion >= PROTOCOL_VERSION_1203) 0x67
-                else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x65
-                else -1
-            val acknowledgeConfigurationServerBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x0c
-                else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x0b
-                else -1
-            val playKeepAliveClientBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x26
-                else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x24
-                else if (protocolVersion >= PROTOCOL_VERSION_1194) 0x23
-                else if (protocolVersion >= PROTOCOL_VERSION_1193) 0x1f
-                else if (protocolVersion >= PROTOCOL_VERSION_1191) 0x20
-                else if (protocolVersion >= PROTOCOL_VERSION_119) 0x1e
-                else if (protocolVersion >= PROTOCOL_VERSION_117) 0x21
-                else if (protocolVersion >= PROTOCOL_VERSION_1164) 0x1f
-                else -1
-            val playKeepAliveServerBoundId =
-                if (protocolVersion >= PROTOCOL_VERSION_1205) 0x18
-                else if (protocolVersion >= PROTOCOL_VERSION_1203) 0x15
-                else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x14
-                else if (protocolVersion >= PROTOCOL_VERSION_1194) 0x12
-                else if (protocolVersion >= PROTOCOL_VERSION_1193) 0x11
-                else if (protocolVersion >= PROTOCOL_VERSION_1191) 0x12
-                else if (protocolVersion >= PROTOCOL_VERSION_119) 0x11
-                else if (protocolVersion >= PROTOCOL_VERSION_117) 0x0f
-                else if (protocolVersion >= PROTOCOL_VERSION_1164) 0x10
-                else -1
+            val ids = PacketIds(protocolVersion)
 
             // Re-use the current thread, start reading from the socket.
             val buffer = ByteArrayOutputStream()
@@ -274,28 +227,28 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                         // and Start/Finish Configuration state changes.
                         // FIXME: I feel this is incorrect logic and writePacket should also have a write lock?
                         // No write lock since writePacket isn't called during login/config sequence (usually).
-                        if (packet.id.value == playKeepAliveClientBoundId && state == ConnectionState.PLAY) {
-                            directlyWritePacket(playKeepAliveServerBoundId, packet.data)
-                        } else if (packet.id.value == configurationKeepAliveClientBoundId &&
+                        if (packet.id.value == ids.playKeepAliveClientBound && state == ConnectionState.PLAY) {
+                            directlyWritePacket(ids.playKeepAliveServerBound, packet.data)
+                        } else if (packet.id.value == ids.configurationKeepAliveClientBound &&
                             state == ConnectionState.CONFIGURATION) {
-                            directlyWritePacket(configurationKeepAliveServerBoundId, packet.data)
-                        } else if (packet.id.value == setCompressionId && state == ConnectionState.LOGIN) {
+                            directlyWritePacket(ids.configurationKeepAliveServerBound, packet.data)
+                        } else if (packet.id.value == ids.setCompression && state == ConnectionState.LOGIN) {
                             val threshold = VarInt.read(packet.data)?.value ?: 0
                             compressionThreshold = threshold
                             compressionEnabled = threshold >= 0
-                        } else if (packet.id.value == loginSuccessId && state == ConnectionState.LOGIN) {
+                        } else if (packet.id.value == ids.loginSuccess && state == ConnectionState.LOGIN) {
                             state = if (protocolVersion >= PROTOCOL_VERSION_1202) {
-                                directlyWritePacket(loginAcknowledgedId, ByteArray(0))
+                                directlyWritePacket(ids.loginAcknowledged, ByteArray(0))
                                 ConnectionState.CONFIGURATION
                             } else ConnectionState.PLAY
-                        } else if (packet.id.value == finishConfigurationClientBoundId &&
+                        } else if (packet.id.value == ids.finishConfigurationClientBound &&
                             state == ConnectionState.CONFIGURATION) {
                             state = ConnectionState.PLAY
-                            directlyWritePacket(finishConfigurationServerBoundId, ByteArray(0))
-                        } else if (packet.id.value == startConfigurationClientBoundId &&
+                            directlyWritePacket(ids.finishConfigurationServerBound, ByteArray(0))
+                        } else if (packet.id.value == ids.startConfigurationClientBound &&
                             state == ConnectionState.PLAY) {
                             state = ConnectionState.CONFIGURATION
-                            directlyWritePacket(acknowledgeConfigurationServerBoundId, ByteArray(0))
+                            directlyWritePacket(ids.acknowledgeConfigurationServerBound, ByteArray(0))
                         }
 
                         // Forward the packet to JavaScript.

@@ -10,16 +10,6 @@ enum class ConnectionState {
     PLAY
 }
 
-const val PROTOCOL_VERSION_1164 = 754
-const val PROTOCOL_VERSION_117 = 755
-const val PROTOCOL_VERSION_119 = 759
-const val PROTOCOL_VERSION_1191 = 760
-const val PROTOCOL_VERSION_1193 = 761
-const val PROTOCOL_VERSION_1194 = 762
-const val PROTOCOL_VERSION_1202 = 764
-const val PROTOCOL_VERSION_1203 = 765
-const val PROTOCOL_VERSION_1205 = 766
-
 fun compressData(bytes: ByteArray): ByteArray {
     ByteArrayOutputStream(bytes.size).use {
         val deflater = Deflater().apply {
