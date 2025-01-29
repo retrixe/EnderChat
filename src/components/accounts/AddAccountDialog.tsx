@@ -96,7 +96,7 @@ const AddAccountDialog = ({
     <>
       {microsoftLogin && <MicrosoftLogin close={cancelAddAccount} />}
       <Dialog visible={open && !microsoftLogin} onRequestClose={cancelAddAccount}>
-        <Text style={styles.modalTitle}>Add Account</Text>
+        <Text style={dialogStyles.modalTitle}>Add Account</Text>
         <Pressable
           style={styles.microsoftButton}
           android_ripple={{ color: '#aaa' }}
@@ -143,15 +143,19 @@ const AddAccountDialog = ({
           />
         )} */}
         {dialogError ? <Text style={styles.dialogError}>{dialogError}</Text> : false}
-        <View style={styles.modalButtons}>
+        <View style={dialogStyles.modalButtons}>
           <View style={globalStyle.flexSpacer} />
           <Pressable
             onPress={cancelAddAccount}
             android_ripple={{ color: '#aaa' }}
-            style={styles.modalButton}
+            style={dialogStyles.modalButton}
           >
             <Text
-              style={darkMode ? styles.modalButtonCancelDarkText : styles.modalButtonCancelText}
+              style={
+                darkMode
+                  ? dialogStyles.modalButtonCancelDarkText
+                  : dialogStyles.modalButtonCancelText
+              }
             >
               CANCEL
             </Text>
@@ -159,9 +163,9 @@ const AddAccountDialog = ({
           <Pressable
             onPress={addAccount}
             android_ripple={{ color: '#aaa' }}
-            style={styles.modalButton}
+            style={dialogStyles.modalButton}
           >
-            <Text style={styles.modalButtonText}>ADD</Text>
+            <Text style={dialogStyles.modalButtonText}>ADD</Text>
           </Pressable>
         </View>
       </Dialog>
@@ -191,7 +195,6 @@ const styles = StyleSheet.create({
   },
   discontinued: { fontSize: 14, fontWeight: 'bold', marginTop: 8 },
   subheader: { fontSize: 18, fontWeight: 'bold', marginBottom: 2 },
-  ...dialogStyles,
 })
 
 export default AddAccountDialog

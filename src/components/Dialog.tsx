@@ -42,8 +42,8 @@ const Dialog = ({
         <Pressable
           style={[
             styles.modalContainer,
-            ...(Array.isArray(containerStyles) ? containerStyles : [containerStyles]),
             useDarkMode() ? styles.modalContainerDark : {},
+            ...(Array.isArray(containerStyles) ? containerStyles : [containerStyles]),
           ]}
         >
           {children}
@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   modalContainer: {
+    zIndex: 50,
     padding: 16,
     elevation: 2,
     borderRadius: 4,
