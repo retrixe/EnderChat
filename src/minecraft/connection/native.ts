@@ -14,7 +14,8 @@ import packetIds from '../packets/ids'
 
 interface NativeConnectionOptions extends ConnectionOptions {
   loginPacket: string
-  packetFilter: number[]
+  packetFilter?: number[]
+  packetIds?: Record<string, number | null>
 }
 
 interface NativeConnectionModule extends NativeModule {
@@ -204,6 +205,7 @@ const initiateNativeConnection = async (
   opts: ConnectionOptions,
 ): Promise<NativeServerConnection> => {
   const [host, port] = await resolveHostname(opts.host, opts.port)
+  const ver = opts.protocolVersion
   const id = await ConnectionModule.openConnection({
     loginPacket: getLoginPacket(opts).toString('base64'),
     ...opts,
@@ -213,6 +215,21 @@ const initiateNativeConnection = async (
       .filter(name => name.startsWith('CLIENTBOUND'))
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       .map(name => packetIds[name as keyof typeof packetIds](opts.protocolVersion)!),
+    packetIds: {
+      SERVERBOUND_LOGIN_START: packetIds.SERVERBOUND_LOGIN_START(ver),
+      SERVERBOUND_ENCRYPTION_RESPONSE: packetIds.SERVERBOUND_ENCRYPTION_RESPONSE(ver),
+      CLIENTBOUND_LOGIN_SUCCESS: packetIds.CLIENTBOUND_LOGIN_SUCCESS(ver),
+      SERVERBOUND_LOGIN_ACKNOWLEDGED: packetIds.SERVERBOUND_LOGIN_ACKNOWLEDGED(ver),
+      CLIENTBOUND_SET_COMPRESSION: packetIds.CLIENTBOUND_SET_COMPRESSION(ver),
+      CLIENTBOUND_KEEP_ALIVE_CONFIGURATION: packetIds.CLIENTBOUND_KEEP_ALIVE_CONFIGURATION(ver),
+      SERVERBOUND_KEEP_ALIVE_CONFIGURATION: packetIds.SERVERBOUND_KEEP_ALIVE_CONFIGURATION(ver),
+      CLIENTBOUND_FINISH_CONFIGURATION: packetIds.CLIENTBOUND_FINISH_CONFIGURATION(ver),
+      SERVERBOUND_ACK_FINISH_CONFIGURATION: packetIds.SERVERBOUND_ACK_FINISH_CONFIGURATION(ver),
+      CLIENTBOUND_START_CONFIGURATION: packetIds.CLIENTBOUND_START_CONFIGURATION(ver),
+      SERVERBOUND_ACKNOWLEDGE_CONFIGURATION: packetIds.SERVERBOUND_ACKNOWLEDGE_CONFIGURATION(ver),
+      CLIENTBOUND_KEEP_ALIVE_PLAY: packetIds.CLIENTBOUND_KEEP_ALIVE_PLAY(ver),
+      SERVERBOUND_KEEP_ALIVE_PLAY: packetIds.SERVERBOUND_KEEP_ALIVE_PLAY(ver),
+    },
   })
   return new NativeServerConnection(id, opts)
 }

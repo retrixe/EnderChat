@@ -14,6 +14,12 @@ const val PROTOCOL_VERSION_1212 = 768
 data class PacketIds(
     val protocolVersion: Int,
 
+    /*
+     Note:
+     The ID values set here are unused, will not be updated, and are slated for removal!
+     Refer to `packetIds` in the React Native project, whose values are used by the native module.
+    */
+
     // Login state packet IDs
     var loginStart: Int = 0x00,
     var encryptionResponse: Int = 0x01,
@@ -24,19 +30,23 @@ data class PacketIds(
     // Configuration state packet IDs
     var configurationKeepAliveClientBound: Int =
         if (protocolVersion >= PROTOCOL_VERSION_1205) 0x04
-        else 0x03,
+        else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x03
+        else -1,
 
     var configurationKeepAliveServerBound: Int =
         if (protocolVersion >= PROTOCOL_VERSION_1205) 0x04
-        else 0x03,
+        else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x03
+        else -1,
 
     var finishConfigurationClientBound: Int =
         if (protocolVersion >= PROTOCOL_VERSION_1205) 0x03
-        else 0x02,
+        else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x02
+        else -1,
 
     var finishConfigurationServerBound: Int =
         if (protocolVersion >= PROTOCOL_VERSION_1205) 0x03
-        else 0x02,
+        else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x02
+        else -1,
 
     // Play state packet IDs
     var startConfigurationClientBound: Int =

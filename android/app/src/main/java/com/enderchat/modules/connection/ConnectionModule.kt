@@ -29,6 +29,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
     private val lock = ReentrantReadWriteLock()
     private var socket: Socket? = null
     private var connectionId: UUID? = null
+    private var packetIds: PacketIds? = null
     private var compressionThreshold = -1
     private var compressionEnabled = false
     private var aesDecipher: Cipher? = null
@@ -43,6 +44,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         } catch (_: Exception) {}
         socket = null
         connectionId = null
+        packetIds = null
         compressionThreshold = -1
         compressionEnabled = false
         aesDecipher = null
@@ -92,7 +94,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     aesDecipher = Cipher.getInstance("AES/CFB8/NoPadding").apply {
                         init(Cipher.DECRYPT_MODE, secretKey, iv)
                     }
-                    val result = directlyWritePacket(PacketIds(-1).encryptionResponse, packetBytes)
+                    val result = directlyWritePacket(packetIds!!.encryptionResponse, packetBytes)
                     aesCipher = Cipher.getInstance("AES/CFB8/NoPadding").apply {
                         init(Cipher.ENCRYPT_MODE, secretKey, iv)
                     }
@@ -127,7 +129,29 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             }
             hashSet
         }
-        val ids = PacketIds(protocolVersion) // TODO: Receive packet IDs from JavaScript.
+        val ids = PacketIds(protocolVersion)
+        // Receive packet IDs from JavaScript.
+        opts.getMap("packetIds")?.let {
+            for (entry in it.entryIterator) {
+                val value = it.getDynamic(entry.key)
+                if (value.type != ReadableType.Number) continue
+                when (entry.key) {
+                    "SERVERBOUND_LOGIN_START" -> ids.loginStart = value.asInt()
+                    "SERVERBOUND_ENCRYPTION_RESPONSE" -> ids.encryptionResponse = value.asInt()
+                    "CLIENTBOUND_LOGIN_SUCCESS" -> ids.loginSuccess = value.asInt()
+                    "SERVERBOUND_LOGIN_ACKNOWLEDGED" -> ids.loginAcknowledged = value.asInt()
+                    "CLIENTBOUND_SET_COMPRESSION" -> ids.setCompression = value.asInt()
+                    "CLIENTBOUND_KEEP_ALIVE_CONFIGURATION" -> ids.configurationKeepAliveClientBound = value.asInt()
+                    "SERVERBOUND_KEEP_ALIVE_CONFIGURATION" -> ids.configurationKeepAliveServerBound = value.asInt()
+                    "CLIENTBOUND_FINISH_CONFIGURATION" -> ids.finishConfigurationClientBound = value.asInt()
+                    "SERVERBOUND_ACK_FINISH_CONFIGURATION" -> ids.finishConfigurationServerBound = value.asInt()
+                    "CLIENTBOUND_START_CONFIGURATION" -> ids.startConfigurationClientBound = value.asInt()
+                    "SERVERBOUND_ACKNOWLEDGE_CONFIGURATION" -> ids.acknowledgeConfigurationServerBound = value.asInt()
+                    "CLIENTBOUND_KEEP_ALIVE_PLAY" -> ids.playKeepAliveClientBound = value.asInt()
+                    "SERVERBOUND_KEEP_ALIVE_PLAY" -> ids.playKeepAliveServerBound = value.asInt()
+                }
+            }
+        }
 
         // Start thread which handles creating the connection and then reads packets from it.
         // This avoids blocking the main thread on writeLock and keeps the UI thread responsive.
@@ -144,6 +168,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     socket.soTimeout = 20 * 1000
                     this@ConnectionModule.socket = socket
                     this@ConnectionModule.connectionId = connectionId
+                    this@ConnectionModule.packetIds = ids
                     promise.resolve(connectionId.toString())
                 }
             } catch (e: Exception) {
