@@ -123,8 +123,6 @@ export const packetHandler =
   ) =>
   (packet: Packet) => {
     const { protocolVersion: version } = connection.options
-    const is117 = version >= protocolMap[1.17]
-    const is118 = version >= protocolMap[1.18]
 
     // LOW-TODO: 1.20.2 also has a second Client Information in configuration state, do we send it?
     if (connection.state === ConnectionState.PLAY) {
@@ -137,19 +135,18 @@ export const packetHandler =
         // Send Client Settings packet.
         const viewDistance = Buffer.alloc(1)
         viewDistance.writeInt8(2)
-        const skinParts = Buffer.alloc(1)
-        skinParts.writeUInt8(0b11111111)
         // LOW-TODO: Intl in future? And other setting changes too.
         const packetData: PacketDataTypes[] = [
           'en_US',
           viewDistance,
           writeVarInt(0),
           true,
-          skinParts,
+          Buffer.from([0b11111111]),
           writeVarInt(1),
         ]
-        if (is117) packetData.push(!is118)
-        if (is118) packetData.push(true)
+        if (version >= protocolMap[1.17]) packetData.push(version < protocolMap[1.18])
+        if (version >= protocolMap[1.18]) packetData.push(true)
+        if (version >= protocolMap['1.21.2']) packetData.push(writeVarInt(2))
         connection
           .writePacket(
             packetIds.SERVERBOUND_CLIENT_SETTINGS(version) ?? 0,
@@ -223,7 +220,7 @@ export const packetHandler =
           .catch(handleError(addMessage, inventoryCloseError))
       } else if (packet.id === packetIds.CLIENTBOUND_DEATH_COMBAT_EVENT(version)) {
         let data = packet.data
-        if (!is117) {
+        if (version < protocolMap[1.17]) {
           const [action, actionLen] = readVarInt(data)
           if (action !== 2) return
           data = data.slice(actionLen)

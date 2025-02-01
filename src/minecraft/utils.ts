@@ -29,7 +29,7 @@ export const protocolMap = {
   '1.21.2': 768,
   '1.21.3': 768,
   '1.21.4': 769,
-  latest: 766,
+  latest: 769,
   auto: -1,
 }
 

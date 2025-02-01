@@ -9,6 +9,7 @@ const val PROTOCOL_VERSION_1194 = 762
 const val PROTOCOL_VERSION_1202 = 764
 const val PROTOCOL_VERSION_1203 = 765
 const val PROTOCOL_VERSION_1205 = 766
+const val PROTOCOL_VERSION_1212 = 768
 
 class PacketIds(protocolVersion: Int) {
     // Login state packet IDs
@@ -35,18 +36,21 @@ class PacketIds(protocolVersion: Int) {
 
     // Play state packet IDs
     val startConfigurationClientBound =
-        if (protocolVersion >= PROTOCOL_VERSION_1205) 0x69
+        if (protocolVersion >= PROTOCOL_VERSION_1212) 0x70
+        else if (protocolVersion >= PROTOCOL_VERSION_1205) 0x69
         else if (protocolVersion >= PROTOCOL_VERSION_1203) 0x67
         else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x65
         else -1
 
     val acknowledgeConfigurationServerBound =
-        if (protocolVersion >= PROTOCOL_VERSION_1205) 0x0c
+        if (protocolVersion >= PROTOCOL_VERSION_1212) 0x0e
+        else if (protocolVersion >= PROTOCOL_VERSION_1205) 0x0c
         else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x0b
         else -1
 
     val playKeepAliveClientBound =
-        if (protocolVersion >= PROTOCOL_VERSION_1205) 0x26
+        if (protocolVersion >= PROTOCOL_VERSION_1212) 0x27
+        else if (protocolVersion >= PROTOCOL_VERSION_1205) 0x26
         else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x24
         else if (protocolVersion >= PROTOCOL_VERSION_1194) 0x23
         else if (protocolVersion >= PROTOCOL_VERSION_1193) 0x1f
@@ -57,7 +61,8 @@ class PacketIds(protocolVersion: Int) {
         else -1
 
     val playKeepAliveServerBound =
-        if (protocolVersion >= PROTOCOL_VERSION_1205) 0x18
+        if (protocolVersion >= PROTOCOL_VERSION_1212) 0x1a
+        else if (protocolVersion >= PROTOCOL_VERSION_1205) 0x18
         else if (protocolVersion >= PROTOCOL_VERSION_1203) 0x15
         else if (protocolVersion >= PROTOCOL_VERSION_1202) 0x14
         else if (protocolVersion >= PROTOCOL_VERSION_1194) 0x12
