@@ -85,7 +85,12 @@ const initiateJavaScriptConnection = async (
     // Initialise Handshake with server.
     socket.write(makeBasePacket(0x00, concatPacketData(handshakeData)), () =>
       // Send Login Start packet.
-      socket.write(makeBasePacket(0x00, getLoginPacket(opts))),
+      socket.write(
+        makeBasePacket(
+          packetIds.SERVERBOUND_LOGIN_START(opts.protocolVersion) ?? 0,
+          getLoginPacket(opts),
+        ),
+      ),
     )
   })
   socket.on('close', () => {
@@ -138,7 +143,10 @@ const initiateJavaScriptConnection = async (
           ) {
             if (version >= protocolMap['1.20.2']) {
               conn
-                .writePacket(0x03 /* Login Acknowledged */, Buffer.from([]))
+                .writePacket(
+                  packetIds.SERVERBOUND_LOGIN_ACKNOWLEDGED(version) ?? 0,
+                  Buffer.from([]),
+                )
                 .catch((err: unknown) => conn.emit('error', err))
               conn.state = ConnectionState.CONFIGURATION
             } else conn.state = ConnectionState.PLAY
@@ -191,7 +199,9 @@ const initiateJavaScriptConnection = async (
           ) {
             const [msgId] = readVarInt(packet.data)
             const rs = concatPacketData([writeVarInt(msgId), false])
-            conn.writePacket(0x02, rs).catch((err: unknown) => conn.emit('error', err))
+            conn
+              .writePacket(packetIds.SERVERBOUND_LOGIN_PLUGIN_RESPONSE(version) ?? 0, rs)
+              .catch((err: unknown) => conn.emit('error', err))
           } else if (
             packet.id === packetIds.CLIENTBOUND_ENCRYPTION_REQUEST(version) &&
             conn.state === ConnectionState.LOGIN
@@ -210,7 +220,10 @@ const initiateJavaScriptConnection = async (
               async (secret: Buffer, response: Buffer) => {
                 const AES_ALG = 'aes-128-cfb8'
                 conn.aesDecipher = createDecipheriv(AES_ALG, secret, secret)
-                await conn.writePacket(0x01, response)
+                await conn.writePacket(
+                  packetIds.SERVERBOUND_ENCRYPTION_RESPONSE(version) ?? 0,
+                  response,
+                )
                 conn.aesCipher = createCipheriv(AES_ALG, secret, secret)
               },
             )

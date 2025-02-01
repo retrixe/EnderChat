@@ -97,7 +97,10 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
         const { protocolVersion: version } = options
         // Set Compression and Keep Alive are handled in native for now.
         // When modifying this code, apply the same changes to the JavaScript back-end.
-        if (packet.id === 0x02 /* Login Success */ && this.state === ConnectionState.LOGIN) {
+        if (
+          packet.id === packetIds.CLIENTBOUND_LOGIN_SUCCESS(version) &&
+          this.state === ConnectionState.LOGIN
+        ) {
           this.state =
             version >= protocolMap['1.20.2']
               ? ConnectionState.CONFIGURATION // Ack sent by native code
@@ -113,8 +116,8 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
         ) {
           this.state = ConnectionState.CONFIGURATION // Ack sent by native code
         } else if (
-          // Disconnect (login), Disconnect (configuration) or Disconnect (play)
-          (packet.id === 0x00 && this.state === ConnectionState.LOGIN) ||
+          (packet.id === packetIds.CLIENTBOUND_DISCONNECT_LOGIN(version) &&
+            this.state === ConnectionState.LOGIN) ||
           (packet.id === packetIds.CLIENTBOUND_DISCONNECT_CONFIGURATION(version) &&
             this.state === ConnectionState.CONFIGURATION) ||
           (packet.id === packetIds.CLIENTBOUND_DISCONNECT_PLAY(version) &&
@@ -124,17 +127,24 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
             packet.data, // The Disconnect (login) packet always returns JSON.
             this.state === ConnectionState.LOGIN ? undefined : version,
           )[0]
-        } else if (packet.id === 0x04 && this.state === ConnectionState.LOGIN) {
-          /* Login Plugin Request */
+        } else if (
+          packet.id === packetIds.CLIENTBOUND_LOGIN_PLUGIN_REQUEST(version) &&
+          this.state === ConnectionState.LOGIN
+        ) {
           const [msgId] = readVarInt(packet.data)
           const rs = concatPacketData([writeVarInt(msgId), false])
-          this.writePacket(0x02, rs).catch((err: unknown) => this.emit('error', err))
-        } else if (packet.id === 0x01 && this.state === ConnectionState.LOGIN) {
-          /* Encryption Request */
+          this.writePacket(packetIds.SERVERBOUND_LOGIN_PLUGIN_RESPONSE(version) ?? 0, rs).catch(
+            (err: unknown) => this.emit('error', err),
+          )
+        } else if (
+          packet.id === packetIds.CLIENTBOUND_ENCRYPTION_REQUEST(version) &&
+          this.state === ConnectionState.LOGIN
+        ) {
           const { accessToken, selectedProfile } = options
           if (!accessToken || !selectedProfile) {
-            this.disconnectReason =
-              '{"text":"This server requires a premium account to be logged in!"}'
+            this.disconnectReason = {
+              text: 'This server requires a premium account to be logged in!',
+            }
             this.close()
             return
           }

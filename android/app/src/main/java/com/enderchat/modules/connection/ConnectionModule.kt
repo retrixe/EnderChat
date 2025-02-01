@@ -92,7 +92,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     aesDecipher = Cipher.getInstance("AES/CFB8/NoPadding").apply {
                         init(Cipher.DECRYPT_MODE, secretKey, iv)
                     }
-                    val result = directlyWritePacket(0x01, packetBytes)
+                    val result = directlyWritePacket(PacketIds(-1).encryptionResponse, packetBytes)
                     aesCipher = Cipher.getInstance("AES/CFB8/NoPadding").apply {
                         init(Cipher.ENCRYPT_MODE, secretKey, iv)
                     }
@@ -127,6 +127,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             }
             hashSet
         }
+        val ids = PacketIds(protocolVersion) // TODO: Receive packet IDs from JavaScript.
 
         // Start thread which handles creating the connection and then reads packets from it.
         // This avoids blocking the main thread on writeLock and keeps the UI thread responsive.
@@ -176,7 +177,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
 
                 // Send Login Start packet.
                 val loginPacketData = Base64.decode(loginPacket, Base64.DEFAULT)
-                socket.getOutputStream().write(Packet(0x00, loginPacketData).writePacket())
+                socket.getOutputStream().write(Packet(ids.loginStart, loginPacketData).writePacket())
             } catch (e: Exception) {
                 lock.write {
                     if (this@ConnectionModule.socket == socket) {
@@ -186,8 +187,6 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 }
                 return@launch
             }
-
-            val ids = PacketIds(protocolVersion)
 
             // Re-use the current thread, start reading from the socket.
             val buffer = ByteArrayOutputStream()
