@@ -49,6 +49,7 @@ const packetIds = {
     [protocolMap['1.20.3'], 0x07],
     [protocolMap['1.20.2'], 0x06],
   ]),
+  CLIENTBOUND_KNOWN_PACKS: generateIdFunction([[protocolMap['1.20.5'], 0x0e]]),
 
   // ===========================
   // Serverbound (configuration)
@@ -69,6 +70,7 @@ const packetIds = {
     [protocolMap['1.20.5'], 0x06],
     [protocolMap['1.20.2'], 0x05],
   ]),
+  SERVERBOUND_KNOWN_PACKS: generateIdFunction([[protocolMap['1.20.5'], 0x07]]),
 
   // ==================
   // Clientbound (play)

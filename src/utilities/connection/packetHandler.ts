@@ -215,7 +215,7 @@ export const packetHandler =
         const [windowId] = readVarInt(packet.data)
         const buf = Buffer.alloc(1)
         buf.writeUInt8(windowId)
-        connection // Close Window (serverbound)
+        connection
           .writePacket(packetIds.SERVERBOUND_CLOSE_WINDOW(version) ?? 0, buf)
           .catch(handleError(addMessage, inventoryCloseError))
       } else if (packet.id === packetIds.CLIENTBOUND_DEATH_COMBAT_EVENT(version)) {
@@ -238,7 +238,7 @@ export const packetHandler =
         // Automatically respawn.
         // LOW-TODO: Should this be manual, or a dialog, like MC?
         addMessage(deathRespawnMessage)
-        connection // Client Status
+        connection
           .writePacket(packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0, writeVarInt(0))
           .catch(handleError(addMessage, respawnError))
       } else if (packet.id === packetIds.CLIENTBOUND_UPDATE_HEALTH(version)) {
@@ -246,7 +246,7 @@ export const packetHandler =
         // If you connect to a server when dead, you simply see your health as zero.
         if (healthRef.current === null && health <= 0) {
           addMessage(deathRespawnMessage)
-          connection // Client Status
+          connection
             .writePacket(packetIds.SERVERBOUND_CLIENT_STATUS(version) ?? 0, writeVarInt(0))
             .catch(handleError(addMessage, respawnError))
         } else if (healthRef.current !== null && health < healthRef.current) {
@@ -257,14 +257,14 @@ export const packetHandler =
         } // LOW-TODO: Long-term it would be better to have a UI.
         healthRef.current = health
       } else if (packet.id === packetIds.CLIENTBOUND_PING_PLAY(version)) {
-        connection // Pong (play)
+        connection
           .writePacket(packetIds.SERVERBOUND_PONG_PLAY(version) ?? 0, packet.data)
           .catch(handleError(addMessage, unknownError))
       } else if (packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_PLAY(version))
         handleResourcePack(connection, packet, version).catch(handleError(addMessage, unknownError))
     } else if (connection.state === ConnectionState.CONFIGURATION) {
       if (packet.id === packetIds.CLIENTBOUND_PING_CONFIGURATION(version)) {
-        connection // Pong (play)
+        connection
           .writePacket(packetIds.SERVERBOUND_PONG_CONFIGURATION(version) ?? 0, packet.data)
           .catch(handleError(addMessage, unknownError))
       } else if (
@@ -272,7 +272,12 @@ export const packetHandler =
         packet.id === packetIds.CLIENTBOUND_START_CONFIGURATION(version)
       ) {
         setLoading('Reconfiguring...')
-      } else if (packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_CONF(version))
+      } else if (packet.id === packetIds.CLIENTBOUND_ADD_RESOURCE_PACK_CONF(version)) {
         handleResourcePack(connection, packet, version).catch(handleError(addMessage, unknownError))
+      } else if (packet.id === packetIds.CLIENTBOUND_KNOWN_PACKS(version)) {
+        connection
+          .writePacket(packetIds.SERVERBOUND_KNOWN_PACKS(version) ?? 0, writeVarInt(0))
+          .catch(handleError(addMessage, unknownError))
+      }
     }
   }
