@@ -262,17 +262,17 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                             compressionEnabled = threshold >= 0
                         } else if (packet.id.value == ids.loginSuccess && state == ConnectionState.LOGIN) {
                             state = if (protocolVersion >= PROTOCOL_VERSION_1202) {
-                                directlyWritePacket(ids.loginAcknowledged, ByteArray(0))
+                                // directlyWritePacket(ids.loginAcknowledged, ByteArray(0))
                                 ConnectionState.CONFIGURATION
                             } else ConnectionState.PLAY
                         } else if (packet.id.value == ids.finishConfigurationClientBound &&
                             state == ConnectionState.CONFIGURATION) {
                             state = ConnectionState.PLAY
-                            directlyWritePacket(ids.finishConfigurationServerBound, ByteArray(0))
+                            // directlyWritePacket(ids.finishConfigurationServerBound, ByteArray(0))
                         } else if (packet.id.value == ids.startConfigurationClientBound &&
                             state == ConnectionState.PLAY) {
                             state = ConnectionState.CONFIGURATION
-                            directlyWritePacket(ids.acknowledgeConfigurationServerBound, ByteArray(0))
+                            // directlyWritePacket(ids.acknowledgeConfigurationServerBound, ByteArray(0))
                         }
 
                         // Forward the packet to JavaScript.

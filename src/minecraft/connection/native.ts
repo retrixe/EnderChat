@@ -103,19 +103,29 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
           this.state === ConnectionState.LOGIN
         ) {
           this.state =
-            version >= protocolMap['1.20.2']
-              ? ConnectionState.CONFIGURATION // Ack sent by native code
-              : ConnectionState.PLAY
+            version >= protocolMap['1.20.2'] ? ConnectionState.CONFIGURATION : ConnectionState.PLAY
+          this.writePacket(
+            packetIds.SERVERBOUND_LOGIN_ACKNOWLEDGED(version) ?? 0,
+            Buffer.alloc(0),
+          ).catch((err: unknown) => this.emit('error', err))
         } else if (
           packet.id === packetIds.CLIENTBOUND_FINISH_CONFIGURATION(version) &&
           this.state === ConnectionState.CONFIGURATION
         ) {
-          this.state = ConnectionState.PLAY // Ack sent by native code
+          this.state = ConnectionState.PLAY
+          this.writePacket(
+            packetIds.SERVERBOUND_ACK_FINISH_CONFIGURATION(version) ?? 0,
+            Buffer.alloc(0),
+          ).catch((err: unknown) => this.emit('error', err))
         } else if (
           packet.id === packetIds.CLIENTBOUND_START_CONFIGURATION(version) &&
           this.state === ConnectionState.PLAY
         ) {
-          this.state = ConnectionState.CONFIGURATION // Ack sent by native code
+          this.state = ConnectionState.CONFIGURATION
+          this.writePacket(
+            packetIds.SERVERBOUND_ACKNOWLEDGE_CONFIGURATION(version) ?? 0,
+            Buffer.alloc(0),
+          ).catch((err: unknown) => this.emit('error', err))
         } else if (
           (packet.id === packetIds.CLIENTBOUND_DISCONNECT_LOGIN(version) &&
             this.state === ConnectionState.LOGIN) ||
