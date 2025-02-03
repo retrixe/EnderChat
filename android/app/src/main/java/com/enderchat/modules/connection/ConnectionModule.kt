@@ -13,12 +13,11 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.UUID
-import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.locks.ReentrantLock
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.concurrent.read
-import kotlin.concurrent.write
+import kotlin.concurrent.withLock
 
 class ConnectionModule(reactContext: ReactApplicationContext)
     : ReactContextBaseJavaModule(reactContext) {
@@ -26,7 +25,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
             Dispatchers.IO +
             Dispatchers.Main +
             Dispatchers.Default)
-    private val lock = ReentrantReadWriteLock()
+    private val writeLock = ReentrantLock()
     private var socket: Socket? = null
     private var connectionId: UUID? = null
     private var packetIds: PacketIds? = null
@@ -69,7 +68,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
     }
 
     @ReactMethod fun writePacket(connId: String, packetId: Int, data: String, promise: Promise) {
-        scope.launch(Dispatchers.IO) { lock.read {
+        scope.launch(Dispatchers.IO) { writeLock.withLock {
             if (connId == connectionId.toString()) {
                 try {
                     val dataBytes = Base64.decode(data, Base64.DEFAULT)
@@ -84,7 +83,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
     @ReactMethod fun enableEncryption(
         connId: String, secret: String, packet: String, promise: Promise
     ) {
-        scope.launch(Dispatchers.IO) { lock.write {
+        scope.launch(Dispatchers.IO) { writeLock.withLock {
             if (connId == connectionId.toString()) {
                 try {
                     val packetBytes = Base64.decode(packet, Base64.DEFAULT)
@@ -107,7 +106,7 @@ class ConnectionModule(reactContext: ReactApplicationContext)
     }
 
     @ReactMethod fun closeConnection(id: String) {
-        scope.launch(Dispatchers.IO) { lock.write {
+        scope.launch(Dispatchers.IO) { writeLock.withLock {
             if (id == connectionId.toString()) directlyCloseConnection()
         } }
     }
@@ -158,8 +157,8 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         scope.launch(Dispatchers.IO) {
             val socket: Socket
             val connectionId = UUID.randomUUID()
-            try {
-                lock.write {
+            writeLock.withLock {
+                try {
                     // Only one connection at a time.
                     directlyCloseConnection()
 
@@ -170,11 +169,11 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     this@ConnectionModule.connectionId = connectionId
                     this@ConnectionModule.packetIds = ids
                     promise.resolve(connectionId.toString())
+                } catch (e: Exception) {
+                    directlyCloseConnection()
+                    promise.reject(e)
+                    return@launch
                 }
-            } catch (e: Exception) {
-                directlyCloseConnection()
-                promise.reject(e)
-                return@launch
             }
 
             try {
@@ -196,15 +195,17 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                 handshakeData.write(writeString(host))
                 handshakeData.write(portBuf.array())
                 handshakeData.write(VarInt.write(2).data)
-
-                // Initialise Handshake with server.
-                socket.getOutputStream().write(Packet(0x00, handshakeData.toByteArray()).writePacket())
-
-                // Send Login Start packet.
                 val loginPacketData = Base64.decode(loginPacket, Base64.DEFAULT)
-                socket.getOutputStream().write(Packet(ids.loginStart, loginPacketData).writePacket())
+
+                writeLock.withLock { // Typically, we won't be writing packets atp, but just in case
+                    // Initialise Handshake with server.
+                    socket.getOutputStream().write(Packet(0x00, handshakeData.toByteArray()).writePacket())
+
+                    // Send Login Start packet.
+                    socket.getOutputStream().write(Packet(ids.loginStart, loginPacketData).writePacket())
+                }
             } catch (e: Exception) {
-                lock.write {
+                writeLock.withLock {
                     if (this@ConnectionModule.socket == socket) {
                         directlyCloseConnection()
                         sendErrorEvent(connectionId, e)
@@ -223,10 +224,11 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                     if (n == -1) break
 
                     // Make sure this is the same socket we read from.
-                    lock.readLock().lock()
+                    // TODO: We should move decryption/decompression out of this lock.
+                    writeLock.lock()
                     lockAcquired = true
                     if (this@ConnectionModule.socket != socket) {
-                        lock.readLock().unlock()
+                        writeLock.unlock()
                         break
                     }
 
@@ -249,8 +251,6 @@ class ConnectionModule(reactContext: ReactApplicationContext)
 
                         // We handle Keep Alive (both play and configuration), Login Success, Set Compression
                         // and Start/Finish Configuration state changes.
-                        // FIXME: I feel this is incorrect logic and writePacket should also have a write lock?
-                        // No write lock since writePacket isn't called during login/config sequence (usually).
                         if (packet.id.value == ids.playKeepAliveClientBound && state == ConnectionState.PLAY) {
                             directlyWritePacket(ids.playKeepAliveServerBound, packet.data)
                         } else if (packet.id.value == ids.configurationKeepAliveClientBound &&
@@ -292,11 +292,11 @@ class ConnectionModule(reactContext: ReactApplicationContext)
                             sendEvent(reactContext = reactApplicationContext, "ecm:packet", params)
                         }
                     }
-                    lock.readLock().unlock()
+                    writeLock.unlock()
                     lockAcquired = false
                 } catch (e: Exception) {
-                    if (lockAcquired) lock.readLock().unlock()
-                    lock.write { if (this@ConnectionModule.socket == socket) directlyCloseConnection() }
+                    if (lockAcquired) writeLock.unlock()
+                    writeLock.withLock { if (this@ConnectionModule.socket == socket) directlyCloseConnection() }
                     sendErrorEvent(connectionId, e)
                     break
                 }
