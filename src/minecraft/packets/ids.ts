@@ -23,7 +23,7 @@ const packetIds = {
   SERVERBOUND_LOGIN_START: generateIdFunction([[protocolMap['1.16.4'], 0x00]]),
   SERVERBOUND_ENCRYPTION_RESPONSE: generateIdFunction([[protocolMap['1.16.4'], 0x01]]),
   SERVERBOUND_LOGIN_PLUGIN_RESPONSE: generateIdFunction([[protocolMap['1.16.4'], 0x02]]),
-  SERVERBOUND_LOGIN_ACKNOWLEDGED: generateIdFunction([[protocolMap['1.16.4'], 0x03]]),
+  SERVERBOUND_LOGIN_ACKNOWLEDGED: generateIdFunction([[protocolMap['1.20.2'], 0x03]]),
 
   // ===========================
   // Clientbound (configuration)

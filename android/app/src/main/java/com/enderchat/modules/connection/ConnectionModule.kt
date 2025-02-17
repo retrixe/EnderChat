@@ -343,9 +343,9 @@ class ConnectionModule(reactContext: ReactApplicationContext)
         // Remove upstream listeners, stop unnecessary background tasks
     }
 
-    /* private fun println(log: Any?) {
+    private fun println(log: Any?) {
         sendEvent(reactContext = reactApplicationContext, "ecm:log", Arguments.createMap().apply {
             putString("log", log.toString())
         })
-    } */
+    }
 }

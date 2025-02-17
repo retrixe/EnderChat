@@ -102,12 +102,13 @@ export class NativeServerConnection extends events.EventEmitter implements Serve
           packet.id === packetIds.CLIENTBOUND_LOGIN_SUCCESS(version) &&
           this.state === ConnectionState.LOGIN
         ) {
-          this.state =
-            version >= protocolMap['1.20.2'] ? ConnectionState.CONFIGURATION : ConnectionState.PLAY
-          this.writePacket(
-            packetIds.SERVERBOUND_LOGIN_ACKNOWLEDGED(version) ?? 0,
-            Buffer.alloc(0),
-          ).catch((err: unknown) => this.emit('error', err))
+          if (version >= protocolMap['1.20.2']) {
+            this.state = ConnectionState.CONFIGURATION
+            this.writePacket(
+              packetIds.SERVERBOUND_LOGIN_ACKNOWLEDGED(version) ?? 0,
+              Buffer.alloc(0),
+            ).catch((err: unknown) => this.emit('error', err))
+          } else this.state = ConnectionState.PLAY
         } else if (
           packet.id === packetIds.CLIENTBOUND_FINISH_CONFIGURATION(version) &&
           this.state === ConnectionState.CONFIGURATION
