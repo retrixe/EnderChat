@@ -3,7 +3,7 @@ import type { MinecraftChat } from '../../minecraft/chatToJsx'
 import { ConnectionState, type ServerConnection } from '../../minecraft/connection'
 import { concatPacketData, type Packet, type PacketDataTypes } from '../../minecraft/packet'
 import { parseChat, protocolMap, readVarInt, writeVarInt } from '../../minecraft/utils'
-import { makeChatMessagePacket } from '../../minecraft/packets/chat'
+import { makeChatMessagePacket, parsePlayerChatMessage } from '../../minecraft/packets/chat'
 import packetIds from '../../minecraft/packets/ids'
 
 export const enderChatPrefix = '\u00A74[\u00A7cEnderChat\u00A74] \u00A7c'
@@ -21,32 +21,6 @@ type HandleError = (
   addMsg: (text: MinecraftChat) => void,
   translated: string,
 ) => (error: unknown) => void
-
-interface PlayerChatMessage {
-  signedChat: MinecraftChat
-  unsignedChat?: MinecraftChat
-  type: number
-  displayName: MinecraftChat
-}
-
-const parsePlayerChatMessage = (data: Buffer, version: number): PlayerChatMessage => {
-  const [signedChat, signedChatLength] = parseChat(data, version)
-  data = data.slice(signedChatLength)
-  const hasUnsignedChat = data.readInt8()
-  data = data.slice(1)
-  let unsignedChat: MinecraftChat | undefined
-  if (hasUnsignedChat && version < protocolMap['1.20.3']) {
-    let unsignedChatLength
-    ;[unsignedChat, unsignedChatLength] = parseChat(data, version)
-    data = data.slice(unsignedChatLength)
-  }
-  const [type, typeLength] = readVarInt(data)
-  data = data.slice(typeLength)
-  data = data.slice(16) // Skip sender UUID
-  const [displayName, displayNameLength] = parseChat(data, version)
-  data = data.slice(displayNameLength)
-  return { signedChat, unsignedChat, type, displayName }
-}
 
 const handleSystemMessage = (
   packet: Packet,

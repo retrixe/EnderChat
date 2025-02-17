@@ -161,6 +161,9 @@ const ChatScreen = ({ navigation, route }: Props): React.JSX.Element => {
   // Packet handler useEffect.
   useEffect(() => {
     if (!connection) return
+    // TODO: This useEffect takes some time to kick in, during which Minecraft may send packets
+    // Typically happens with locally running Velocity proxies which are super fast and zero latency
+    // Extremely annoying though, it causes the ChatScreen to be stuck on "Logging in..."
     connection.on(
       'packet',
       packetHandler(
