@@ -64,6 +64,23 @@ export const parseIp = (ipAddress: string): [string, number] => {
   return [splitAddr.join(':'), port]
 }
 
+export const resolveIP = async (
+  hostname: string,
+  retry = false, // Not intended to be set by user.
+): Promise<string> => {
+  const req = await fetch(
+    retry
+      ? `https://dns.google/resolve?name=${hostname}&type=a&do=1`
+      : `https://cloudflare-dns.com/dns-query?name=${hostname}&type=A`,
+    { headers: { accept: 'application/dns-json' } },
+  )
+  if (!req.ok && !retry) return await resolveIP(hostname, true)
+  else if (!req.ok) throw new Error('Failed to make DNS query!')
+  const res = (await req.json()) as { Answer?: { type: number; data: string }[] }
+  const aRecords = res.Answer?.filter(r => r.type === 1 && r.data)
+  return aRecords?.length ? aRecords[0].data : hostname
+}
+
 export const resolveHostname = async (
   hostname: string,
   port: number,
@@ -79,11 +96,15 @@ export const resolveHostname = async (
   else if (!req.ok) throw new Error('Failed to make DNS query!')
   const res = (await req.json()) as { Answer?: { type: number; data: string }[] }
   const srvRecords = res.Answer?.filter(r => r.type === 33 && r.data)
+  let result: [string, number] = [hostname, port]
   if (srvRecords?.length) {
     // TODO: Support SRV priority/weight, maybe?
     const record = srvRecords.map(r => r.data.split(' '))[0]
-    return [record[3], +record[2]]
-  } else return [hostname, port]
+    result = [record[3], +record[2]]
+  }
+  // Prefer system's hostname resolution unless special characters are present (breaks Android).
+  if (!/^[a-zA-Z0-9.-]+$/.test(result[0])) return [await resolveIP(result[0]), result[1]]
+  return result
 }
 
 export const getRandomBytes = async (size: number): Promise<Buffer> =>
