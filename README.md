@@ -40,6 +40,15 @@ Development on this application is similar to any other React Native app. Howeve
 {"clientId": "", "scope": "XboxLive.signin offline_access"}
 ```
 
+## Privacy Policy
+
+EnderChat does not collect any data from its users. The data that is collected and sent to third-parties is required for the app to function, and is as follows:
+
+1. Data sent to the Minecraft server you are connecting to. This data includes, but is not limited to, pings to receive server info, chat messages, commands, tab completion events, detection and usage of EnderChat-specific features, server-side settings and account details necessary for connecting to the server.
+2. Data sent to Microsoft for authenticating your purchased copy of Minecraft, which enables you to connect to online mode Minecraft servers.
+
+Analytics may be added in the future, but are currently not present.
+
 ## License
 
 ```markdown
@@ -49,12 +58,3 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ```
 
 The `src/minecraft` folder is independent of the rest of the project, and is licensed under the terms of the MIT license. Refer to the folder's own `README.md` and `LICENSE` files for more information.
-
-## Privacy Policy
-
-EnderChat does not collect any data from its users. The data that is collected and sent to third-parties is required for the app to function, and is as follows:
-
-1. Data sent to the Minecraft server you are connecting to. This data includes, but is not limited to, pings to receive server info, chat messages, commands, tab completion events, detection and usage of EnderChat-specific features, server-side settings and account details necessary for connecting to the server.
-2. Data sent to Microsoft for authenticating your purchased copy of Minecraft, which enables you to connect to online mode Minecraft servers.
-
-Analytics may be added in the future, but are currently not present.
